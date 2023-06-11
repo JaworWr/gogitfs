@@ -16,13 +16,13 @@ func (h noOpHandlerType) HandleError(_ error) {
 
 var NoOpHandler noOpHandlerType
 
-type panicHandlerType struct{}
+type fatalHandlerType struct{}
 
-func (h panicHandlerType) HandleError(err error) {
+func (h fatalHandlerType) HandleError(err error) {
 	log.Fatalf("[ERROR] An error occurred: %v", err.Error())
 }
 
-var PanicHandler panicHandlerType
+var FatalHandler fatalHandlerType
 
 type LogHandlerWrapper struct {
 	next ErrorHandler

@@ -8,9 +8,6 @@ import (
 type subprocessErrorHandler struct {
 }
 
-type subprocessErrorReceiver struct {
-}
-
 func (s subprocessErrorHandler) HandleError(err error) {
 	//TODO implement me
 	panic("implement me")
