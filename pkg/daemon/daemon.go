@@ -6,5 +6,5 @@ import (
 
 type DaemonProcess interface {
 	DaemonArgs(args []string) []string
-	DaemonProcess(handler error_handler.ErrorHandler)
+	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
