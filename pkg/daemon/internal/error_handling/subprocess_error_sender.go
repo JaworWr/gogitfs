@@ -37,6 +37,7 @@ func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
 func (s *SubprocessErrorSender) HandleError(err error) {
 	wrapper := wrapError(err)
 	s.send(wrapper)
+	os.Exit(1)
 }
 
 func (s *SubprocessErrorSender) HandleSuccess() {
