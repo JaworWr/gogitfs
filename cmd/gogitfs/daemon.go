@@ -15,13 +15,14 @@ func (g *gogitfsDaemon) DaemonArgs(args []string) []string {
 	return args
 }
 
-func (g *gogitfsDaemon) DaemonEnv(env []string) []string {
+func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 	return nil
 }
 
 func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
 	mountDir := os.Args[1]
 	root := &gitfs.RootNode{}
+	errHandler = error_handler.MakeLoggingHandler(errHandler)
 	log.Printf("Mounting in %v\n", mountDir)
 	server, err := fs.Mount(mountDir, root, &fs.Options{})
 	if err != nil {
@@ -29,6 +30,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	}
 	succHandler.HandleSuccess()
 	server.Wait()
+	log.Printf("Exiting")
 }
 
 var _ daemon.ProcessInfo = (*gogitfsDaemon)(nil)

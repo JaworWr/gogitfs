@@ -4,6 +4,7 @@ import (
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
+	"log"
 	"os"
 )
 
@@ -13,15 +14,12 @@ type ProcessInfo interface {
 	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
 
-type dummySuccHandler struct{}
-
-func (h dummySuccHandler) HandleSuccess() {
-
-}
-
 func SpawnDaemon(info ProcessInfo, name string) error {
-	envInfo := error_handling.EnvInit(name)
-	defer error_handling.EnvCleanup()
+	envInfo, err := error_handling.EnvInit(name)
+	if err != nil {
+		return err
+	}
+	defer error_handling.EnvCleanup(envInfo)
 
 	args := info.DaemonArgs(os.Args)
 	env := append(envInfo.Env, info.DaemonEnv(os.Environ())...)
@@ -38,17 +36,28 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 
 	if child == nil {
 		// child code - run actual process
-		errHandler := error_handler.FatalHandler
-		succHandler := dummySuccHandler{}
-		info.DaemonProcess(errHandler, succHandler)
+		childProcessPostSpawn(info, envInfo)
 		return nil
 	}
 	// parent code - handle errors from child
-	err = parentProcessPostSpawn()
+	err = parentProcessPostSpawn(envInfo)
 	return err
 }
 
-func parentProcessPostSpawn() (err error) {
-	// handle errors from child - for now, do nothing
-	return
+func parentProcessPostSpawn(envInfo error_handling.EnvInfo) error {
+	receiver, err := error_handling.NewSubprocessErrorReceiver(envInfo.NamedPipeName)
+	if err != nil {
+		log.Panicf("Unable to setup daemon error receiver\n%v", err.Error())
+	}
+	defer receiver.Close()
+	return receiver.Receive()
+}
+
+func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
+	sender, err := error_handling.NewSubprocessErrorSender(envInfo.NamedPipeName)
+	if err != nil {
+		log.Panicf("Unable to setup daemon error sender\n%v", err.Error())
+	}
+	defer sender.Close()
+	info.DaemonProcess(sender, sender)
 }
