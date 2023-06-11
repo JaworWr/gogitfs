@@ -1,8 +1,14 @@
-package daemon
+package error_handling
 
-import "gogitfs/pkg/error_handler"
+import (
+	"gogitfs/pkg/daemon"
+	"gogitfs/pkg/error_handler"
+)
 
 type subprocessErrorHandler struct {
+}
+
+type subprocessErrorReceiver struct {
 }
 
 func (s subprocessErrorHandler) HandleError(err error) {
@@ -16,4 +22,4 @@ func (s subprocessErrorHandler) HandleSuccess() {
 }
 
 var _ error_handler.ErrorHandler = (*subprocessErrorHandler)(nil)
-var _ SuccessHandler = (*subprocessErrorHandler)(nil)
+var _ daemon.SuccessHandler = (*subprocessErrorHandler)(nil)
