@@ -58,11 +58,6 @@ func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
 	if err != nil {
 		log.Panicf("Unable to setup daemon error sender\n%v", err.Error())
 	}
-	defer (func() {
-		err := sender.Close()
-		if err != nil {
-			log.Printf("Sender close error\n%v", err.Error())
-		}
-	})()
+	defer sender.Close()
 	info.DaemonProcess(sender, sender)
 }

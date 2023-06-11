@@ -23,10 +23,14 @@ func NewSubprocessErrorSender(fifoName string) (*SubprocessErrorSender, error) {
 }
 
 func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
+	if s.errorSent {
+		log.Println("[WARNING] attempting to send multiple errors!")
+		return
+	}
 	s.errorSent = true
-	encodeErr := s.encoder.Encode(wrapper)
-	if encodeErr != nil {
-		log.Panicf("Daemon status send error\n%v", encodeErr.Error())
+	err := s.encoder.Encode(wrapper)
+	if err != nil {
+		log.Panicf("Daemon status send error\n%v", err.Error())
 	}
 }
 
@@ -40,13 +44,9 @@ func (s *SubprocessErrorSender) HandleSuccess() {
 	s.send(wrapper)
 }
 
-func (s *SubprocessErrorSender) Close() (err error) {
+func (s *SubprocessErrorSender) Close() {
 	if !s.errorSent {
 		s.HandleError(&UnknownError{})
-	}
-	err = s.fifo.Sync()
-	if err != nil {
-		return
 	}
 	_ = s.fifo.Close()
 	return
