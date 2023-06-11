@@ -29,7 +29,7 @@ type LogHandlerWrapper struct {
 }
 
 func (h *LogHandlerWrapper) HandleError(err error) {
-	log.Printf("An error occurred: %v", err.Error())
+	log.Printf("[ERROR] An error occurred: %v", err.Error())
 	h.next.HandleError(err)
 }
 
