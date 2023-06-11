@@ -29,3 +29,9 @@ func (w *subprocessErrorWrapper) unwrap() error {
 	}
 	return &w.err
 }
+
+type UnknownError struct{}
+
+func (_ *UnknownError) Error() string {
+	return "unknown error in daemon - see log file"
+}

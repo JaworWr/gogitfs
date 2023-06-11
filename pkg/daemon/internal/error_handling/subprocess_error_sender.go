@@ -8,8 +8,9 @@ import (
 )
 
 type SubprocessErrorSender struct {
-	fifo    *os.File
-	encoder *gob.Encoder
+	errorSent bool
+	fifo      *os.File
+	encoder   *gob.Encoder
 }
 
 func NewSubprocessErrorSender() (*SubprocessErrorSender, error) {
@@ -23,11 +24,12 @@ func NewSubprocessErrorSender() (*SubprocessErrorSender, error) {
 		return nil, err
 	}
 	encoder := gob.NewEncoder(fifo)
-	sender := SubprocessErrorSender{fifo, encoder}
+	sender := SubprocessErrorSender{fifo: fifo, encoder: encoder}
 	return &sender, nil
 }
 
 func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
+	s.errorSent = true
 	encodeErr := s.encoder.Encode(wrapper)
 	if encodeErr != nil {
 		log.Panicf("Daemon status send error\n%v", encodeErr.Error())
@@ -45,6 +47,9 @@ func (s *SubprocessErrorSender) HandleSuccess() {
 }
 
 func (s *SubprocessErrorSender) Close() (err error) {
+	if !s.errorSent {
+		s.HandleError(&UnknownError{})
+	}
 	err = s.fifo.Sync()
 	if err != nil {
 		return
