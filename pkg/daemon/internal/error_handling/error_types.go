@@ -1,33 +1,33 @@
 package error_handling
 
 type subprocessError struct {
-	msg string
+	Msg string
 }
 
 func (e *subprocessError) Error() string {
-	return e.msg
+	return e.Msg
 }
 
 type subprocessErrorWrapper struct {
-	hasError bool
-	err      subprocessError
+	HasError bool
+	Err      subprocessError
 }
 
 func wrapError(err error) *subprocessErrorWrapper {
-	res := subprocessErrorWrapper{hasError: false}
+	res := subprocessErrorWrapper{HasError: false}
 	if err == nil {
 		return &res
 	}
-	res.hasError = true
-	res.err = subprocessError{err.Error()}
+	res.HasError = true
+	res.Err = subprocessError{err.Error()}
 	return &res
 }
 
 func (w *subprocessErrorWrapper) unwrap() error {
-	if !w.hasError {
+	if !w.HasError {
 		return nil
 	}
-	return &w.err
+	return &w.Err
 }
 
 type UnknownError struct{}
