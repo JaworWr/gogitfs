@@ -10,21 +10,25 @@ import (
 	"syscall"
 )
 
-var pipeKey string
-
 type EnvInfo struct {
 	Env           []string
 	LogFileName   string
 	NamedPipeName string
 }
 
-func EnvInit(name string) (info *EnvInfo, err error) {
-	initKeys(name)
+func EnvInit(name string) (info EnvInfo, err error) {
+	pipeKey := strings.ToUpper(name) + "_NAMED_PIPE"
 	if daemon.WasReborn() {
+		// this runs in the child process
+		pipeName, ok := os.LookupEnv(pipeKey)
+		if !ok {
+			err = fmt.Errorf("missing environment variable: %v", pipeKey)
+			return
+		}
+		info.NamedPipeName = pipeName
 		return
 	}
 	// the following only runs in the parent process
-	info = &EnvInfo{}
 	baseName := fmt.Sprintf("%s-%d", name, os.Getpid())
 	info.LogFileName = filepath.Join(os.TempDir(), baseName+".log")
 	info.NamedPipeName = filepath.Join(os.TempDir(), baseName+".pipe")
@@ -35,7 +39,7 @@ func EnvInit(name string) (info *EnvInfo, err error) {
 	return
 }
 
-func EnvCleanup(info *EnvInfo) {
+func EnvCleanup(info EnvInfo) {
 	if daemon.WasReborn() {
 		return
 	}
@@ -44,8 +48,4 @@ func EnvCleanup(info *EnvInfo) {
 	if err != nil {
 		log.Panicln(err)
 	}
-}
-
-func initKeys(name string) {
-	pipeKey = strings.ToUpper(name) + "_NAMED_PIPE"
 }

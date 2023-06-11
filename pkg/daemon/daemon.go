@@ -36,7 +36,7 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 
 	if child == nil {
 		// child code - run actual process
-		childProcessPostSpawn(info)
+		childProcessPostSpawn(info, envInfo)
 		return nil
 	}
 	// parent code - handle errors from child
@@ -44,7 +44,7 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 	return err
 }
 
-func parentProcessPostSpawn(envInfo *error_handling.EnvInfo) error {
+func parentProcessPostSpawn(envInfo error_handling.EnvInfo) error {
 	receiver, err := error_handling.NewSubprocessErrorReceiver(envInfo.NamedPipeName)
 	if err != nil {
 		log.Panicf("Unable to setup daemon error receiver\n%v", err.Error())
@@ -53,8 +53,8 @@ func parentProcessPostSpawn(envInfo *error_handling.EnvInfo) error {
 	return receiver.Receive()
 }
 
-func childProcessPostSpawn(info ProcessInfo) {
-	sender, err := error_handling.NewSubprocessErrorSender()
+func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
+	sender, err := error_handling.NewSubprocessErrorSender(envInfo.NamedPipeName)
 	if err != nil {
 		log.Panicf("Unable to setup daemon error sender\n%v", err.Error())
 	}

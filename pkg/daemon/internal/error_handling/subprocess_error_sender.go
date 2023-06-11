@@ -2,7 +2,6 @@ package error_handling
 
 import (
 	"encoding/gob"
-	"fmt"
 	"log"
 	"os"
 )
@@ -13,12 +12,7 @@ type SubprocessErrorSender struct {
 	encoder   *gob.Encoder
 }
 
-func NewSubprocessErrorSender() (*SubprocessErrorSender, error) {
-	fifoName, ok := os.LookupEnv(pipeKey)
-	if !ok {
-		err := fmt.Errorf("missing environment variable: %v", pipeKey)
-		return nil, err
-	}
+func NewSubprocessErrorSender(fifoName string) (*SubprocessErrorSender, error) {
 	fifo, err := os.OpenFile(fifoName, os.O_WRONLY, os.ModeNamedPipe)
 	if err != nil {
 		return nil, err
