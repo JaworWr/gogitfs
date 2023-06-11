@@ -30,7 +30,7 @@ func newSubprocessErrorSender() (*subprocessErrorSender, error) {
 func (s *subprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
 	encodeErr := s.encoder.Encode(wrapper)
 	if encodeErr != nil {
-		log.Panicf("Send error\n%v", encodeErr.Error())
+		log.Panicf("Daemon status send error\n%v", encodeErr.Error())
 	}
 }
 
