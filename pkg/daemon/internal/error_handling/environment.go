@@ -24,7 +24,7 @@ func EnvInit(name string) (info *EnvInfo, err error) {
 		return
 	}
 	// the following only runs in the parent process
-	*info = EnvInfo{}
+	info = &EnvInfo{}
 	baseName := fmt.Sprintf("%s-%d", name, os.Getpid())
 	info.LogFileName = filepath.Join(os.TempDir(), baseName+".log")
 	info.NamedPipeName = filepath.Join(os.TempDir(), baseName+".pipe")
