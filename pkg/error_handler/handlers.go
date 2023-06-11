@@ -33,4 +33,8 @@ func (h *LogHandlerWrapper) HandleError(err error) {
 	h.next.HandleError(err)
 }
 
+func MakeLoggingHandler(h ErrorHandler) *LogHandlerWrapper {
+	return &LogHandlerWrapper{next: h}
+}
+
 var LogHandler = &LogHandlerWrapper{NoOpHandler}

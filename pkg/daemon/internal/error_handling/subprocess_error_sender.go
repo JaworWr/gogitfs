@@ -7,12 +7,12 @@ import (
 	"os"
 )
 
-type subprocessErrorSender struct {
+type SubprocessErrorSender struct {
 	fifo    *os.File
 	encoder *gob.Encoder
 }
 
-func newSubprocessErrorSender() (*subprocessErrorSender, error) {
+func NewSubprocessErrorSender() (*SubprocessErrorSender, error) {
 	fifoName, ok := os.LookupEnv(pipeKey)
 	if !ok {
 		err := fmt.Errorf("missing environment variable: %v", pipeKey)
@@ -23,28 +23,28 @@ func newSubprocessErrorSender() (*subprocessErrorSender, error) {
 		return nil, err
 	}
 	encoder := gob.NewEncoder(fifo)
-	sender := subprocessErrorSender{fifo, encoder}
+	sender := SubprocessErrorSender{fifo, encoder}
 	return &sender, nil
 }
 
-func (s *subprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
+func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
 	encodeErr := s.encoder.Encode(wrapper)
 	if encodeErr != nil {
 		log.Panicf("Daemon status send error\n%v", encodeErr.Error())
 	}
 }
 
-func (s *subprocessErrorSender) HandleError(err error) {
+func (s *SubprocessErrorSender) HandleError(err error) {
 	wrapper := wrapError(err)
 	s.send(wrapper)
 }
 
-func (s *subprocessErrorSender) HandleSuccess() {
+func (s *SubprocessErrorSender) HandleSuccess() {
 	wrapper := wrapError(nil)
 	s.send(wrapper)
 }
 
-func (s *subprocessErrorSender) Close() (err error) {
+func (s *SubprocessErrorSender) Close() (err error) {
 	err = s.fifo.Sync()
 	if err != nil {
 		return

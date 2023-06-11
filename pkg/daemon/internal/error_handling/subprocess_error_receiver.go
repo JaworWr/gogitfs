@@ -6,22 +6,22 @@ import (
 	"os"
 )
 
-type subprocessErrorReceiver struct {
+type SubprocessErrorReceiver struct {
 	fifo    *os.File
 	decoder *gob.Decoder
 }
 
-func newSubprocessErrorReceiver(fifoName string) (*subprocessErrorReceiver, error) {
+func NewSubprocessErrorReceiver(fifoName string) (*SubprocessErrorReceiver, error) {
 	fifo, err := os.OpenFile(fifoName, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
 		return nil, err
 	}
 	decoder := gob.NewDecoder(fifo)
-	receiver := subprocessErrorReceiver{fifo, decoder}
+	receiver := SubprocessErrorReceiver{fifo, decoder}
 	return &receiver, nil
 }
 
-func (r *subprocessErrorReceiver) receive() error {
+func (r *SubprocessErrorReceiver) Receive() error {
 	var wrapper subprocessErrorWrapper
 	err := r.decoder.Decode(&wrapper)
 	if err != nil {
@@ -30,6 +30,6 @@ func (r *subprocessErrorReceiver) receive() error {
 	return wrapper.unwrap()
 }
 
-func (r *subprocessErrorReceiver) Close() {
+func (r *SubprocessErrorReceiver) Close() {
 	_ = r.fifo.Close()
 }

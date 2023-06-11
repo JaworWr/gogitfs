@@ -22,6 +22,7 @@ func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
 	mountDir := os.Args[1]
 	root := &gitfs.RootNode{}
+	errHandler = error_handler.MakeLoggingHandler(errHandler)
 	log.Printf("Mounting in %v\n", mountDir)
 	server, err := fs.Mount(mountDir, root, &fs.Options{})
 	if err != nil {
