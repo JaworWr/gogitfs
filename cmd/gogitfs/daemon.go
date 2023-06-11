@@ -30,6 +30,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	}
 	succHandler.HandleSuccess()
 	server.Wait()
+	log.Printf("Exiting")
 }
 
 var _ daemon.ProcessInfo = (*gogitfsDaemon)(nil)
