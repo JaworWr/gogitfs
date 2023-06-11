@@ -24,7 +24,7 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 	if err != nil {
 		return err
 	}
-	defer error_handling.EnvCleanup(&envInfo)
+	defer error_handling.EnvCleanup(envInfo)
 
 	args := info.DaemonArgs(os.Args)
 	env := append(envInfo.Env, info.DaemonEnv(os.Environ())...)

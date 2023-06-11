@@ -18,12 +18,13 @@ type EnvInfo struct {
 	NamedPipeName string
 }
 
-func EnvInit(name string) (info EnvInfo, err error) {
+func EnvInit(name string) (info *EnvInfo, err error) {
 	initKeys(name)
 	if daemon.WasReborn() {
 		return
 	}
 	// the following only runs in the parent process
+	*info = EnvInfo{}
 	baseName := fmt.Sprintf("%s-%d", name, os.Getpid())
 	info.LogFileName = filepath.Join(os.TempDir(), baseName+".log")
 	info.NamedPipeName = filepath.Join(os.TempDir(), baseName+".pipe")
