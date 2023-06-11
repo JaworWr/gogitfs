@@ -3,9 +3,11 @@ package error_handling
 import (
 	"fmt"
 	"github.com/sevlyar/go-daemon"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 var pipeKey string
@@ -16,7 +18,7 @@ type EnvInfo struct {
 	NamedPipeName string
 }
 
-func EnvInit(name string) (info EnvInfo) {
+func EnvInit(name string) (info EnvInfo, err error) {
 	initKeys(name)
 	if daemon.WasReborn() {
 		return
@@ -28,14 +30,19 @@ func EnvInit(name string) (info EnvInfo) {
 	info.Env = []string{
 		pipeKey + "=" + info.NamedPipeName,
 	}
+	err = syscall.Mkfifo(info.NamedPipeName, 0700)
 	return
 }
 
-func EnvCleanup() {
+func EnvCleanup(info *EnvInfo) {
 	if daemon.WasReborn() {
 		return
 	}
 	// the following only runs in the parent process
+	err := syscall.Unlink(info.NamedPipeName)
+	if err != nil {
+		log.Panicln(err)
+	}
 }
 
 func initKeys(name string) {

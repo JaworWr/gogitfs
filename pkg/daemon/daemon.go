@@ -20,8 +20,11 @@ func (h dummySuccHandler) HandleSuccess() {
 }
 
 func SpawnDaemon(info ProcessInfo, name string) error {
-	envInfo := error_handling.EnvInit(name)
-	defer error_handling.EnvCleanup()
+	envInfo, err := error_handling.EnvInit(name)
+	if err != nil {
+		return err
+	}
+	defer error_handling.EnvCleanup(&envInfo)
 
 	args := info.DaemonArgs(os.Args)
 	env := append(envInfo.Env, info.DaemonEnv(os.Environ())...)
