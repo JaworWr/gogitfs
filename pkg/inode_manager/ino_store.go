@@ -1,4 +1,4 @@
-package inode_store
+package inode_manager
 
 import (
 	"fmt"
@@ -12,12 +12,11 @@ type InoStore struct {
 }
 
 func NewInoStore(initialIno uint64) *InoStore {
-	store := InoStore{
+	return &InoStore{
 		nextIno: initialIno,
 		inos:    make(map[string]uint64),
 		gens:    make(map[string]uint64),
 	}
-	return &store
 }
 
 func (s *InoStore) GetOrInsert(hash fmt.Stringer, updateGen bool) fs.StableAttr {

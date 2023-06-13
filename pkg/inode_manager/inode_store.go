@@ -1,4 +1,4 @@
-package inode_store
+package inode_manager
 
 import (
 	"context"
@@ -11,10 +11,9 @@ type InodeStore struct {
 }
 
 func NewInodeStore() *InodeStore {
-	store := InodeStore{
+	return &InodeStore{
 		inodes: make(map[string]*fs.Inode),
 	}
-	return &store
 }
 
 func (s *InodeStore) GetOrInsert(
