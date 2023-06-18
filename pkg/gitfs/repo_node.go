@@ -11,9 +11,10 @@ type repoNode struct {
 }
 
 type repoNodeEmbedder interface {
-	getRepoNode() *repoNode
+	fs.InodeEmbedder
+	embeddedRepoNode() *repoNode
 }
 
-func (n *repoNode) getRepoNode() *repoNode {
+func (n *repoNode) embeddedRepoNode() *repoNode {
 	return n
 }
