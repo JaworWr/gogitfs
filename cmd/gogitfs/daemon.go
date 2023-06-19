@@ -28,6 +28,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	}
 	repoDir := os.Args[1]
 	mountDir := os.Args[2]
+	log.Printf("Repository path: %v\n", repoDir)
 	root, err := gitfs.NewRootNode(repoDir)
 	if err != nil {
 		errHandler.HandleError(err)
