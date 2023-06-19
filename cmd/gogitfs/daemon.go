@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/error_handler"
@@ -20,9 +21,17 @@ func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 }
 
 func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
-	mountDir := os.Args[1]
-	root := &gitfs.RootNode{}
 	errHandler = error_handler.MakeLoggingHandler(errHandler)
+	if len(os.Args) < 3 {
+		err := fmt.Errorf("not enough arguments. Usage: gogitfs <repo-path> <mount-path>")
+		errHandler.HandleError(err)
+	}
+	repoDir := os.Args[1]
+	mountDir := os.Args[2]
+	root, err := gitfs.NewRootNode(repoDir)
+	if err != nil {
+		errHandler.HandleError(err)
+	}
 	log.Printf("Mounting in %v\n", mountDir)
 	server, err := fs.Mount(mountDir, root, &fs.Options{})
 	if err != nil {

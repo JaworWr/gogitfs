@@ -10,7 +10,7 @@ import (
 
 type commitNode struct {
 	repoNode
-	commit object.Commit
+	commit *object.Commit
 }
 
 func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
@@ -28,7 +28,7 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	n.AddChild("message", child, false)
 }
 
-func newCommitNode(ctx context.Context, commit object.Commit, parent repoNodeEmbedder) *fs.Inode {
+func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
 	builder := func() fs.InodeEmbedder {
 		node := commitNode{commit: commit}
 		node.repo = parent.embeddedRepoNode().repo
