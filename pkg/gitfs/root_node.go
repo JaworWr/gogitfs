@@ -15,8 +15,8 @@ type RootNode struct {
 
 func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
 	out.Mode = 0555
-	out.AttrValid = 10
-	out.EntryValid = 10
+	out.AttrValid = 15
+	out.EntryValid = 15
 
 	switch name {
 	case "commits":
@@ -30,7 +30,7 @@ func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) 
 			error_handler.Logging.HandleError(err)
 			return nil, syscall.EIO
 		}
-		child := n.NewInode(ctx, node, fs.StableAttr{Ino: rootIno, Mode: fuse.S_IFDIR})
+		child := n.NewInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
 		return child, 0
 	default:
 		return nil, syscall.ENOENT
@@ -38,7 +38,7 @@ func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) 
 }
 
 func (n *RootNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
-	commitEntry := fuse.DirEntry{Mode: 0555, Name: "commits", Ino: rootIno}
+	commitEntry := fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "commits"}
 	stream := fs.NewListDirStream([]fuse.DirEntry{commitEntry})
 	return stream, 0
 }
