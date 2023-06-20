@@ -13,10 +13,18 @@ type LogHandlerWrapper struct {
 }
 
 func (h *LogHandlerWrapper) HandleError(err error) {
-	log.Printf("[ERROR] An error occurred: %v", err.Error())
+	log.Printf("[ERROR] %v", err.Error())
 	h.next.HandleError(err)
 }
 
 func MakeLoggingHandler(h ErrorHandler) *LogHandlerWrapper {
 	return &LogHandlerWrapper{next: h}
 }
+
+type noOpErrorHandler struct{}
+
+func (h noOpErrorHandler) HandleError(err error) {
+
+}
+
+var Logging = MakeLoggingHandler(noOpErrorHandler{})
