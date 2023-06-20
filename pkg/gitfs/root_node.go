@@ -3,13 +3,44 @@ package gitfs
 import (
 	"context"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
+	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/error_handler"
+	"syscall"
 )
 
 type RootNode struct {
 	repoNode
-	commit *object.Commit
+}
+
+func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	out.Mode = 0555
+	out.AttrValid = 10
+	out.EntryValid = 10
+
+	switch name {
+	case "commits":
+		head, err := n.repo.Head()
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+			return nil, syscall.EIO
+		}
+		node, err := newHardlinkCommitListNode(head, n)
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+			return nil, syscall.EIO
+		}
+		child := n.NewPersistentInode(ctx, node, fs.StableAttr{Ino: rootIno})
+		return child, 0
+	default:
+		return nil, syscall.ENOENT
+	}
+}
+
+func (n *RootNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
+	commitEntry := fuse.DirEntry{Mode: 0555, Name: "commits", Ino: rootIno}
+	stream := fs.NewListDirStream([]fuse.DirEntry{commitEntry})
+	return stream, 0
 }
 
 func NewRootNode(path string) (node *RootNode, err error) {
@@ -18,23 +49,11 @@ func NewRootNode(path string) (node *RootNode, err error) {
 	if err != nil {
 		return
 	}
-	ref, err := repo.Head()
-	if err != nil {
-		return
-	}
-	commit, err := repo.CommitObject(ref.Hash())
-	if err != nil {
-		return
-	}
+
 	node = &RootNode{}
 	node.repo = repo
-	node.commit = commit
 	return
 }
 
-func (n *RootNode) OnAdd(ctx context.Context) {
-	child := newCommitNode(ctx, n.commit, n)
-	n.AddChild("HEAD", child, false)
-}
-
-var _ fs.NodeOnAdder = (*RootNode)(nil)
+var _ fs.NodeLookuper = (*RootNode)(nil)
+var _ fs.NodeReaddirer = (*RootNode)(nil)
