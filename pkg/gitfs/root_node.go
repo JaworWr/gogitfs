@@ -30,7 +30,7 @@ func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) 
 			error_handler.Logging.HandleError(err)
 			return nil, syscall.EIO
 		}
-		child := n.NewPersistentInode(ctx, node, fs.StableAttr{Ino: rootIno})
+		child := n.NewInode(ctx, node, fs.StableAttr{Ino: rootIno, Mode: fuse.S_IFDIR})
 		return child, 0
 	default:
 		return nil, syscall.ENOENT
