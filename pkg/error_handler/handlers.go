@@ -23,7 +23,7 @@ func MakeLoggingHandler(h ErrorHandler) *LogHandlerWrapper {
 
 type noOpErrorHandler struct{}
 
-func (h noOpErrorHandler) HandleError(err error) {
+func (h noOpErrorHandler) HandleError(_ error) {
 
 }
 

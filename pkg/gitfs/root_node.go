@@ -37,7 +37,7 @@ func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) 
 	}
 }
 
-func (n *RootNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
+func (n *RootNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
 	commitEntry := fuse.DirEntry{Mode: 0555, Name: "commits", Ino: rootIno}
 	stream := fs.NewListDirStream([]fuse.DirEntry{commitEntry})
 	return stream, 0
