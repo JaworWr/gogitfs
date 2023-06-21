@@ -5,7 +5,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
-	"gogitfs/pkg/error_handler"
 )
 
 type RootNode struct {
@@ -13,11 +12,7 @@ type RootNode struct {
 }
 
 func (n *RootNode) OnAdd(ctx context.Context) {
-	node, err := newHardlinkCommitListNode(n.repo)
-	if err != nil {
-		error_handler.Fatal.HandleError(err)
-		return
-	}
+	node := newHardlinkCommitListNode(n.repo)
 	child := n.NewPersistentInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
 }
