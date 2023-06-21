@@ -33,18 +33,19 @@ func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 var _ fs.NodeReadlinker = (*headLinkNode)(nil)
 
 type commitDirStream struct {
-	next *object.Commit
-	err  error
-	iter object.CommitIter
+	headLink *fs.Inode
+	next     *object.Commit
+	err      error
+	iter     object.CommitIter
 }
 
-func newCommitDirStream(iter object.CommitIter) *commitDirStream {
-	ds := &commitDirStream{iter: iter}
-	ds.update()
+func newCommitDirStream(iter object.CommitIter, headLink *fs.Inode) *commitDirStream {
+	ds := &commitDirStream{iter: iter, headLink: headLink}
 	return ds
 }
 
 func (s *commitDirStream) update() {
+	s.headLink = nil
 	next, err := s.iter.Next()
 	if err != nil {
 		next = nil
@@ -60,6 +61,13 @@ func (s *commitDirStream) HasNext() bool {
 }
 
 func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
+	if s.headLink != nil {
+		entry.Name = "HEAD"
+		entry.Mode = fuse.S_IFLNK
+		entry.Ino = s.headLink.StableAttr().Ino
+		s.update()
+		return
+	}
 	if s.err != nil {
 		error_handler.Logging.HandleError(s.err)
 		errno = syscall.EIO
@@ -87,7 +95,7 @@ func (n *allCommitsNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	return newCommitDirStream(iter), fs.OK
+	return newCommitDirStream(iter, n.headLink), fs.OK
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
