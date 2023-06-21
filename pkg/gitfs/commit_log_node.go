@@ -4,18 +4,25 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"log"
 	"strings"
+	"syscall"
 )
 
 type commitLogNode struct {
 	repoNode
 	iter     object.CommitIter
 	basePath *string
+	attr     fuse.Attr
+}
+
+func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	out.Attr = n.attr
+	out.AttrValid = 2 << 62
+	return fs.OK
 }
 
 func (n *commitLogNode) OnAdd(ctx context.Context) {
@@ -52,8 +59,8 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 	})
 }
 
-func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) (*commitLogNode, error) {
-	opts := &git.LogOptions{From: from}
+func newCommitLogNode(repo *git.Repository, from *object.Commit, linkLevels int) (*commitLogNode, error) {
+	opts := &git.LogOptions{From: from.Hash}
 	iter, err := repo.Log(opts)
 	if err != nil {
 		return nil, err
@@ -61,6 +68,8 @@ func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) 
 	node := &commitLogNode{}
 	node.repo = repo
 	node.iter = iter
+	node.attr = commitAttr(from)
+	node.attr.Mode = 0555
 	if linkLevels == 0 {
 		node.basePath = nil
 	} else {
@@ -75,3 +84,4 @@ func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) 
 }
 
 var _ fs.NodeOnAdder = (*commitLogNode)(nil)
+var _ fs.NodeGetattrer = (*commitLogNode)(nil)

@@ -45,11 +45,11 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 		error_handler.Fatal.HandleError(err)
 	}
 
-	logNode, err := newCommitLogNode(n.repo, n.commit.Hash, 2)
+	logNode, err := newCommitLogNode(n.repo, n.commit, 2)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}
-	child = n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFLNK})
+	child = n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("log", child, false)
 }
 
