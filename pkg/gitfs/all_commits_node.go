@@ -21,6 +21,20 @@ type headLinkNode struct {
 	repoNode
 }
 
+func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
+	repo := n.embeddedRepoNode().repo
+	head, err := repo.Head()
+	if err != nil {
+		return
+	}
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		return
+	}
+	attr = commitAttr(commit)
+	return
+}
+
 func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	head, err := n.repo.Head()
 	if err != nil {
@@ -30,7 +44,20 @@ func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	return []byte(head.Hash().String()), fs.OK
 }
 
+func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	attr, err := headAttr(n)
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return syscall.EIO
+	}
+	out.Attr = attr
+	out.Attr.Mode = 0555
+	out.AttrValid = 30
+	return fs.OK
+}
+
 var _ fs.NodeReadlinker = (*headLinkNode)(nil)
+var _ fs.NodeGetattrer = (*headLinkNode)(nil)
 
 type commitDirStream struct {
 	headLink *fs.Inode
@@ -127,6 +154,18 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	return node, fs.OK
 }
 
+func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	attr, err := headAttr(n)
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return syscall.EIO
+	}
+	out.Attr = attr
+	out.Attr.Mode = 0555
+	out.AttrValid = 30
+	return fs.OK
+}
+
 func newAllCommitsNode(repo *git.Repository) *allCommitsNode {
 	node := &allCommitsNode{}
 	node.repo = repo
@@ -145,3 +184,4 @@ func (n *allCommitsNode) getHeadLinkNode(ctx context.Context) *fs.Inode {
 
 var _ fs.NodeLookuper = (*allCommitsNode)(nil)
 var _ fs.NodeReaddirer = (*allCommitsNode)(nil)
+var _ fs.NodeGetattrer = (*allCommitsNode)(nil)
