@@ -54,13 +54,13 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 
 func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) (*commitLogNode, error) {
 	opts := &git.LogOptions{From: from}
-	log, err := repo.Log(opts)
+	iter, err := repo.Log(opts)
 	if err != nil {
 		return nil, err
 	}
 	node := &commitLogNode{}
 	node.repo = repo
-	node.iter = log
+	node.iter = iter
 	if linkLevels == 0 {
 		node.basePath = nil
 	} else {
