@@ -16,6 +16,21 @@ type allCommitsNode struct {
 	repoNode
 }
 
+type headLinkNode struct {
+	repoNode
+}
+
+func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
+	head, err := n.repo.Head()
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return nil, syscall.EIO
+	}
+	return []byte(head.Hash().String()), fs.OK
+}
+
+var _ fs.NodeReadlinker = (*headLinkNode)(nil)
+
 type commitDirStream struct {
 	next *object.Commit
 	err  error
@@ -71,7 +86,7 @@ func (n *allCommitsNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	return newCommitDirStream(iter), 0
+	return newCommitDirStream(iter), fs.OK
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
@@ -90,23 +105,8 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	out.Mode = syscall.S_IFDIR | 0555
 	out.AttrValid = 2 << 62
 	out.EntryValid = 2 << 62
-	return node, 0
+	return node, fs.OK
 }
-
-//func (h *allCommitsNode) OnAdd(ctx context.Context) {
-//	_ = h.commitIter.ForEach(func(commit *object.Commit) error {
-//		node := newCommitNode(ctx, commit, h)
-//		succ := h.AddChild(commit.Hash.String(), node, false)
-//		if !succ {
-//			log.Printf("File already exists: %v", commit.Hash.String())
-//		}
-//		return nil
-//	})
-//
-//	headLink := &fs.MemSymlink{Data: []byte(h.head.Hash().String())}
-//	headNode := h.NewPersistentInode(ctx, headLink, fs.StableAttr{Mode: fuse.S_IFLNK})
-//	h.AddChild("HEAD", headNode, false)
-//}
 
 func newHardlinkCommitListNode(repo *git.Repository) *allCommitsNode {
 	node := &allCommitsNode{}
@@ -114,6 +114,5 @@ func newHardlinkCommitListNode(repo *git.Repository) *allCommitsNode {
 	return node
 }
 
-// var _ fs.NodeOnAdder = (*allCommitsNode)(nil)
 var _ fs.NodeLookuper = (*allCommitsNode)(nil)
 var _ fs.NodeReaddirer = (*allCommitsNode)(nil)
