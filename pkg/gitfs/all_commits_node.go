@@ -10,13 +10,13 @@ import (
 	"log"
 )
 
-type hardlinkCommitListNode struct {
+type allCommitsNode struct {
 	repoNode
 	head       *plumbing.Reference
 	commitIter object.CommitIter
 }
 
-func (h *hardlinkCommitListNode) OnAdd(ctx context.Context) {
+func (h *allCommitsNode) OnAdd(ctx context.Context) {
 	_ = h.commitIter.ForEach(func(commit *object.Commit) error {
 		node := newCommitNode(ctx, commit, h)
 		succ := h.AddChild(commit.Hash.String(), node, false)
@@ -31,7 +31,7 @@ func (h *hardlinkCommitListNode) OnAdd(ctx context.Context) {
 	h.AddChild("HEAD", headNode, false)
 }
 
-func newHardlinkCommitListNode(ref *plumbing.Reference, parent repoNodeEmbedder) (node *hardlinkCommitListNode, err error) {
+func newHardlinkCommitListNode(ref *plumbing.Reference, parent repoNodeEmbedder) (node *allCommitsNode, err error) {
 	opts := &git.LogOptions{}
 	var head *plumbing.Reference
 	if ref == nil {
@@ -48,11 +48,11 @@ func newHardlinkCommitListNode(ref *plumbing.Reference, parent repoNodeEmbedder)
 	if err != nil {
 		return
 	}
-	node = &hardlinkCommitListNode{}
+	node = &allCommitsNode{}
 	node.repo = parent.embeddedRepoNode().repo
 	node.head = head
 	node.commitIter = iter
 	return
 }
 
-var _ fs.NodeOnAdder = (*hardlinkCommitListNode)(nil)
+var _ fs.NodeOnAdder = (*allCommitsNode)(nil)
