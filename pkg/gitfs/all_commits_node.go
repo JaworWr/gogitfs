@@ -91,6 +91,14 @@ func (n *allCommitsNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	if name == "HEAD" {
+		headLink := n.getHeadLinkNode(ctx)
+		out.Attr.Mode = fuse.S_IFLNK | 0555
+		out.AttrValid = 2 << 62
+		out.EntryValid = 2 << 62
+		return headLink, fs.OK
+	}
+
 	hash := plumbing.NewHash(name)
 	commit, err := n.repo.CommitObject(hash)
 	if err != nil {
