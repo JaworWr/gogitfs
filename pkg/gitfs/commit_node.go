@@ -44,6 +44,13 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	} else if err != object.ErrParentNotFound {
 		error_handler.Fatal.HandleError(err)
 	}
+
+	logNode, err := newCommitLogNode(n.repo, n.commit.Hash, 2)
+	if err != nil {
+		error_handler.Fatal.HandleError(err)
+	}
+	child = n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFLNK})
+	n.AddChild("log", child, false)
 }
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
