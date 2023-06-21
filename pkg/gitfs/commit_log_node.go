@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -14,6 +15,7 @@ import (
 
 type commitLogNode struct {
 	repoNode
+	from     plumbing.Hash
 	iter     object.CommitIter
 	basePath *string
 	attr     fuse.Attr
@@ -35,6 +37,9 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 
 func (n *commitLogNode) addHardlinks(ctx context.Context) {
 	_ = n.iter.ForEach(func(commit *object.Commit) error {
+		if commit.Hash == n.from {
+			return nil
+		}
 		node := newCommitNode(ctx, commit, n)
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
@@ -46,6 +51,9 @@ func (n *commitLogNode) addHardlinks(ctx context.Context) {
 
 func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 	_ = n.iter.ForEach(func(commit *object.Commit) error {
+		if commit.Hash == n.from {
+			return nil
+		}
 		attr := commitAttr(commit)
 		attr.Mode = 0555
 		path := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
@@ -67,6 +75,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, linkLevels int)
 	}
 	node := &commitLogNode{}
 	node.repo = repo
+	node.from = from.Hash
 	node.iter = iter
 	node.attr = commitAttr(from)
 	node.attr.Mode = 0555
