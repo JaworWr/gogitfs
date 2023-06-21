@@ -12,6 +12,8 @@ import (
 	"syscall"
 )
 
+const HeadAttrValid = 30
+
 type allCommitsNode struct {
 	repoNode
 	headLink *fs.Inode
@@ -128,10 +130,16 @@ func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Err
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	var err error
 	if name == "HEAD" {
 		headLink := n.getHeadLinkNode(ctx)
-		out.Attr.Mode = fuse.S_IFLNK | 0555
-		out.AttrValid = 2 << 62
+		out.Attr, err = headAttr(n)
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+			return nil, syscall.EIO
+		}
+		out.Mode = fuse.S_IFLNK | 0555
+		out.AttrValid = HeadAttrValid
 		out.EntryValid = 2 << 62
 		return headLink, fs.OK
 	}
@@ -148,6 +156,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	}
 	node := newCommitNode(ctx, commit, n)
 
+	out.Attr = commitAttr(commit)
 	out.Mode = syscall.S_IFDIR | 0555
 	out.AttrValid = 2 << 62
 	out.EntryValid = 2 << 62
@@ -162,7 +171,7 @@ func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.A
 	}
 	out.Attr = attr
 	out.Attr.Mode = 0555
-	out.AttrValid = 30
+	out.AttrValid = HeadAttrValid
 	return fs.OK
 }
 
