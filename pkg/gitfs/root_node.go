@@ -13,13 +13,7 @@ type RootNode struct {
 }
 
 func (n *RootNode) OnAdd(ctx context.Context) {
-	head, err := n.repo.Head()
-	if err != nil {
-		error_handler.Fatal.HandleError(err)
-		return
-	}
-	// TODO: this won't work, instead we need a type which will dynamically update itself
-	node, err := newHardlinkCommitListNode(head, n)
+	node, err := newHardlinkCommitListNode(n.repo)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 		return

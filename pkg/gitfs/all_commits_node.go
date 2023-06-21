@@ -31,25 +31,17 @@ func (h *allCommitsNode) OnAdd(ctx context.Context) {
 	h.AddChild("HEAD", headNode, false)
 }
 
-func newHardlinkCommitListNode(ref *plumbing.Reference, parent repoNodeEmbedder) (node *allCommitsNode, err error) {
-	opts := &git.LogOptions{}
-	var head *plumbing.Reference
-	if ref == nil {
-		opts.All = true
-		head, err = parent.embeddedRepoNode().repo.Head()
-		if err != nil {
-			return
-		}
-	} else {
-		opts.From = ref.Hash()
-		head = ref
+func newHardlinkCommitListNode(repo *git.Repository) (node *allCommitsNode, err error) {
+	head, err := repo.Head()
+	if err != nil {
+		return
 	}
-	iter, err := parent.embeddedRepoNode().repo.Log(opts)
+	iter, err := repo.CommitObjects()
 	if err != nil {
 		return
 	}
 	node = &allCommitsNode{}
-	node.repo = parent.embeddedRepoNode().repo
+	node.repo = repo
 	node.head = head
 	node.commitIter = iter
 	return
