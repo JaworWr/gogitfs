@@ -12,7 +12,7 @@ type RootNode struct {
 }
 
 func (n *RootNode) OnAdd(ctx context.Context) {
-	node := newHardlinkCommitListNode(n.repo)
+	node := newAllCommitsNode(n.repo)
 	child := n.NewPersistentInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
 }

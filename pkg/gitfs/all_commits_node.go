@@ -14,6 +14,7 @@ import (
 
 type allCommitsNode struct {
 	repoNode
+	headLink *fs.Inode
 }
 
 type headLinkNode struct {
@@ -108,10 +109,20 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	return node, fs.OK
 }
 
-func newHardlinkCommitListNode(repo *git.Repository) *allCommitsNode {
+func newAllCommitsNode(repo *git.Repository) *allCommitsNode {
 	node := &allCommitsNode{}
 	node.repo = repo
 	return node
+}
+
+func (n *allCommitsNode) getHeadLinkNode(ctx context.Context) *fs.Inode {
+	if n.headLink == nil {
+		headLink := &headLinkNode{}
+		headLink.repo = n.repo
+		hlNode := n.NewInode(ctx, headLink, fs.StableAttr{Mode: fuse.S_IFLNK})
+		n.headLink = hlNode
+	}
+	return n.headLink
 }
 
 var _ fs.NodeLookuper = (*allCommitsNode)(nil)
