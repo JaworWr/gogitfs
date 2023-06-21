@@ -14,13 +14,14 @@ type commitNode struct {
 }
 
 func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
-	out.Attr = n.attr()
+	out.Attr = commitAttr(n.commit)
 	out.Mode = 0555
+	out.AttrValid = 2 << 62
 	return 0
 }
 
 func (n *commitNode) OnAdd(ctx context.Context) {
-	attr := n.attr()
+	attr := commitAttr(n.commit)
 	attr.Mode = 0444
 	hashNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Hash.String())}
 	child := n.NewPersistentInode(ctx, hashNode, fs.StableAttr{Mode: fuse.S_IFREG})
@@ -40,8 +41,8 @@ func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEm
 	return commitNodeMgr.GetOrInsert(ctx, commit.Hash, fuse.S_IFDIR, parent, builder, false)
 }
 
-func (n *commitNode) attr() fuse.Attr {
-	commitTime := (uint64)(n.commit.Author.When.Unix())
+func commitAttr(commit *object.Commit) fuse.Attr {
+	commitTime := (uint64)(commit.Author.When.Unix())
 	return fuse.Attr{
 		Atime: commitTime,
 		Ctime: commitTime,
