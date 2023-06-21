@@ -1,9 +1,14 @@
 package gitfs
 
 import (
+	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/hanwen/go-fuse/v2/fs"
+	"github.com/hanwen/go-fuse/v2/fuse"
+	"log"
 	"strings"
 )
 
@@ -11,6 +16,40 @@ type commitLogNode struct {
 	repoNode
 	iter     object.CommitIter
 	basePath *string
+}
+
+func (n *commitLogNode) OnAdd(ctx context.Context) {
+	if n.basePath == nil {
+		n.addHardlinks(ctx)
+	} else {
+		n.addSymlinks(ctx, *n.basePath)
+	}
+}
+
+func (n *commitLogNode) addHardlinks(ctx context.Context) {
+	_ = n.iter.ForEach(func(commit *object.Commit) error {
+		node := newCommitNode(ctx, commit, n)
+		succ := n.AddChild(commit.Hash.String(), node, false)
+		if !succ {
+			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+		}
+		return nil
+	})
+}
+
+func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
+	_ = n.iter.ForEach(func(commit *object.Commit) error {
+		attr := commitAttr(commit)
+		attr.Mode = 0555
+		path := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
+		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
+		succ := n.AddChild(commit.Hash.String(), node, false)
+		if !succ {
+			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+		}
+		return nil
+	})
 }
 
 func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) (*commitLogNode, error) {
@@ -34,3 +73,5 @@ func newCommitLogNode(repo *git.Repository, from plumbing.Hash, linkLevels int) 
 	}
 	return node, nil
 }
+
+var _ fs.NodeOnAdder = (*commitLogNode)(nil)
