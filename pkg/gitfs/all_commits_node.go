@@ -57,7 +57,7 @@ func (s *commitDirStream) update() {
 }
 
 func (s *commitDirStream) HasNext() bool {
-	return s.next != nil
+	return s.next != nil || s.headLink != nil
 }
 
 func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
@@ -86,16 +86,18 @@ func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 }
 
 func (s *commitDirStream) Close() {
+	s.next = nil
+	s.headLink = nil
 	s.iter.Close()
 }
 
-func (n *allCommitsNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	iter, err := n.repo.CommitObjects()
 	if err != nil {
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	return newCommitDirStream(iter, n.headLink), fs.OK
+	return newCommitDirStream(iter, n.getHeadLinkNode(ctx)), fs.OK
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
