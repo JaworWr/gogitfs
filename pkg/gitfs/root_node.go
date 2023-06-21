@@ -6,41 +6,26 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
-	"syscall"
 )
 
 type RootNode struct {
 	repoNode
 }
 
-func (n *RootNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
-	out.Mode = 0555
-	out.AttrValid = 15
-	out.EntryValid = 15
-
-	switch name {
-	case "commits":
-		head, err := n.repo.Head()
-		if err != nil {
-			error_handler.Logging.HandleError(err)
-			return nil, syscall.EIO
-		}
-		node, err := newHardlinkCommitListNode(head, n)
-		if err != nil {
-			error_handler.Logging.HandleError(err)
-			return nil, syscall.EIO
-		}
-		child := n.NewInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
-		return child, 0
-	default:
-		return nil, syscall.ENOENT
+func (n *RootNode) OnAdd(ctx context.Context) {
+	head, err := n.repo.Head()
+	if err != nil {
+		error_handler.Fatal.HandleError(err)
+		return
 	}
-}
-
-func (n *RootNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
-	commitEntry := fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "commits"}
-	stream := fs.NewListDirStream([]fuse.DirEntry{commitEntry})
-	return stream, 0
+	// TODO: this won't work, instead we need a type which will dynamically update itself
+	node, err := newHardlinkCommitListNode(head, n)
+	if err != nil {
+		error_handler.Fatal.HandleError(err)
+		return
+	}
+	child := n.NewPersistentInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
+	n.AddChild("commits", child, false)
 }
 
 func NewRootNode(path string) (node *RootNode, err error) {
@@ -55,5 +40,4 @@ func NewRootNode(path string) (node *RootNode, err error) {
 	return
 }
 
-var _ fs.NodeLookuper = (*RootNode)(nil)
-var _ fs.NodeReaddirer = (*RootNode)(nil)
+var _ fs.NodeOnAdder = (*RootNode)(nil)

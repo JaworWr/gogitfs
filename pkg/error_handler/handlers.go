@@ -28,3 +28,11 @@ func (h noOpErrorHandler) HandleError(_ error) {
 }
 
 var Logging = MakeLoggingHandler(noOpErrorHandler{})
+
+type fatalErrorHandler struct{}
+
+func (h fatalErrorHandler) HandleError(err error) {
+	log.Fatalf("[ERROR] %v", err.Error())
+}
+
+var Fatal fatalErrorHandler
