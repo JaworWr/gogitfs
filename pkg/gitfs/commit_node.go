@@ -2,9 +2,11 @@ package gitfs
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/error_handler"
 	"syscall"
 )
 
@@ -30,6 +32,18 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	msgNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Message)}
 	child = n.NewPersistentInode(ctx, msgNode, fs.StableAttr{Mode: fuse.S_IFREG})
 	n.AddChild("message", child, false)
+
+	parent, err := n.commit.Parent(0)
+	if err == nil {
+		parentAttr := commitAttr(parent)
+		parentAttr.Mode = 0555
+		path := fmt.Sprintf("../%v", parent.Hash.String())
+		parentNode := &fs.MemSymlink{Attr: parentAttr, Data: []byte(path)}
+		child = n.NewPersistentInode(ctx, parentNode, fs.StableAttr{Mode: fuse.S_IFLNK})
+		n.AddChild("parent", child, false)
+	} else if err != object.ErrParentNotFound {
+		error_handler.Fatal.HandleError(err)
+	}
 }
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
