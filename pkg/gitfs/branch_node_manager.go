@@ -25,12 +25,17 @@ func (n *branchNodeManager) getOrInsert(
 	ctx context.Context,
 	branch string,
 	commit *object.Commit,
-	parent fs.InodeEmbedder,
-) *fs.Inode {
+	parent repoNodeEmbedder,
+) (*fs.Inode, error) {
 	lastHash := n.lastCommit[branch]
 	overwrite := lastHash != commit.Hash
-	builder := func() fs.InodeEmbedder {
-		panic("Not implemented")
+	logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, 0)
+	if err != nil {
+		return nil, err
 	}
-	return n.inodeMgr.GetOrInsert(ctx, branch, fuse.S_IFDIR, parent, builder, overwrite)
+	builder := func() fs.InodeEmbedder {
+		return logNode
+	}
+	node := n.inodeMgr.GetOrInsert(ctx, branch, fuse.S_IFDIR, parent, builder, overwrite)
+	return node, nil
 }
