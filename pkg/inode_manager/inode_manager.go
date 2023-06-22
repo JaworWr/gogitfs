@@ -24,10 +24,10 @@ func (m *InodeManager) GetOrInsert(
 	mode uint32,
 	parent fs.InodeEmbedder,
 	builder func() fs.InodeEmbedder,
-	updateGen bool,
+	overwrite bool,
 ) *fs.Inode {
-	attr := m.InoStore.GetOrInsert(hash, updateGen)
+	attr := m.InoStore.GetOrInsert(hash, overwrite)
 	attr.Mode = mode
-	node := m.InodeStore.GetOrInsert(ctx, hash, attr, parent, builder)
+	node := m.InodeStore.GetOrInsert(ctx, hash, attr, parent, builder, overwrite)
 	return node
 }

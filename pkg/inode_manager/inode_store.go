@@ -22,10 +22,11 @@ func (s *InodeStore) GetOrInsert(
 	attr fs.StableAttr,
 	parent fs.InodeEmbedder,
 	builder func() fs.InodeEmbedder,
+	overwrite bool,
 ) *fs.Inode {
 	hashStr := hash.String()
 	inode, ok := s.inodes[hashStr]
-	if ok {
+	if ok && !overwrite {
 		return inode
 	}
 	newEmb := builder()
