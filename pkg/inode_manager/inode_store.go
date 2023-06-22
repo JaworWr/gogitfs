@@ -2,7 +2,6 @@ package inode_manager
 
 import (
 	"context"
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 )
 
@@ -18,19 +17,17 @@ func NewInodeStore() *InodeStore {
 
 func (s *InodeStore) GetOrInsert(
 	ctx context.Context,
-	hash fmt.Stringer,
-	attr fs.StableAttr,
+	key string, attr fs.StableAttr,
 	parent fs.InodeEmbedder,
 	builder func() fs.InodeEmbedder,
 	overwrite bool,
 ) *fs.Inode {
-	hashStr := hash.String()
-	inode, ok := s.inodes[hashStr]
+	inode, ok := s.inodes[key]
 	if ok && !overwrite {
 		return inode
 	}
 	newEmb := builder()
 	newNode := parent.EmbeddedInode().NewPersistentInode(ctx, newEmb, attr)
-	s.inodes[hashStr] = newNode
+	s.inodes[key] = newNode
 	return newNode
 }

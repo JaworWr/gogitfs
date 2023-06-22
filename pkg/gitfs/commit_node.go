@@ -59,7 +59,7 @@ func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEm
 		node.repo = parent.embeddedRepoNode().repo
 		return &node
 	}
-	return commitNodeMgr.GetOrInsert(ctx, commit.Hash, fuse.S_IFDIR, parent, builder, false)
+	return commitNodeMgr.GetOrInsert(ctx, commit.Hash.String(), fuse.S_IFDIR, parent, builder, false)
 }
 
 func commitAttr(commit *object.Commit) fuse.Attr {

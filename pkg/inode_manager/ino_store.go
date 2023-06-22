@@ -1,7 +1,6 @@
 package inode_manager
 
 import (
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 )
 
@@ -19,20 +18,19 @@ func NewInoStore(initialIno uint64) *InoStore {
 	}
 }
 
-func (s *InoStore) GetOrInsert(hash fmt.Stringer, updateGen bool) fs.StableAttr {
-	hashStr := hash.String()
-	ino, ok := s.inos[hashStr]
+func (s *InoStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
+	ino, ok := s.inos[key]
 	if ok {
-		gen := s.gens[hashStr]
+		gen := s.gens[key]
 		if updateGen {
 			gen += 1
-			s.gens[hashStr] += 1
+			s.gens[key] += 1
 		}
 		return fs.StableAttr{Ino: ino, Gen: gen}
 	}
 	result := fs.StableAttr{Ino: s.nextIno, Gen: 0}
-	s.inos[hashStr] = s.nextIno
+	s.inos[key] = s.nextIno
 	s.nextIno += 1
-	s.gens[hashStr] = 0
+	s.gens[key] = 0
 	return result
 }
