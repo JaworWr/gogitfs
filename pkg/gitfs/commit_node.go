@@ -45,7 +45,8 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 		error_handler.Fatal.HandleError(err)
 	}
 
-	logNode, err := newCommitLogNode(n.repo, n.commit, 2)
+	nodeOpts := commitLogNodeOpts{linkLevels: 2}
+	logNode, err := newCommitLogNode(n.repo, n.commit, nodeOpts)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}

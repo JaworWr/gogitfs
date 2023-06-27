@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -15,10 +14,12 @@ import (
 
 type commitLogNode struct {
 	repoNode
-	from     plumbing.Hash
-	iter     object.CommitIter
-	basePath *string
-	attr     fuse.Attr
+	from        *object.Commit
+	iter        object.CommitIter
+	basePath    *string
+	attr        fuse.Attr
+	includeHead bool
+	symlinkHead bool
 }
 
 func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
@@ -33,11 +34,19 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 	} else {
 		n.addSymlinks(ctx, *n.basePath)
 	}
+	if n.symlinkHead {
+		attr := commitAttr(n.from)
+		attr.Mode = 0555
+		path := n.from.Hash.String()
+		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
+		n.AddChild("HEAD", node, false)
+	}
 }
 
 func (n *commitLogNode) addHardlinks(ctx context.Context) {
 	_ = n.iter.ForEach(func(commit *object.Commit) error {
-		if commit.Hash == n.from {
+		if !n.includeHead && commit.Hash == n.from.Hash {
 			return nil
 		}
 		node := newCommitNode(ctx, commit, n)
@@ -51,7 +60,7 @@ func (n *commitLogNode) addHardlinks(ctx context.Context) {
 
 func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 	_ = n.iter.ForEach(func(commit *object.Commit) error {
-		if commit.Hash == n.from {
+		if !n.includeHead && commit.Hash == n.from.Hash {
 			return nil
 		}
 		attr := commitAttr(commit)
@@ -67,7 +76,13 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 	})
 }
 
-func newCommitLogNode(repo *git.Repository, from *object.Commit, linkLevels int) (*commitLogNode, error) {
+type commitLogNodeOpts struct {
+	linkLevels  int
+	includeHead bool
+	symlinkHead bool
+}
+
+func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commitLogNodeOpts) (*commitLogNode, error) {
 	opts := &git.LogOptions{From: from.Hash}
 	iter, err := repo.Log(opts)
 	if err != nil {
@@ -75,14 +90,16 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, linkLevels int)
 	}
 	node := &commitLogNode{}
 	node.repo = repo
-	node.from = from.Hash
+	node.from = from
 	node.iter = iter
+	node.includeHead = nodeOpts.includeHead
+	node.symlinkHead = nodeOpts.symlinkHead
 	node.attr = commitAttr(from)
 	node.attr.Mode = 0555
-	if linkLevels == 0 {
+	if nodeOpts.linkLevels == 0 {
 		node.basePath = nil
 	} else {
-		elems := make([]string, linkLevels)
+		elems := make([]string, nodeOpts.linkLevels)
 		for i := range elems {
 			elems[i] = ".."
 		}

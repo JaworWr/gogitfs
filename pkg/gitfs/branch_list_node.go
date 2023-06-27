@@ -2,7 +2,6 @@ package gitfs
 
 import (
 	"github.com/go-git/go-git/v5"
-	"github.com/hanwen/go-fuse/v2/fs"
 )
 
 type branchListNode struct {
@@ -15,5 +14,5 @@ func newBranchListNode(repo *git.Repository) *branchListNode {
 	return node
 }
 
-var _ fs.NodeLookuper = (*branchListNode)(nil)
-var _ fs.NodeReaddirer = (*branchListNode)(nil)
+//var _ fs.NodeLookuper = (*branchListNode)(nil)
+//var _ fs.NodeReaddirer = (*branchListNode)(nil)

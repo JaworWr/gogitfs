@@ -29,7 +29,8 @@ func (n *branchNodeManager) getOrInsert(
 ) (*fs.Inode, error) {
 	lastHash := n.lastCommit[branch]
 	overwrite := lastHash != commit.Hash
-	logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, 0)
+	nodeOpts := commitLogNodeOpts{linkLevels: 0}
+	logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, nodeOpts)
 	if err != nil {
 		return nil, err
 	}
