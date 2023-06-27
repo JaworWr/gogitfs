@@ -17,7 +17,8 @@ func NewInodeStore() *InodeStore {
 
 func (s *InodeStore) GetOrInsert(
 	ctx context.Context,
-	key string, attr fs.StableAttr,
+	key string,
+	attr fs.StableAttr,
 	parent fs.InodeEmbedder,
 	builder func() fs.InodeEmbedder,
 	overwrite bool,
