@@ -12,13 +12,13 @@ import (
 )
 
 type branchNodeManager struct {
-	inodeMgr   *inode_manager.InodeManager
+	inode_manager.InodeManager
 	lastCommit map[string]plumbing.Hash
 }
 
 func newBranchNodeManager(initialIno uint64) *branchNodeManager {
 	nodeMgr := &branchNodeManager{}
-	nodeMgr.inodeMgr = inode_manager.NewInodeManager(initialIno)
+	nodeMgr.InodeManager.Init(initialIno)
 	nodeMgr.lastCommit = make(map[string]plumbing.Hash)
 	return nodeMgr
 }
@@ -42,7 +42,7 @@ func (n *branchNodeManager) getOrInsert(
 	builder := func() fs.InodeEmbedder {
 		return logNode
 	}
-	node := n.inodeMgr.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
+	node := n.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
 	return commit, node, nil
 }
 

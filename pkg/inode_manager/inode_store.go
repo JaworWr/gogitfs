@@ -9,10 +9,8 @@ type InodeStore struct {
 	inodes map[string]*fs.Inode
 }
 
-func NewInodeStore() *InodeStore {
-	return &InodeStore{
-		inodes: make(map[string]*fs.Inode),
-	}
+func (s *InodeStore) Init() {
+	s.inodes = make(map[string]*fs.Inode)
 }
 
 func (s *InodeStore) GetOrInsert(

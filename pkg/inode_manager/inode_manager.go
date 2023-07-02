@@ -10,11 +10,9 @@ type InodeManager struct {
 	InodeStore *InodeStore
 }
 
-func NewInodeManager(initialIno uint64) *InodeManager {
-	return &InodeManager{
-		InoStore:   NewInoStore(initialIno),
-		InodeStore: NewInodeStore(),
-	}
+func (m *InodeManager) Init(initialIno uint64) {
+	m.InoStore.Init(initialIno)
+	m.InodeStore.Init()
 }
 
 func (m *InodeManager) GetOrInsert(

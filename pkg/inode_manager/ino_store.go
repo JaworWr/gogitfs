@@ -10,12 +10,10 @@ type InoStore struct {
 	gens    map[string]uint64
 }
 
-func NewInoStore(initialIno uint64) *InoStore {
-	return &InoStore{
-		nextIno: initialIno,
-		inos:    make(map[string]uint64),
-		gens:    make(map[string]uint64),
-	}
+func (s *InoStore) Init(initialIno uint64) {
+	s.nextIno = initialIno
+	s.inos = make(map[string]uint64)
+	s.gens = make(map[string]uint64)
 }
 
 func (s *InoStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
