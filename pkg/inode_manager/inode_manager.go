@@ -2,7 +2,6 @@ package inode_manager
 
 import (
 	"context"
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 )
 
@@ -11,23 +10,23 @@ type InodeManager struct {
 	InodeStore *InodeStore
 }
 
-func NewInodeManager(initialIno uint64) *InodeManager {
-	return &InodeManager{
-		InoStore:   NewInoStore(initialIno),
-		InodeStore: NewInodeStore(),
-	}
+func (m *InodeManager) Init(initialIno uint64) {
+	m.InoStore = &InoStore{}
+	m.InoStore.Init(initialIno)
+	m.InodeStore = &InodeStore{}
+	m.InodeStore.Init()
 }
 
 func (m *InodeManager) GetOrInsert(
 	ctx context.Context,
-	hash fmt.Stringer,
+	key string,
 	mode uint32,
 	parent fs.InodeEmbedder,
-	builder func() fs.InodeEmbedder,
-	updateGen bool,
-) *fs.Inode {
-	attr := m.InoStore.GetOrInsert(hash, updateGen)
+	builder func() (fs.InodeEmbedder, error),
+	overwrite bool,
+) (*fs.Inode, error) {
+	attr := m.InoStore.GetOrInsert(key, overwrite)
 	attr.Mode = mode
-	node := m.InodeStore.GetOrInsert(ctx, hash, attr, parent, builder)
-	return node
+	node, err := m.InodeStore.GetOrInsert(ctx, key, attr, parent, builder, overwrite)
+	return node, err
 }

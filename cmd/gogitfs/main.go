@@ -11,5 +11,4 @@ func main() {
 	if err != nil {
 		log.Fatalf("An error occurred - cannot start the filesystem daemon.\n%v", err.Error())
 	}
-
 }

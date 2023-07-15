@@ -108,7 +108,7 @@ func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 	}
 
 	entry.Name = s.next.Hash.String()
-	entry.Ino = commitNodeMgr.InoStore.GetOrInsert(s.next.Hash, false).Ino
+	entry.Ino = commitNodeMgr.InoStore.GetOrInsert(s.next.Hash.String(), false).Ino
 	entry.Mode = fuse.S_IFDIR
 	s.update()
 	return

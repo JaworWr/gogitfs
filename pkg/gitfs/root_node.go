@@ -12,9 +12,13 @@ type RootNode struct {
 }
 
 func (n *RootNode) OnAdd(ctx context.Context) {
-	node := newAllCommitsNode(n.repo)
-	child := n.NewPersistentInode(ctx, node, fs.StableAttr{Mode: fuse.S_IFDIR})
+	acNode := newAllCommitsNode(n.repo)
+	child := n.NewPersistentInode(ctx, acNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
+
+	blNode := newBranchListNode(n.repo)
+	child = n.NewPersistentInode(ctx, blNode, fs.StableAttr{Mode: fuse.S_IFDIR})
+	n.AddChild("branches", child, false)
 }
 
 func NewRootNode(path string) (node *RootNode, err error) {

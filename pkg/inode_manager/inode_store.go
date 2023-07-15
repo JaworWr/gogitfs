@@ -2,7 +2,6 @@ package inode_manager
 
 import (
 	"context"
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 )
 
@@ -10,26 +9,27 @@ type InodeStore struct {
 	inodes map[string]*fs.Inode
 }
 
-func NewInodeStore() *InodeStore {
-	return &InodeStore{
-		inodes: make(map[string]*fs.Inode),
-	}
+func (s *InodeStore) Init() {
+	s.inodes = make(map[string]*fs.Inode)
 }
 
 func (s *InodeStore) GetOrInsert(
 	ctx context.Context,
-	hash fmt.Stringer,
+	key string,
 	attr fs.StableAttr,
 	parent fs.InodeEmbedder,
-	builder func() fs.InodeEmbedder,
-) *fs.Inode {
-	hashStr := hash.String()
-	inode, ok := s.inodes[hashStr]
-	if ok {
-		return inode
+	builder func() (fs.InodeEmbedder, error),
+	overwrite bool,
+) (*fs.Inode, error) {
+	inode, ok := s.inodes[key]
+	if ok && !overwrite {
+		return inode, nil
 	}
-	newEmb := builder()
+	newEmb, err := builder()
+	if err != nil {
+		return nil, err
+	}
 	newNode := parent.EmbeddedInode().NewPersistentInode(ctx, newEmb, attr)
-	s.inodes[hashStr] = newNode
-	return newNode
+	s.inodes[key] = newNode
+	return newNode, nil
 }
