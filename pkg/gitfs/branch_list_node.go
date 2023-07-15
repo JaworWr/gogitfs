@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"io"
 	"syscall"
 )
 
@@ -24,7 +25,14 @@ type branchDirStream struct {
 }
 
 func (s *branchDirStream) update() {
-
+	next, err := s.iter.Next()
+	if err != nil {
+		next = nil
+		if err != io.EOF {
+			s.err = err
+		}
+	}
+	s.next = next
 }
 
 func (s *branchDirStream) HasNext() bool {
