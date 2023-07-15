@@ -50,7 +50,7 @@ func (s *branchDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 		return
 	}
 	entry.Name = s.next.Name().Short()
-	//entry.Ino
+	entry.Ino = branchNodeMgr.InoStore.GetOrInsert(s.next.Hash().String(), false).Ino
 	entry.Mode = fuse.S_IFDIR
 	s.update()
 	return
