@@ -11,7 +11,9 @@ type InodeManager struct {
 }
 
 func (m *InodeManager) Init(initialIno uint64) {
+	m.InoStore = &InoStore{}
 	m.InoStore.Init(initialIno)
+	m.InodeStore = &InodeStore{}
 	m.InodeStore.Init()
 }
 
