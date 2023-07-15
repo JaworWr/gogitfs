@@ -16,11 +16,9 @@ type branchNodeManager struct {
 	lastCommit map[string]plumbing.Hash
 }
 
-func newBranchNodeManager(initialIno uint64) *branchNodeManager {
-	nodeMgr := &branchNodeManager{}
-	nodeMgr.InodeManager.Init(initialIno)
-	nodeMgr.lastCommit = make(map[string]plumbing.Hash)
-	return nodeMgr
+func (m *branchNodeManager) init(initialIno uint64) {
+	m.InodeManager.Init(initialIno)
+	m.lastCommit = make(map[string]plumbing.Hash)
 }
 
 func (n *branchNodeManager) getOrInsert(

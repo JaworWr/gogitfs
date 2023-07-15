@@ -15,6 +15,7 @@ func Init() {
 	}
 	commitNodeMgr = &inode_manager.InodeManager{}
 	commitNodeMgr.Init(commitIno)
-	branchNodeMgr = newBranchNodeManager(branchIno)
+	branchNodeMgr = &branchNodeManager{}
+	branchNodeMgr.init(branchIno)
 	initRun = true
 }
