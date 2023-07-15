@@ -24,6 +24,12 @@ type branchDirStream struct {
 	iter storer.ReferenceIter
 }
 
+func newBranchDirStream(iter storer.ReferenceIter) *branchDirStream {
+	stream := &branchDirStream{iter: iter}
+	stream.update()
+	return stream
+}
+
 func (s *branchDirStream) update() {
 	next, err := s.iter.Next()
 	if err != nil {
@@ -67,7 +73,7 @@ func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	return &branchDirStream{iter: iter}, fs.OK
+	return newBranchDirStream(iter), fs.OK
 }
 
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
