@@ -55,12 +55,13 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 }
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
-	builder := func() fs.InodeEmbedder {
+	builder := func() (fs.InodeEmbedder, error) {
 		node := commitNode{commit: commit}
 		node.repo = parent.embeddedRepoNode().repo
-		return &node
+		return &node, nil
 	}
-	return commitNodeMgr.GetOrInsert(ctx, commit.Hash.String(), fuse.S_IFDIR, parent, builder, false)
+	node, _ := commitNodeMgr.GetOrInsert(ctx, commit.Hash.String(), fuse.S_IFDIR, parent, builder, false)
+	return node
 }
 
 func commitAttr(commit *object.Commit) fuse.Attr {

@@ -18,15 +18,18 @@ func (s *InodeStore) GetOrInsert(
 	key string,
 	attr fs.StableAttr,
 	parent fs.InodeEmbedder,
-	builder func() fs.InodeEmbedder,
+	builder func() (fs.InodeEmbedder, error),
 	overwrite bool,
-) *fs.Inode {
+) (*fs.Inode, error) {
 	inode, ok := s.inodes[key]
 	if ok && !overwrite {
-		return inode
+		return inode, nil
 	}
-	newEmb := builder()
+	newEmb, err := builder()
+	if err != nil {
+		return nil, err
+	}
 	newNode := parent.EmbeddedInode().NewPersistentInode(ctx, newEmb, attr)
 	s.inodes[key] = newNode
-	return newNode
+	return newNode, nil
 }

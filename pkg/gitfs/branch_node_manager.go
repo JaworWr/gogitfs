@@ -32,15 +32,21 @@ func (n *branchNodeManager) getOrInsert(
 		return nil, nil, err
 	}
 	overwrite := lastHash != commit.Hash
-	nodeOpts := commitLogNodeOpts{linkLevels: 0, includeHead: true, symlinkHead: true}
-	logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, nodeOpts)
 	if err != nil {
 		return nil, nil, err
 	}
-	builder := func() fs.InodeEmbedder {
-		return logNode
+	builder := func() (fs.InodeEmbedder, error) {
+		nodeOpts := commitLogNodeOpts{linkLevels: 0, includeHead: true, symlinkHead: true}
+		logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, nodeOpts)
+		if err != nil {
+			return nil, err
+		}
+		return logNode, nil
 	}
-	node := n.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
+	node, err := n.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
+	if err != nil {
+		return nil, nil, err
+	}
 	return commit, node, nil
 }
 
