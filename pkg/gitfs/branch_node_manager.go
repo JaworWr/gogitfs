@@ -21,12 +21,12 @@ func (m *branchNodeManager) init(initialIno uint64) {
 	m.lastCommit = make(map[string]plumbing.Hash)
 }
 
-func (n *branchNodeManager) getOrInsert(
+func (m *branchNodeManager) getOrInsert(
 	ctx context.Context,
 	branch *config.Branch,
 	parent repoNodeEmbedder,
 ) (*object.Commit, *fs.Inode, error) {
-	lastHash := n.lastCommit[branch.Name]
+	lastHash := m.lastCommit[branch.Name]
 	commit, err := getBranchCommit(parent.embeddedRepoNode().repo, branch)
 	if err != nil {
 		return nil, nil, err
@@ -43,7 +43,7 @@ func (n *branchNodeManager) getOrInsert(
 		}
 		return logNode, nil
 	}
-	node, err := n.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
+	node, err := m.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -61,6 +61,15 @@ func (s *branchDirStream) Close() {
 	s.iter.Close()
 }
 
+func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+	iter, err := n.repo.Branches()
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return nil, syscall.EIO
+	}
+	return &branchDirStream{iter: iter}, fs.OK
+}
+
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
 	branch, err := n.repo.Branch(name)
 	if err != nil {
@@ -90,5 +99,4 @@ func newBranchListNode(repo *git.Repository) *branchListNode {
 }
 
 var _ fs.NodeLookuper = (*branchListNode)(nil)
-
-//var _ fs.NodeReaddirer = (*branchListNode)(nil)
+var _ fs.NodeReaddirer = (*branchListNode)(nil)
