@@ -2,21 +2,26 @@ package inode_manager
 
 import (
 	"github.com/hanwen/go-fuse/v2/fs"
+	"sync"
 )
 
 type InoStore struct {
+	lock    *sync.Mutex
 	nextIno uint64
 	inos    map[string]uint64
 	gens    map[string]uint64
 }
 
 func (s *InoStore) Init(initialIno uint64) {
+	s.lock = &sync.Mutex{}
 	s.nextIno = initialIno
 	s.inos = make(map[string]uint64)
 	s.gens = make(map[string]uint64)
 }
 
 func (s *InoStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	ino, ok := s.inos[key]
 	if ok {
 		gen := s.gens[key]

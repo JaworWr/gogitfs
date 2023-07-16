@@ -9,15 +9,18 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/inode_manager"
+	"sync"
 )
 
 type branchNodeManager struct {
 	inode_manager.InodeManager
+	lock       *sync.Mutex
 	lastCommit map[string]plumbing.Hash
 }
 
 func (m *branchNodeManager) init(initialIno uint64) {
 	m.InodeManager.Init(initialIno)
+	m.lock = &sync.Mutex{}
 	m.lastCommit = make(map[string]plumbing.Hash)
 }
 
@@ -26,6 +29,8 @@ func (m *branchNodeManager) getOrInsert(
 	branch *config.Branch,
 	parent repoNodeEmbedder,
 ) (*object.Commit, *fs.Inode, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	lastHash := m.lastCommit[branch.Name]
 	commit, err := getBranchCommit(parent.embeddedRepoNode().repo, branch)
 	if err != nil {
