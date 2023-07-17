@@ -16,6 +16,7 @@ const (
 	Method
 )
 
+// ProcessFuncName extract desired parts from fully qualified function name
 func ProcessFuncName(fullName string, kind FuncName) (name string) {
 	switch kind {
 	case Full:
@@ -30,6 +31,10 @@ func ProcessFuncName(fullName string, kind FuncName) (name string) {
 	return
 }
 
+// CurrentFuncName get current function name
+// skip: how many frames to skip after the caller of CurrentFuncName
+// i.e. pass 0 to call the coller of CurrentFuncName, 1 for its caller etc.
+// kind: which part of the function name to return
 func CurrentFuncName(skip int, kind FuncName) string {
 	pc := make([]uintptr, 16)
 	n := runtime.Callers(skip+2, pc)
