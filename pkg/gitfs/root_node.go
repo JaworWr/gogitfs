@@ -5,13 +5,19 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/logging"
 )
 
 type RootNode struct {
 	repoNode
 }
 
+func (n *RootNode) CallLogInfo() map[string]string {
+	return nil
+}
+
 func (n *RootNode) OnAdd(ctx context.Context) {
+	logging.LogCall(n)
 	acNode := newAllCommitsNode(n.repo)
 	child := n.NewPersistentInode(ctx, acNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
