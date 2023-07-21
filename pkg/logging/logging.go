@@ -18,14 +18,14 @@ const (
 
 // ProcessFuncName extract desired parts from fully qualified function name
 func ProcessFuncName(fullName string, kind FuncName) (name string) {
+	pathParts := strings.Split(fullName, "/")
+	parts := strings.Split(pathParts[len(pathParts)-1], ".")
 	switch kind {
 	case Full:
 		name = fullName
 	case Class:
-		parts := strings.Split(fullName, ".")
 		name = strings.Join(parts[len(parts)-2:], ".")
 	case Method:
-		parts := strings.Split(fullName, ".")
 		name = parts[len(parts)-1]
 	}
 	return
