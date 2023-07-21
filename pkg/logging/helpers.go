@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 	"strings"
 )
@@ -75,7 +74,7 @@ func LogCall(l CallLogInfoer, extra map[string]string) {
 	info := l.CallLogInfo()
 	info = concatMaps(info, extra)
 	methodInfo := formatInfo(info)
-	log.Printf("Called %v (%v)", methodName, methodInfo)
+	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
 }
 
 func BoolToStr(b bool) string {

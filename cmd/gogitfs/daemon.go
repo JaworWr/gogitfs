@@ -8,7 +8,6 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs"
 	"gogitfs/pkg/logging"
-	"log"
 	"time"
 )
 
@@ -43,13 +42,14 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	errHandler = error_handler.MakeLoggingHandler(errHandler)
 	opts := options{}
 	opts.parse(errHandler)
-	log.Printf("Log level: %v\n", opts.logLevel)
-	log.Printf("Repository path: %v\n", opts.repoDir)
+	logging.Init(opts.logLevel)
+	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel)
+	logging.InfoLog.Printf("Repository path: %v\n", opts.repoDir)
 	root, err := gitfs.NewRootNode(opts.repoDir)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
-	log.Printf("Mounting in %v\n", opts.mountDir)
+	logging.InfoLog.Printf("Mounting in %v\n", opts.mountDir)
 	h := 6 * time.Hour
 	fsOpts := fs.Options{
 		AttrTimeout:  &h,
@@ -61,7 +61,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	}
 	succHandler.HandleSuccess()
 	server.Wait()
-	log.Printf("Exiting")
+	logging.InfoLog.Printf("Exiting")
 }
 
 var _ daemon.ProcessInfo = (*gogitfsDaemon)(nil)

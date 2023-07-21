@@ -8,7 +8,6 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/logging"
-	"log"
 	"strings"
 	"syscall"
 )
@@ -67,7 +66,7 @@ func (n *commitLogNode) addHardlinks(ctx context.Context) {
 		node := newCommitNode(ctx, commit, n)
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
-			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+			logging.WarningLog.Printf("Duplicate commit node: %v\n", commit.Hash.String())
 		}
 		return nil
 	})
@@ -85,7 +84,7 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
-			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+			logging.WarningLog.Printf("Duplicate commit node: %v\n", commit.Hash.String())
 		}
 		return nil
 	})
