@@ -1,6 +1,7 @@
 package error_handler
 
 import (
+	"gogitfs/pkg/logging"
 	"log"
 )
 
@@ -13,7 +14,8 @@ type LogHandlerWrapper struct {
 }
 
 func (h *LogHandlerWrapper) HandleError(err error) {
-	log.Printf("[ERROR] %v", err.Error())
+	funcname := logging.CurrentFuncName(1, logging.Full)
+	log.Printf("[ERROR] [%v] %v", funcname, err.Error())
 	h.next.HandleError(err)
 }
 
@@ -32,7 +34,8 @@ var Logging = MakeLoggingHandler(noOpErrorHandler{})
 type fatalErrorHandler struct{}
 
 func (h fatalErrorHandler) HandleError(err error) {
-	log.Fatalf("[ERROR] %v", err.Error())
+	funcname := logging.CurrentFuncName(1, logging.Full)
+	log.Fatalf("[ERROR] [%v] %v", funcname, err.Error())
 }
 
 var Fatal fatalErrorHandler
