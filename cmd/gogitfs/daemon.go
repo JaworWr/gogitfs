@@ -1,13 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs"
 	"log"
-	"os"
 	"time"
 )
 
@@ -21,26 +21,40 @@ func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 	return nil
 }
 
-func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
-	errHandler = error_handler.MakeLoggingHandler(errHandler)
-	if len(os.Args) < 3 {
+type options struct {
+	repoDir   string
+	mountDir  string
+	verbosity int
+}
+
+func (o *options) parse(errHandler error_handler.ErrorHandler) {
+	flag.IntVar(&o.verbosity, "verbosity", 0, "verbosity level")
+	flag.Parse()
+	if flag.NArg() < 2 {
 		err := fmt.Errorf("not enough arguments. Usage: gogitfs <repo-path> <mount-path>")
 		errHandler.HandleError(err)
 	}
-	repoDir := os.Args[1]
-	mountDir := os.Args[2]
-	log.Printf("Repository path: %v\n", repoDir)
-	root, err := gitfs.NewRootNode(repoDir)
+	o.repoDir = flag.Arg(0)
+	o.mountDir = flag.Arg(1)
+}
+
+func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
+	errHandler = error_handler.MakeLoggingHandler(errHandler)
+	opts := options{}
+	opts.parse(errHandler)
+	log.Printf("Verbosity: %v\n", opts.verbosity)
+	log.Printf("Repository path: %v\n", opts.repoDir)
+	root, err := gitfs.NewRootNode(opts.repoDir)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
-	log.Printf("Mounting in %v\n", mountDir)
+	log.Printf("Mounting in %v\n", opts.mountDir)
 	h := 6 * time.Hour
-	opts := fs.Options{
+	fsOpts := fs.Options{
 		AttrTimeout:  &h,
 		EntryTimeout: &h,
 	}
-	server, err := fs.Mount(mountDir, root, &opts)
+	server, err := fs.Mount(opts.mountDir, root, &fsOpts)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
