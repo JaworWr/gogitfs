@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"golang.org/x/exp/maps"
 	"log"
 	"runtime"
 	"strings"
@@ -49,8 +50,7 @@ type CallLogInfoer interface {
 	CallLogInfo() map[string]string
 }
 
-func formatInfo(l CallLogInfoer) string {
-	info := l.CallLogInfo()
+func formatInfo(info map[string]string) string {
 	parts := make([]string, 0)
 	for k, v := range info {
 		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
@@ -61,8 +61,10 @@ func formatInfo(l CallLogInfoer) string {
 // LogCall log function call
 // the format is Called <method> (<key>=<value>)
 // with key, value returned by CallLogInfo()
-func LogCall(l CallLogInfoer) {
+func LogCall(l CallLogInfoer, extra map[string]string) {
 	methodName := CurrentFuncName(1, Class)
-	methodInfo := formatInfo(l)
+	info := l.CallLogInfo()
+	maps.Copy(info, extra)
+	methodInfo := formatInfo(info)
 	log.Printf("Called %v (%v)", methodName, methodInfo)
 }

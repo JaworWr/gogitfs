@@ -17,7 +17,7 @@ func (n *RootNode) CallLogInfo() map[string]string {
 }
 
 func (n *RootNode) OnAdd(ctx context.Context) {
-	logging.LogCall(n)
+	logging.LogCall(n, nil)
 	acNode := newAllCommitsNode(n.repo)
 	child := n.NewPersistentInode(ctx, acNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
