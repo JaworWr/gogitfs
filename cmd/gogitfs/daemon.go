@@ -7,6 +7,7 @@ import (
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs"
+	"gogitfs/pkg/logging"
 	"log"
 	"time"
 )
@@ -22,13 +23,13 @@ func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 }
 
 type options struct {
-	repoDir   string
-	mountDir  string
-	verbosity int
+	repoDir  string
+	mountDir string
+	logLevel logging.LogLevelFlag
 }
 
 func (o *options) parse(errHandler error_handler.ErrorHandler) {
-	flag.IntVar(&o.verbosity, "verbosity", 0, "verbosity level")
+	flag.IntVar((*int)(&o.logLevel), "loglevel", int(logging.Info), "log level")
 	flag.Parse()
 	if flag.NArg() < 2 {
 		err := fmt.Errorf("not enough arguments. Usage: gogitfs <repo-path> <mount-path>")
@@ -42,7 +43,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	errHandler = error_handler.MakeLoggingHandler(errHandler)
 	opts := options{}
 	opts.parse(errHandler)
-	log.Printf("Verbosity: %v\n", opts.verbosity)
+	log.Printf("Log level: %v\n", opts.logLevel)
 	log.Printf("Repository path: %v\n", opts.repoDir)
 	root, err := gitfs.NewRootNode(opts.repoDir)
 	if err != nil {
