@@ -8,6 +8,7 @@ import (
 	"gogitfs/pkg/gitfs"
 	"log"
 	"os"
+	"time"
 )
 
 type gogitfsDaemon struct{}
@@ -34,7 +35,12 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 		errHandler.HandleError(err)
 	}
 	log.Printf("Mounting in %v\n", mountDir)
-	server, err := fs.Mount(mountDir, root, &fs.Options{})
+	h := time.Hour
+	opts := fs.Options{
+		AttrTimeout:  &h,
+		EntryTimeout: &h,
+	}
+	server, err := fs.Mount(mountDir, root, &opts)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
