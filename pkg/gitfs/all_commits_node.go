@@ -8,8 +8,11 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/logging"
 	"io"
+	"strings"
 	"syscall"
+	"time"
 )
 
 const HeadAttrValid = 30
@@ -19,17 +22,37 @@ type allCommitsNode struct {
 	headLink *fs.Inode
 }
 
+func (n *allCommitsNode) CallLogInfo() map[string]string {
+	return nil
+}
+
 type headLinkNode struct {
 	repoNode
 }
 
-func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
+func (n *headLinkNode) CallLogInfo() map[string]string {
+	commit, err := headCommit(n)
+	if err != nil {
+		error_handler.Fatal.HandleError(err)
+	}
+	info := make(map[string]string)
+	info["hash"] = commit.Hash.String()
+	info["msg"] = strings.Replace(commit.Message, "\n", ";", -1)
+	return info
+}
+
+func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 	repo := n.embeddedRepoNode().repo
 	head, err := repo.Head()
 	if err != nil {
 		return
 	}
-	commit, err := repo.CommitObject(head.Hash())
+	commit, err = repo.CommitObject(head.Hash())
+	return
+}
+
+func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
+	commit, err := headCommit(n)
 	if err != nil {
 		return
 	}
@@ -38,6 +61,7 @@ func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
 }
 
 func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
+	logging.LogCall(n, nil)
 	head, err := n.repo.Head()
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -47,6 +71,7 @@ func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 }
 
 func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -54,7 +79,7 @@ func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.Att
 	}
 	out.Attr = attr
 	out.Attr.Mode = 0555
-	out.AttrValid = 30
+	out.SetTimeout(HeadAttrValid * time.Second)
 	return fs.OK
 }
 
@@ -121,6 +146,7 @@ func (s *commitDirStream) Close() {
 }
 
 func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
+	logging.LogCall(n, nil)
 	iter, err := n.repo.CommitObjects()
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -130,6 +156,7 @@ func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Err
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	logging.LogCall(n, map[string]string{"name": name})
 	var err error
 	if name == "HEAD" {
 		headLink := n.getHeadLinkNode(ctx)
@@ -139,7 +166,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 			return nil, syscall.EIO
 		}
 		out.Mode = fuse.S_IFLNK | 0555
-		out.AttrValid = HeadAttrValid
+		out.SetAttrTimeout(HeadAttrValid * time.Second)
 		out.EntryValid = 2 << 62
 		return headLink, fs.OK
 	}
@@ -164,6 +191,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 }
 
 func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -171,7 +199,7 @@ func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.A
 	}
 	out.Attr = attr
 	out.Attr.Mode = 0555
-	out.AttrValid = HeadAttrValid
+	out.SetTimeout(HeadAttrValid * time.Second)
 	return fs.OK
 }
 

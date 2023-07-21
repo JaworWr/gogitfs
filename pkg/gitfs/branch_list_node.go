@@ -10,6 +10,7 @@ import (
 	"gogitfs/pkg/error_handler"
 	"io"
 	"syscall"
+	"time"
 )
 
 const BranchValid = 30
@@ -91,8 +92,8 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	out.AttrValid = BranchValid
-	out.EntryValid = BranchValid
+	out.SetAttrTimeout(BranchValid * time.Second)
+	out.SetEntryTimeout(BranchValid * time.Second)
 	out.Attr = commitAttr(commit)
 	out.Mode = fuse.S_IFDIR | 0555
 	return node, fs.OK
