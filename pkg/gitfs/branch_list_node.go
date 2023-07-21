@@ -8,14 +8,20 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/logging"
 	"io"
 	"syscall"
+	"time"
 )
 
-const BranchValid = 30
+const BranchValid = 30 * time.Second
 
 type branchListNode struct {
 	repoNode
+}
+
+func (n *branchListNode) CallLogInfo() map[string]string {
+	return nil
 }
 
 type branchDirStream struct {
@@ -68,6 +74,7 @@ func (s *branchDirStream) Close() {
 }
 
 func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+	logging.LogCall(n, nil)
 	iter, err := n.repo.Branches()
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -77,9 +84,11 @@ func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 }
 
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	logging.LogCall(n, map[string]string{"name": name})
 	branch, err := n.repo.Branch(name)
 	if err != nil {
 		if err == git.ErrBranchNotFound {
+			logging.InfoLog.Printf("Branch %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
 			error_handler.Logging.HandleError(err)
@@ -91,8 +100,8 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	out.AttrValid = BranchValid
-	out.EntryValid = BranchValid
+	out.SetAttrTimeout(BranchValid)
+	out.SetEntryTimeout(BranchValid)
 	out.Attr = commitAttr(commit)
 	out.Mode = fuse.S_IFDIR | 0555
 	return node, fs.OK

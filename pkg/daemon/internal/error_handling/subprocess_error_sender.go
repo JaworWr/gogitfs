@@ -24,7 +24,7 @@ func NewSubprocessErrorSender(fifoName string) (*SubprocessErrorSender, error) {
 
 func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
 	if s.errorSent {
-		log.Println("[WARNING] attempting to send multiple errors!")
+		log.Println("Attempting to send multiple errors!")
 		return
 	}
 	s.errorSent = true

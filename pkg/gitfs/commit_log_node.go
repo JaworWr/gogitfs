@@ -7,7 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
-	"log"
+	"gogitfs/pkg/logging"
 	"strings"
 	"syscall"
 )
@@ -22,13 +22,27 @@ type commitLogNode struct {
 	symlinkHead bool
 }
 
+func (n *commitLogNode) CallLogInfo() map[string]string {
+	info := make(map[string]string)
+	info["from"] = n.from.Hash.String()
+	if n.basePath == nil {
+		info["basepath"] = "<nil>"
+	} else {
+		info["basepath"] = *n.basePath
+	}
+	info["includeHead"] = logging.BoolToStr(n.includeHead)
+	info["symlinkHead"] = logging.BoolToStr(n.symlinkHead)
+	return info
+}
+
 func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
 	out.Attr = n.attr
-	out.AttrValid = 2 << 62
 	return fs.OK
 }
 
 func (n *commitLogNode) OnAdd(ctx context.Context) {
+	logging.LogCall(n, nil)
 	if n.basePath == nil {
 		n.addHardlinks(ctx)
 	} else {
@@ -52,7 +66,7 @@ func (n *commitLogNode) addHardlinks(ctx context.Context) {
 		node := newCommitNode(ctx, commit, n)
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
-			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+			logging.WarningLog.Printf("Duplicate commit node: %v\n", commit.Hash.String())
 		}
 		return nil
 	})
@@ -70,7 +84,7 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
-			log.Printf("Duplicate commit node: %v\n", commit.Hash.String())
+			logging.WarningLog.Printf("Duplicate commit node: %v\n", commit.Hash.String())
 		}
 		return nil
 	})
