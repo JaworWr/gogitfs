@@ -52,5 +52,5 @@ func makeLogger(level LogLevelFlag) *log.Logger {
 	}
 	prefix = fmt.Sprintf("[%s] ", prefix)
 
-	return log.New(output, prefix, log.LstdFlags)
+	return log.New(output, prefix, log.LstdFlags|log.Lmsgprefix)
 }
