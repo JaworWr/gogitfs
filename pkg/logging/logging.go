@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"fmt"
+	"log"
 	"runtime"
 	"strings"
 )
@@ -41,4 +43,26 @@ func CurrentFuncName(skip int, kind FuncName) string {
 	frames := runtime.CallersFrames(pc[:n])
 	frame, _ := frames.Next()
 	return ProcessFuncName(frame.Function, kind)
+}
+
+type CallLogInfoer interface {
+	CallLogInfo() map[string]string
+}
+
+func formatInfo(l CallLogInfoer) string {
+	info := l.CallLogInfo()
+	parts := make([]string, 0)
+	for k, v := range info {
+		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
+	}
+	return strings.Join(parts, ", ")
+}
+
+// LogCall log function call
+// the format is Called <method> (<key>=<value>)
+// with key, value returned by CallLogInfo()
+func LogCall(l CallLogInfoer) {
+	methodName := CurrentFuncName(1, Class)
+	methodInfo := formatInfo(l)
+	log.Printf("Called %v (%v)", methodName, methodInfo)
 }
