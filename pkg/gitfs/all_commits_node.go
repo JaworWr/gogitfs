@@ -174,6 +174,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	commit, err := n.repo.CommitObject(hash)
 	if err != nil {
 		if err == plumbing.ErrObjectNotFound {
+			logging.InfoLog.Printf("Commit %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
 			error_handler.Logging.HandleError(err)
