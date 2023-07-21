@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/logging"
 	"io"
 	"syscall"
 	"time"
@@ -17,6 +18,10 @@ const BranchValid = 30
 
 type branchListNode struct {
 	repoNode
+}
+
+func (n *branchListNode) CallLogInfo() map[string]string {
+	return nil
 }
 
 type branchDirStream struct {
@@ -69,6 +74,7 @@ func (s *branchDirStream) Close() {
 }
 
 func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+	logging.LogCall(n, nil)
 	iter, err := n.repo.Branches()
 	if err != nil {
 		error_handler.Logging.HandleError(err)
@@ -78,6 +84,7 @@ func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 }
 
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	logging.LogCall(n, map[string]string{"name": name})
 	branch, err := n.repo.Branch(name)
 	if err != nil {
 		if err == git.ErrBranchNotFound {
