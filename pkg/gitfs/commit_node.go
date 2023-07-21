@@ -7,6 +7,8 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/logging"
+	"strings"
 	"syscall"
 )
 
@@ -15,7 +17,15 @@ type commitNode struct {
 	commit *object.Commit
 }
 
+func (n *commitNode) CallLogInfo() map[string]string {
+	info := make(map[string]string)
+	info["hash"] = n.commit.Hash.String()
+	info["msg"] = strings.Replace(n.commit.Message, "\n", ";", -1)
+	return info
+}
+
 func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n)
 	out.Attr = commitAttr(n.commit)
 	out.Mode = 0555
 	out.AttrValid = 2 << 62
@@ -23,6 +33,7 @@ func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrO
 }
 
 func (n *commitNode) OnAdd(ctx context.Context) {
+	logging.LogCall(n)
 	attr := commitAttr(n.commit)
 	attr.Mode = 0444
 	hashNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Hash.String())}
