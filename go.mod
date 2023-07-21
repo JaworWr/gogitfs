@@ -6,7 +6,6 @@ require (
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/hanwen/go-fuse/v2 v2.3.0
 	github.com/sevlyar/go-daemon v0.1.6
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 )
 
 require (

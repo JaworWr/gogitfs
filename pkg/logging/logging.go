@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"log"
 	"runtime"
 	"strings"
@@ -58,13 +57,23 @@ func formatInfo(info map[string]string) string {
 	return strings.Join(parts, ", ")
 }
 
+func concatMaps(dst map[string]string, src map[string]string) map[string]string {
+	if dst == nil {
+		return src
+	}
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
 // LogCall log function call
 // the format is Called <method> (<key>=<value>)
 // with key, value returned by CallLogInfo()
 func LogCall(l CallLogInfoer, extra map[string]string) {
 	methodName := CurrentFuncName(1, Class)
 	info := l.CallLogInfo()
-	maps.Copy(info, extra)
+	info = concatMaps(info, extra)
 	methodInfo := formatInfo(info)
 	log.Printf("Called %v (%v)", methodName, methodInfo)
 }
