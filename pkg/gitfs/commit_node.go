@@ -28,7 +28,6 @@ func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrO
 	logging.LogCall(n, nil)
 	out.Attr = commitAttr(n.commit)
 	out.Mode = 0555
-	out.AttrValid = 2 << 62
 	return 0
 }
 

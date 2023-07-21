@@ -35,7 +35,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 		errHandler.HandleError(err)
 	}
 	log.Printf("Mounting in %v\n", mountDir)
-	h := time.Hour
+	h := 6 * time.Hour
 	opts := fs.Options{
 		AttrTimeout:  &h,
 		EntryTimeout: &h,

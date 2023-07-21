@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const HeadAttrValid = 30
+const HeadAttrValid = 30 * time.Second
 
 type allCommitsNode struct {
 	repoNode
@@ -79,7 +79,7 @@ func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.Att
 	}
 	out.Attr = attr
 	out.Attr.Mode = 0555
-	out.SetTimeout(HeadAttrValid * time.Second)
+	out.SetTimeout(HeadAttrValid)
 	return fs.OK
 }
 
@@ -166,8 +166,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 			return nil, syscall.EIO
 		}
 		out.Mode = fuse.S_IFLNK | 0555
-		out.SetAttrTimeout(HeadAttrValid * time.Second)
-		out.EntryValid = 2 << 62
+		out.SetAttrTimeout(HeadAttrValid)
 		return headLink, fs.OK
 	}
 
@@ -185,8 +184,6 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 
 	out.Attr = commitAttr(commit)
 	out.Mode = syscall.S_IFDIR | 0555
-	out.AttrValid = 2 << 62
-	out.EntryValid = 2 << 62
 	return node, fs.OK
 }
 
@@ -199,7 +196,7 @@ func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.A
 	}
 	out.Attr = attr
 	out.Attr.Mode = 0555
-	out.SetTimeout(HeadAttrValid * time.Second)
+	out.SetTimeout(HeadAttrValid)
 	return fs.OK
 }
 

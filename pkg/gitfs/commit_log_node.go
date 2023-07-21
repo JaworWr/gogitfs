@@ -39,7 +39,6 @@ func (n *commitLogNode) CallLogInfo() map[string]string {
 func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = n.attr
-	out.AttrValid = 2 << 62
 	return fs.OK
 }
 

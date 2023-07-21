@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const BranchValid = 30
+const BranchValid = 30 * time.Second
 
 type branchListNode struct {
 	repoNode
@@ -99,8 +99,8 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO
 	}
-	out.SetAttrTimeout(BranchValid * time.Second)
-	out.SetEntryTimeout(BranchValid * time.Second)
+	out.SetAttrTimeout(BranchValid)
+	out.SetEntryTimeout(BranchValid)
 	out.Attr = commitAttr(commit)
 	out.Mode = fuse.S_IFDIR | 0555
 	return node, fs.OK
