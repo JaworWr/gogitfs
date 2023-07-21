@@ -77,3 +77,11 @@ func LogCall(l CallLogInfoer, extra map[string]string) {
 	methodInfo := formatInfo(info)
 	log.Printf("Called %v (%v)", methodName, methodInfo)
 }
+
+func BoolToStr(b bool) string {
+	if b {
+		return "true"
+	} else {
+		return "false"
+	}
+}

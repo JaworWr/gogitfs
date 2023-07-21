@@ -7,6 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/logging"
 	"log"
 	"strings"
 	"syscall"
@@ -22,13 +23,28 @@ type commitLogNode struct {
 	symlinkHead bool
 }
 
+func (n *commitLogNode) CallLogInfo() map[string]string {
+	info := make(map[string]string)
+	info["from"] = n.from.Hash.String()
+	if n.basePath == nil {
+		info["basepath"] = "<nil>"
+	} else {
+		info["basepath"] = *n.basePath
+	}
+	info["includeHead"] = logging.BoolToStr(n.includeHead)
+	info["symlinkHead"] = logging.BoolToStr(n.symlinkHead)
+	return info
+}
+
 func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
 	out.Attr = n.attr
 	out.AttrValid = 2 << 62
 	return fs.OK
 }
 
 func (n *commitLogNode) OnAdd(ctx context.Context) {
+	logging.LogCall(n, nil)
 	if n.basePath == nil {
 		n.addHardlinks(ctx)
 	} else {
