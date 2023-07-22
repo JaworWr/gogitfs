@@ -3,6 +3,7 @@ package logging
 import (
 	"fmt"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -51,14 +52,20 @@ type CallCtxGetter interface {
 }
 
 func formatCtx(ctx CallCtx) string {
-	parts := make([]string, 0)
-	for k, v := range ctx {
+	var keys []string
+	for k := range ctx {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var parts []string
+	for _, k := range keys {
+		v := ctx[k]
 		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
 	}
 	return strings.Join(parts, ", ")
 }
 
-func concatMaps(dst map[string]string, src map[string]string) map[string]string {
+func concatCtx(dst CallCtx, src CallCtx) CallCtx {
 	if dst == nil {
 		return src
 	}
@@ -74,7 +81,7 @@ func concatMaps(dst map[string]string, src map[string]string) map[string]string 
 func LogCall(l CallCtxGetter, extra CallCtx) {
 	methodName := CurrentFuncName(1, Class)
 	info := l.GetCallCtx()
-	info = concatMaps(info, extra)
+	info = concatCtx(info, extra)
 	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
 }
