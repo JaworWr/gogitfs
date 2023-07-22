@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"io"
 	"strings"
@@ -56,7 +57,7 @@ func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
 	if err != nil {
 		return
 	}
-	attr = commitAttr(commit)
+	attr = utils.CommitAttr(commit)
 	return
 }
 
@@ -183,7 +184,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	}
 	node := newCommitNode(ctx, commit, n)
 
-	out.Attr = commitAttr(commit)
+	out.Attr = utils.CommitAttr(commit)
 	out.Mode = syscall.S_IFDIR | 0555
 	return node, fs.OK
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"io"
 	"syscall"
@@ -102,7 +103,7 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	}
 	out.SetAttrTimeout(BranchValid)
 	out.SetEntryTimeout(BranchValid)
-	out.Attr = commitAttr(commit)
+	out.Attr = utils.CommitAttr(commit)
 	out.Mode = fuse.S_IFDIR | 0555
 	return node, fs.OK
 }
