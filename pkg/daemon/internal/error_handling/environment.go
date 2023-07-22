@@ -3,7 +3,6 @@ package error_handling
 import (
 	"fmt"
 	"github.com/sevlyar/go-daemon"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +45,6 @@ func EnvCleanup(info EnvInfo) {
 	// the following only runs in the parent process
 	err := syscall.Unlink(info.NamedPipeName)
 	if err != nil {
-		log.Panicln(err)
+		panic("Error during cleanup:" + err.Error())
 	}
 }
