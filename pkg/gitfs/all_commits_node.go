@@ -42,25 +42,6 @@ func (n *headLinkNode) CallLogInfo() map[string]string {
 	return info
 }
 
-func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
-	repo := n.embeddedRepoNode().repo
-	head, err := repo.Head()
-	if err != nil {
-		return
-	}
-	commit, err = repo.CommitObject(head.Hash())
-	return
-}
-
-func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
-	commit, err := headCommit(n)
-	if err != nil {
-		return
-	}
-	attr = utils.CommitAttr(commit)
-	return
-}
-
 func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	logging.LogCall(n, nil)
 	head, err := n.repo.Head()
