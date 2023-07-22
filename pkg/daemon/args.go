@@ -25,7 +25,7 @@ type NotEnoughArgsError struct {
 }
 
 func (err *NotEnoughArgsError) Error() string {
-	return fmt.Sprintf("not enough arguments: Expected %v, Got %v", err.Expected, err.Got)
+	return fmt.Sprintf("not enough positional arguments: expected %v, got %v", err.Expected, err.Got)
 }
 
 type TooManyArgsError struct {
@@ -50,7 +50,7 @@ func InitArgs(da DaemonArgs) {
 		}
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s%s\n", os.Args[0], argnames)
 		for _, arg := range da.PositionalArgs() {
-			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  %s\t%s", arg.Name, arg.Usage)
+			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  %s\t%s\n", arg.Name, arg.Usage)
 		}
 		flag.PrintDefaults()
 	}
