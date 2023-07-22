@@ -22,7 +22,7 @@ type allCommitsNode struct {
 	headLink *fs.Inode
 }
 
-func (n *allCommitsNode) GetCallCtx() map[string]string {
+func (n *allCommitsNode) GetCallCtx() logging.CallCtx {
 	return nil
 }
 
@@ -30,12 +30,12 @@ type headLinkNode struct {
 	repoNode
 }
 
-func (n *headLinkNode) GetCallCtx() map[string]string {
+func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	commit, err := headCommit(n)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}
-	info := make(map[string]string)
+	info := make(logging.CallCtx)
 	info["headHash"] = commit.Hash.String()
 	info["headMsg"] = strings.Replace(commit.Message, "\n", ";", -1)
 	return info
@@ -157,7 +157,7 @@ func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Err
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
-	logging.LogCall(n, map[string]string{"name": name})
+	logging.LogCall(n, logging.CallCtx{"name": name})
 	var err error
 	if name == "HEAD" {
 		headLink := n.getHeadLinkNode(ctx)

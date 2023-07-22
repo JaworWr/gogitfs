@@ -45,7 +45,7 @@ func CurrentFuncName(skip int, kind FuncName) string {
 	return ProcessFuncName(frame.Function, kind)
 }
 
-type CallCtx = map[string]string
+type CallCtx = map[string]any
 
 type CallCtxGetter interface {
 	GetCallCtx() CallCtx

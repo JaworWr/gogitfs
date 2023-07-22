@@ -12,7 +12,7 @@ type RootNode struct {
 	repoNode
 }
 
-func (n *RootNode) GetCallCtx() map[string]string {
+func (n *RootNode) GetCallCtx() logging.CallCtx {
 	return nil
 }
 

@@ -22,8 +22,8 @@ type commitLogNode struct {
 	symlinkHead bool
 }
 
-func (n *commitLogNode) GetCallCtx() map[string]string {
-	info := make(map[string]string)
+func (n *commitLogNode) GetCallCtx() logging.CallCtx {
+	info := make(logging.CallCtx)
 	info["from"] = n.from.Hash.String()
 	if n.basePath == nil {
 		info["basepath"] = "<nil>"
