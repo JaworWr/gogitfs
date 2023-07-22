@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"gogitfs/pkg/daemon"
 	"log"
 )
@@ -9,13 +8,9 @@ import (
 func main() {
 	var err error
 
-	setupHelp()
 	daemonInfo := &gogitfsDaemon{}
 	da := daemonInfo.DaemonArgs()
-	daemon.InitArgs(da)
-	flag.Parse()
-	showHelp()
-	err = da.HandlePositionalArgs(flag.Args())
+	err = parseArgs(da)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
