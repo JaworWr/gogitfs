@@ -42,10 +42,14 @@ func (f *LogLevelFlag) Set(s string) error {
 		return nil
 	}
 	val1, err := strconv.Atoi(s)
+	val = LogLevelFlag(val1)
+	if val < 0 || val > Error {
+		err = fmt.Errorf("log level must be between 0 and %v, got %v", Error, val)
+	}
 	if err != nil {
 		return err
 	}
-	*f = LogLevelFlag(val1)
+	*f = val
 	return nil
 }
 
