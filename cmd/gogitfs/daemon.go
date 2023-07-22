@@ -15,7 +15,7 @@ func (g *gogitfsDaemon) DaemonArgs(args []string) []string {
 	return args
 }
 
-func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
+func (g *gogitfsDaemon) DaemonEnv() []string {
 	return nil
 }
 

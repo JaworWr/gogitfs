@@ -9,7 +9,7 @@ import (
 
 type ProcessInfo interface {
 	DaemonArgs(args []string) []string
-	DaemonEnv(env []string) []string
+	DaemonEnv() []string
 	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
 
@@ -21,7 +21,7 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 	defer error_handling.EnvCleanup(envInfo)
 
 	args := info.DaemonArgs(os.Args)
-	env := append(envInfo.Env, info.DaemonEnv(os.Environ())...)
+	env := append(envInfo.Env, info.DaemonEnv()...)
 	ctx := daemon.Context{
 		Args:        args,
 		Env:         env,
