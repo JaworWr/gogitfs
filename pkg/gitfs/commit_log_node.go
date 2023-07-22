@@ -7,6 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"strings"
 	"syscall"
@@ -49,7 +50,7 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 		n.addSymlinks(ctx, *n.basePath)
 	}
 	if n.symlinkHead {
-		attr := commitAttr(n.from)
+		attr := utils.CommitAttr(n.from)
 		attr.Mode = 0555
 		path := n.from.Hash.String()
 		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
@@ -77,7 +78,7 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		if !n.includeHead && commit.Hash == n.from.Hash {
 			return nil
 		}
-		attr := commitAttr(commit)
+		attr := utils.CommitAttr(commit)
 		attr.Mode = 0555
 		path := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
 		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
@@ -108,7 +109,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	node.iter = iter
 	node.includeHead = nodeOpts.includeHead
 	node.symlinkHead = nodeOpts.symlinkHead
-	node.attr = commitAttr(from)
+	node.attr = utils.CommitAttr(from)
 	node.attr.Mode = 0555
 	if nodeOpts.linkLevels == 0 {
 		node.basePath = nil

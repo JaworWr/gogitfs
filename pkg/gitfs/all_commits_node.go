@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"io"
 	"syscall"
@@ -38,26 +39,6 @@ func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	info["headHash"] = commit.Hash.String()
 	info["headMsg"] = commit.Message
 	return info
-}
-
-func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
-	repo := n.embeddedRepoNode().repo
-	head, err := repo.Head()
-	if err != nil {
-		return
-	}
-	commit, err = repo.CommitObject(head.Hash())
-	logging.DebugLog.Printf("HEAD points to %v", commit.Hash.String())
-	return
-}
-
-func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
-	commit, err := headCommit(n)
-	if err != nil {
-		return
-	}
-	attr = commitAttr(commit)
-	return
 }
 
 func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
@@ -183,7 +164,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	}
 	node := newCommitNode(ctx, commit, n)
 
-	out.Attr = commitAttr(commit)
+	out.Attr = utils.CommitAttr(commit)
 	out.Mode = syscall.S_IFDIR | 0555
 	return node, fs.OK
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"strings"
 	"syscall"
@@ -26,14 +27,14 @@ func (n *commitNode) GetCallCtx() logging.CallCtx {
 
 func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
-	out.Attr = commitAttr(n.commit)
+	out.Attr = utils.CommitAttr(n.commit)
 	out.Mode = 0555
 	return 0
 }
 
 func (n *commitNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
-	attr := commitAttr(n.commit)
+	attr := utils.CommitAttr(n.commit)
 	attr.Mode = 0444
 	hashNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Hash.String())}
 	child := n.NewPersistentInode(ctx, hashNode, fs.StableAttr{Mode: fuse.S_IFREG})
@@ -45,7 +46,7 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 
 	parent, err := n.commit.Parent(0)
 	if err == nil {
-		parentAttr := commitAttr(parent)
+		parentAttr := utils.CommitAttr(parent)
 		parentAttr.Mode = 0555
 		path := fmt.Sprintf("../%v", parent.Hash.String())
 		parentNode := &fs.MemSymlink{Attr: parentAttr, Data: []byte(path)}
@@ -77,15 +78,6 @@ func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEm
 	}
 	node, _ := commitNodeMgr.GetOrInsert(ctx, commit.Hash.String(), fuse.S_IFDIR, parent, builder, false)
 	return node
-}
-
-func commitAttr(commit *object.Commit) fuse.Attr {
-	commitTime := (uint64)(commit.Author.When.Unix())
-	return fuse.Attr{
-		Atime: commitTime,
-		Ctime: commitTime,
-		Mtime: commitTime,
-	}
 }
 
 var _ fs.NodeOnAdder = (*commitNode)(nil)
