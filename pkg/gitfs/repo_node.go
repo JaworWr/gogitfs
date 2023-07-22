@@ -6,6 +6,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/gitfs/internal/utils"
+	"gogitfs/pkg/logging"
 )
 
 type repoNode struct {
@@ -29,6 +30,7 @@ func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 		return
 	}
 	commit, err = repo.CommitObject(head.Hash())
+	logging.DebugLog.Printf("HEAD points to %v", commit.Hash.String())
 	return
 }
 
