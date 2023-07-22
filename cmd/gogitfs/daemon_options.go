@@ -13,7 +13,8 @@ type daemonOptions struct {
 }
 
 func parseDaemonOpts() (opts daemonOptions, err error) {
-	flag.IntVar((*int)(&opts.logLevel), "loglevel", int(logging.Info), "log level")
+	opts.logLevel = logging.Info
+	flag.Var(&opts.logLevel, "loglevel", "log level")
 	flag.Parse()
 	if flag.NArg() < 2 {
 		err = fmt.Errorf("not enough arguments")

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 )
 
 type LogLevelFlag int
@@ -15,6 +16,38 @@ const (
 	Warning
 	Error
 )
+
+var levelToStr = map[LogLevelFlag]string{
+	Debug:   "DEBUG",
+	Info:    "INFO",
+	Warning: "WARNING",
+	Error:   "ERROR",
+}
+
+var strToLevel = map[string]LogLevelFlag{
+	"DEBUG":   Debug,
+	"INFO":    Info,
+	"WARNING": Warning,
+	"ERROR":   Error,
+}
+
+func (f *LogLevelFlag) String() string {
+	return levelToStr[*f]
+}
+
+func (f *LogLevelFlag) Set(s string) error {
+	val, ok := strToLevel[s]
+	if ok {
+		*f = val
+		return nil
+	}
+	val1, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+	*f = LogLevelFlag(val1)
+	return nil
+}
 
 var logLevel = Info
 
@@ -39,18 +72,6 @@ func makeLogger(level LogLevelFlag) *log.Logger {
 		output = io.Discard
 	}
 
-	var prefix string
-	switch level {
-	case Debug:
-		prefix = "DEBUG"
-	case Info:
-		prefix = "INFO"
-	case Warning:
-		prefix = "WARNING"
-	case Error:
-		prefix = "ERROR"
-	}
-	prefix = fmt.Sprintf("[%s] ", prefix)
-
+	prefix := fmt.Sprintf("[%s] ", levelToStr[level])
 	return log.New(output, prefix, log.LstdFlags|log.Lmsgprefix)
 }

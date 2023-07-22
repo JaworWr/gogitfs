@@ -26,7 +26,7 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 	}
 	logging.Init(opts.logLevel)
 	errHandler = error_handler.MakeLoggingHandler(errHandler)
-	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel)
+	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())
 	logging.InfoLog.Printf("Repository path: %v\n", opts.repoDir)
 	root, err := gitfs.NewRootNode(opts.repoDir)
 	if err != nil {
