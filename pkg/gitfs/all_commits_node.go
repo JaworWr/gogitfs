@@ -10,7 +10,6 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/logging"
 	"io"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -37,7 +36,7 @@ func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	}
 	info := make(logging.CallCtx)
 	info["headHash"] = commit.Hash.String()
-	info["headMsg"] = strings.Replace(commit.Message, "\n", ";", -1)
+	info["headMsg"] = commit.Message
 	return info
 }
 

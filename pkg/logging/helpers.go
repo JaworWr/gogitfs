@@ -51,6 +51,34 @@ type CallCtxGetter interface {
 	GetCallCtx() CallCtx
 }
 
+func formatCtxValue(v any) string {
+	useQuotes := true
+	var formatted string
+	switch v.(type) {
+	case int, int8, int16, int32, int64:
+		useQuotes = false
+	case uint, uint8, uint16, uint32, uint64, uintptr:
+		useQuotes = false
+	case float32, float64, complex64, complex128:
+		useQuotes = false
+	case bool:
+		if v.(bool) {
+			formatted = "true"
+		} else {
+			formatted = "false"
+		}
+	}
+	if formatted == "" {
+		if useQuotes {
+			formatted = fmt.Sprintf("\"%v\"", v)
+		} else {
+			formatted = fmt.Sprintf("%v", v)
+		}
+	}
+	formatted = strings.Replace(formatted, "\n", ";", -1)
+	return formatted
+}
+
 func formatCtx(ctx CallCtx) string {
 	var keys []string
 	for k := range ctx {
@@ -59,7 +87,7 @@ func formatCtx(ctx CallCtx) string {
 	sort.Strings(keys)
 	var parts []string
 	for _, k := range keys {
-		v := ctx[k]
+		v := formatCtxValue(ctx[k])
 		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
 	}
 	return strings.Join(parts, ", ")
@@ -84,12 +112,4 @@ func LogCall(l CallCtxGetter, extra CallCtx) {
 	info = concatCtx(info, extra)
 	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
-}
-
-func BoolToStr(b bool) string {
-	if b {
-		return "true"
-	} else {
-		return "false"
-	}
 }

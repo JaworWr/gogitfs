@@ -30,8 +30,8 @@ func (n *commitLogNode) GetCallCtx() logging.CallCtx {
 	} else {
 		info["basepath"] = *n.basePath
 	}
-	info["includeHead"] = logging.BoolToStr(n.includeHead)
-	info["symlinkHead"] = logging.BoolToStr(n.symlinkHead)
+	info["includeHead"] = n.includeHead
+	info["symlinkHead"] = n.symlinkHead
 	return info
 }
 

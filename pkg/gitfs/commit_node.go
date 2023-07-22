@@ -20,7 +20,7 @@ type commitNode struct {
 func (n *commitNode) GetCallCtx() logging.CallCtx {
 	info := make(logging.CallCtx)
 	info["hash"] = n.commit.Hash.String()
-	info["msg"] = strings.Replace(n.commit.Message, "\n", ";", -1)
+	info["msg"] = n.commit.Message
 	return info
 }
 
