@@ -88,7 +88,7 @@ func formatCtx(ctx CallCtx) string {
 	var parts []string
 	for _, k := range keys {
 		v := formatCtxValue(ctx[k])
-		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
+		parts = append(parts, fmt.Sprintf("%v=%v", k, v))
 	}
 	return strings.Join(parts, ", ")
 }
