@@ -23,7 +23,7 @@ type allCommitsNode struct {
 }
 
 func (n *allCommitsNode) GetCallCtx() logging.CallCtx {
-	return nil
+	return utils.NodeCallCtx(n)
 }
 
 type headLinkNode struct {
@@ -35,7 +35,7 @@ func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}
-	info := make(logging.CallCtx)
+	info := utils.NodeCallCtx(n)
 	info["headHash"] = commit.Hash.String()
 	info["headMsg"] = commit.Message
 	return info

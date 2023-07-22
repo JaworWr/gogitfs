@@ -22,7 +22,7 @@ type branchListNode struct {
 }
 
 func (n *branchListNode) GetCallCtx() logging.CallCtx {
-	return nil
+	return utils.NodeCallCtx(n)
 }
 
 type branchDirStream struct {

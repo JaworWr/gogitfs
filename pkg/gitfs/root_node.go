@@ -6,6 +6,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"syscall"
 )
@@ -15,7 +16,7 @@ type RootNode struct {
 }
 
 func (n *RootNode) GetCallCtx() logging.CallCtx {
-	return nil
+	return utils.NodeCallCtx(n)
 }
 
 func (n *RootNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {

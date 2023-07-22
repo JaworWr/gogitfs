@@ -24,7 +24,7 @@ type commitLogNode struct {
 }
 
 func (n *commitLogNode) GetCallCtx() logging.CallCtx {
-	info := make(logging.CallCtx)
+	info := utils.NodeCallCtx(n)
 	info["from"] = n.from.Hash.String()
 	if n.basePath == nil {
 		info["basepath"] = "<nil>"

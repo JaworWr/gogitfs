@@ -19,7 +19,7 @@ type commitNode struct {
 }
 
 func (n *commitNode) GetCallCtx() logging.CallCtx {
-	info := make(logging.CallCtx)
+	info := utils.NodeCallCtx(n)
 	info["hash"] = n.commit.Hash.String()
 	info["msg"] = n.commit.Message
 	return info
