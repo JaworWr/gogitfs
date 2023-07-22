@@ -7,10 +7,16 @@ import (
 	"strings"
 )
 
+type PositionalArg struct {
+	Name  string
+	Usage string
+}
+
 type DaemonArgs interface {
-	SetupFlags()
-	PositionalArgNames() []string
+	Setup()
+	PositionalArgs() []PositionalArg
 	HandlePositionalArgs([]string) error
+	Serialize() []string
 }
 
 type NotEnoughArgsError struct {
@@ -36,14 +42,16 @@ func (err *TooManyArgsError) Error() string {
 }
 
 func InitArgs(da DaemonArgs) {
-	da.SetupFlags()
+	da.Setup()
 	flag.Usage = func() {
 		var argnames string
-		for _, argname := range da.PositionalArgNames() {
-			argnames += " " + argname
+		for _, arg := range da.PositionalArgs() {
+			argnames += " <" + arg.Name + ">"
 		}
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s%s\n", os.Args[0], argnames)
-		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s", os.Args[0])
+		for _, arg := range da.PositionalArgs() {
+			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  %s\t%s", arg.Name, arg.Usage)
+		}
 		flag.PrintDefaults()
 	}
 }
