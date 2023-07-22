@@ -20,21 +20,21 @@ type DaemonArgs interface {
 }
 
 type NotEnoughArgsError struct {
-	expected int
-	got      int
+	Expected int
+	Got      int
 }
 
 func (err *NotEnoughArgsError) Error() string {
-	return fmt.Sprintf("not enough arguments: expected %v, got %v", err.expected, err.got)
+	return fmt.Sprintf("not enough arguments: Expected %v, Got %v", err.Expected, err.Got)
 }
 
 type TooManyArgsError struct {
-	extraArgs []string
+	ExtraArgs []string
 }
 
 func (err *TooManyArgsError) Error() string {
 	var quoted []string
-	for _, arg := range err.extraArgs {
+	for _, arg := range err.ExtraArgs {
 		quoted = append(quoted, "\""+arg+"\"")
 	}
 	unexpected := strings.Join(quoted, ", ")

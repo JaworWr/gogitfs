@@ -4,11 +4,10 @@ import (
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
-	"os"
 )
 
 type ProcessInfo interface {
-	DaemonArgs(args []string) []string
+	DaemonArgs() DaemonArgs
 	DaemonEnv() []string
 	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
@@ -20,10 +19,10 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 	}
 	defer error_handling.EnvCleanup(envInfo)
 
-	args := info.DaemonArgs(os.Args)
+	args := info.DaemonArgs()
 	env := append(envInfo.Env, info.DaemonEnv()...)
 	ctx := daemon.Context{
-		Args:        args,
+		Args:        args.Serialize(),
 		Env:         env,
 		LogFileName: envInfo.LogFileName,
 		LogFilePerm: 0755,
