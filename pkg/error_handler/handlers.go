@@ -16,7 +16,7 @@ type LogHandlerWrapper struct {
 
 func (h *LogHandlerWrapper) HandleError(err error) {
 	funcname := logging.CurrentFuncName(1, logging.Full)
-	logging.WarningLog.Printf("[%v] %v", funcname, err.Error())
+	h.logger.Printf("[%v] %v", funcname, err.Error())
 	h.next.HandleError(err)
 }
 
