@@ -14,6 +14,7 @@ func main() {
 	da := daemonInfo.DaemonArgs()
 	daemon.InitArgs(da)
 	flag.Parse()
+	showHelp()
 	err = da.HandlePositionalArgs(flag.Args())
 	if err != nil {
 		log.Fatalln(err.Error())

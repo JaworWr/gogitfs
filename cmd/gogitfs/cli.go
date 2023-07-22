@@ -1,10 +1,16 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"github.com/sevlyar/go-daemon"
+)
 
 var shouldShowHelp bool
 
 func setupHelp() {
+	if daemon.WasReborn() {
+		return
+	}
 	flag.BoolVar(&shouldShowHelp, "help", false, "show help and exit")
 	flag.BoolVar(&shouldShowHelp, "h", false, "shorthand for --help")
 }
