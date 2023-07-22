@@ -11,19 +11,20 @@ import (
 
 type gogitfsDaemon struct{}
 
-func (g *gogitfsDaemon) DaemonArgs(args []string) []string {
-	return args
+func (g *gogitfsDaemon) DaemonArgs() daemon.DaemonArgs {
+	return &daemonOptions{}
 }
 
-func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
+func (g *gogitfsDaemon) DaemonEnv() []string {
 	return nil
 }
 
-func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
-	opts, err := parseDaemonOpts()
-	if err != nil {
-		errHandler.HandleError(err)
-	}
+func (g *gogitfsDaemon) DaemonProcess(
+	args daemon.DaemonArgs,
+	errHandler error_handler.ErrorHandler,
+	succHandler daemon.SuccessHandler,
+) {
+	opts := args.(*daemonOptions)
 	logging.Init(opts.logLevel)
 	errHandler = error_handler.MakeLoggingHandler(errHandler, logging.Error)
 	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())

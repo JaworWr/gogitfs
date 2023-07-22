@@ -1,29 +1,28 @@
 package daemon
 
 import (
+	"flag"
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
-	"os"
 )
 
 type ProcessInfo interface {
-	DaemonArgs(args []string) []string
-	DaemonEnv(env []string) []string
-	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
+	DaemonArgs() DaemonArgs
+	DaemonEnv() []string
+	DaemonProcess(args DaemonArgs, errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
 
-func SpawnDaemon(info ProcessInfo, name string) error {
+func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
 	envInfo, err := error_handling.EnvInit(name)
 	if err != nil {
 		return err
 	}
 	defer error_handling.EnvCleanup(envInfo)
 
-	args := info.DaemonArgs(os.Args)
-	env := append(envInfo.Env, info.DaemonEnv(os.Environ())...)
+	env := append(envInfo.Env, info.DaemonEnv()...)
 	ctx := daemon.Context{
-		Args:        args,
+		Args:        argsToFullList(args),
 		Env:         env,
 		LogFileName: envInfo.LogFileName,
 		LogFilePerm: 0755,
@@ -58,5 +57,12 @@ func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
 		panic("Unable to setup daemon error sender\nError: " + err.Error())
 	}
 	defer sender.Close()
-	info.DaemonProcess(sender, sender)
+	args := info.DaemonArgs()
+	args.Setup()
+	flag.Parse()
+	err = args.HandlePositionalArgs(flag.Args())
+	if err != nil {
+		panic("argument mismatch: " + err.Error())
+	}
+	info.DaemonProcess(args, sender, sender)
 }

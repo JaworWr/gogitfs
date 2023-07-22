@@ -1,14 +1,27 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"gogitfs/pkg/daemon"
-	"log"
+	"os"
 )
 
 func main() {
+	var err error
+
 	daemonInfo := &gogitfsDaemon{}
-	err := daemon.SpawnDaemon(daemonInfo, "gogitfs")
+	da := daemonInfo.DaemonArgs()
+	err = parseArgs(da)
 	if err != nil {
-		log.Fatalf("An error occurred - cannot start the filesystem daemon.\n%v", err.Error())
+		fmt.Println(err.Error())
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	err = daemon.SpawnDaemon(da, daemonInfo, "gogitfs")
+	if err != nil {
+		fmt.Printf("cannot start the filesystem daemon\n%v", err.Error())
+		os.Exit(1)
 	}
 }
