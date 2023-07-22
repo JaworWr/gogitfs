@@ -56,6 +56,19 @@ var InfoLog *log.Logger
 var WarningLog *log.Logger
 var ErrorLog *log.Logger
 
+func LoggerWithLevel(l LogLevelFlag) *log.Logger {
+	switch l {
+	case Debug:
+		return DebugLog
+	case Info:
+		return InfoLog
+	case Warning:
+		return WarningLog
+	case Error:
+		return ErrorLog
+	}
+}
+
 func Init(l LogLevelFlag) {
 	logLevel = l
 	DebugLog = makeLogger(Debug)
