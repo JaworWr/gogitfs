@@ -36,8 +36,8 @@ func (n *headLinkNode) CallLogInfo() map[string]string {
 		error_handler.Fatal.HandleError(err)
 	}
 	info := make(map[string]string)
-	info["hash"] = commit.Hash.String()
-	info["msg"] = strings.Replace(commit.Message, "\n", ";", -1)
+	info["headHash"] = commit.Hash.String()
+	info["headMsg"] = strings.Replace(commit.Message, "\n", ";", -1)
 	return info
 }
 
@@ -48,6 +48,7 @@ func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 		return
 	}
 	commit, err = repo.CommitObject(head.Hash())
+	logging.DebugLog.Printf("HEAD points to %v", commit.Hash.String())
 	return
 }
 

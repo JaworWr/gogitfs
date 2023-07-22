@@ -18,10 +18,12 @@ func (n *RootNode) CallLogInfo() map[string]string {
 
 func (n *RootNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
+	logging.InfoLog.Println("Adding commit list")
 	acNode := newAllCommitsNode(n.repo)
 	child := n.NewPersistentInode(ctx, acNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
 
+	logging.InfoLog.Println("Adding branch list")
 	blNode := newBranchListNode(n.repo)
 	child = n.NewPersistentInode(ctx, blNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("branches", child, false)

@@ -66,6 +66,11 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
 	builder := func() (fs.InodeEmbedder, error) {
+		logging.InfoLog.Printf(
+			"Creating new node for commit %v (%v)",
+			commit.Hash,
+			strings.Replace(commit.Message, "\n", ";", -1),
+		)
 		node := commitNode{commit: commit}
 		node.repo = parent.embeddedRepoNode().repo
 		return &node, nil

@@ -9,6 +9,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/inode_manager"
+	"gogitfs/pkg/logging"
 	"sync"
 )
 
@@ -41,6 +42,10 @@ func (m *branchNodeManager) getOrInsert(
 		return nil, nil, err
 	}
 	builder := func() (fs.InodeEmbedder, error) {
+		logging.InfoLog.Printf(
+			"Creating new node for branch %v",
+			branch.Name,
+		)
 		nodeOpts := commitLogNodeOpts{linkLevels: 0, includeHead: true, symlinkHead: true}
 		logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, nodeOpts)
 		if err != nil {
