@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"flag"
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
@@ -9,7 +10,7 @@ import (
 type ProcessInfo interface {
 	DaemonArgs() DaemonArgs
 	DaemonEnv() []string
-	DaemonProcess(errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
+	DaemonProcess(args DaemonArgs, errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
 
 func SpawnDaemon(info ProcessInfo, name string) error {
@@ -57,5 +58,12 @@ func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
 		panic("Unable to setup daemon error sender\nError: " + err.Error())
 	}
 	defer sender.Close()
-	info.DaemonProcess(sender, sender)
+	args := info.DaemonArgs()
+	args.Setup()
+	flag.Parse()
+	err = args.HandlePositionalArgs(flag.Args())
+	if err != nil {
+		panic("argument mismatch: " + err.Error())
+	}
+	info.DaemonProcess(args, sender, sender)
 }
