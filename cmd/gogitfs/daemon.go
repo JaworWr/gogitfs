@@ -50,10 +50,12 @@ func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, suc
 		errHandler.HandleError(err)
 	}
 	logging.InfoLog.Printf("Mounting in %v\n", opts.mountDir)
-	h := 6 * time.Hour
+	posTime := 6 * time.Hour
+	negTime := 15 * time.Second
 	fsOpts := fs.Options{
-		AttrTimeout:  &h,
-		EntryTimeout: &h,
+		AttrTimeout:     &posTime,
+		EntryTimeout:    &posTime,
+		NegativeTimeout: &negTime,
 	}
 	server, err := fs.Mount(opts.mountDir, root, &fsOpts)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"io"
 	"syscall"
@@ -102,9 +103,21 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	}
 	out.SetAttrTimeout(BranchValid)
 	out.SetEntryTimeout(BranchValid)
-	out.Attr = commitAttr(commit)
+	out.Attr = utils.CommitAttr(commit)
 	out.Mode = fuse.S_IFDIR | 0555
 	return node, fs.OK
+}
+
+func (n *branchListNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
+	attr, err := headAttr(n)
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return syscall.EIO
+	}
+	out.Attr = attr
+	out.Attr.Mode = 0555
+	return fs.OK
 }
 
 func newBranchListNode(repo *git.Repository) *branchListNode {
@@ -115,3 +128,4 @@ func newBranchListNode(repo *git.Repository) *branchListNode {
 
 var _ fs.NodeLookuper = (*branchListNode)(nil)
 var _ fs.NodeReaddirer = (*branchListNode)(nil)
+var _ fs.NodeGetattrer = (*branchListNode)(nil)
