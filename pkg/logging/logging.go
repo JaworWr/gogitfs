@@ -67,6 +67,7 @@ func LoggerWithLevel(l LogLevelFlag) *log.Logger {
 	case Error:
 		return ErrorLog
 	}
+	return nil
 }
 
 func Init(l LogLevelFlag) {
