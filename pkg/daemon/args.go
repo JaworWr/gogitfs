@@ -55,3 +55,9 @@ func InitArgs(da DaemonArgs) {
 		flag.PrintDefaults()
 	}
 }
+
+func argsToFullList(da DaemonArgs) []string {
+	result := []string{os.Args[0]}
+	result = append(result, da.Serialize()...)
+	return result
+}

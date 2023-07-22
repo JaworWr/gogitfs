@@ -13,17 +13,16 @@ type ProcessInfo interface {
 	DaemonProcess(args DaemonArgs, errHandler error_handler.ErrorHandler, succHandler SuccessHandler)
 }
 
-func SpawnDaemon(info ProcessInfo, name string) error {
+func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
 	envInfo, err := error_handling.EnvInit(name)
 	if err != nil {
 		return err
 	}
 	defer error_handling.EnvCleanup(envInfo)
 
-	args := info.DaemonArgs()
 	env := append(envInfo.Env, info.DaemonEnv()...)
 	ctx := daemon.Context{
-		Args:        args.Serialize(),
+		Args:        argsToFullList(args),
 		Env:         env,
 		LogFileName: envInfo.LogFileName,
 		LogFilePerm: 0755,
