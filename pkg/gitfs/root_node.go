@@ -6,6 +6,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/error_handler"
+	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"syscall"
 )
@@ -14,8 +15,8 @@ type RootNode struct {
 	repoNode
 }
 
-func (n *RootNode) CallLogInfo() map[string]string {
-	return nil
+func (n *RootNode) GetCallCtx() logging.CallCtx {
+	return utils.NodeCallCtx(n)
 }
 
 func (n *RootNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
@@ -32,10 +33,12 @@ func (n *RootNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut
 
 func (n *RootNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
+	logging.InfoLog.Println("Adding commit list")
 	acNode := newAllCommitsNode(n.repo)
 	child := n.NewPersistentInode(ctx, acNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("commits", child, false)
 
+	logging.InfoLog.Println("Adding branch list")
 	blNode := newBranchListNode(n.repo)
 	child = n.NewPersistentInode(ctx, blNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("branches", child, false)

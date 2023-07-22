@@ -3,6 +3,7 @@ package logging
 import (
 	"fmt"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -44,19 +45,55 @@ func CurrentFuncName(skip int, kind FuncName) string {
 	return ProcessFuncName(frame.Function, kind)
 }
 
-type CallLogInfoer interface {
-	CallLogInfo() map[string]string
+type CallCtx = map[string]any
+
+type CallCtxGetter interface {
+	GetCallCtx() CallCtx
 }
 
-func formatInfo(info map[string]string) string {
-	parts := make([]string, 0)
-	for k, v := range info {
-		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
+func formatCtxValue(v any) string {
+	useQuotes := true
+	var formatted string
+	switch v.(type) {
+	case int, int8, int16, int32, int64:
+		useQuotes = false
+	case uint, uint8, uint16, uint32, uint64, uintptr:
+		useQuotes = false
+	case float32, float64, complex64, complex128:
+		useQuotes = false
+	case bool:
+		if v.(bool) {
+			formatted = "true"
+		} else {
+			formatted = "false"
+		}
+	}
+	if formatted == "" {
+		if useQuotes {
+			formatted = fmt.Sprintf("\"%v\"", v)
+		} else {
+			formatted = fmt.Sprintf("%v", v)
+		}
+	}
+	formatted = strings.Replace(formatted, "\n", ";", -1)
+	return formatted
+}
+
+func formatCtx(ctx CallCtx) string {
+	var keys []string
+	for k := range ctx {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var parts []string
+	for _, k := range keys {
+		v := formatCtxValue(ctx[k])
+		parts = append(parts, fmt.Sprintf("%v=%v", k, v))
 	}
 	return strings.Join(parts, ", ")
 }
 
-func concatMaps(dst map[string]string, src map[string]string) map[string]string {
+func concatCtx(dst CallCtx, src CallCtx) CallCtx {
 	if dst == nil {
 		return src
 	}
@@ -68,19 +105,11 @@ func concatMaps(dst map[string]string, src map[string]string) map[string]string 
 
 // LogCall log function call
 // the format is Called <method> (<key>=<value>)
-// with key, value returned by CallLogInfo()
-func LogCall(l CallLogInfoer, extra map[string]string) {
+// with key, value returned by GetCallCtx()
+func LogCall(l CallCtxGetter, extra CallCtx) {
 	methodName := CurrentFuncName(1, Class)
-	info := l.CallLogInfo()
-	info = concatMaps(info, extra)
-	methodInfo := formatInfo(info)
+	info := l.GetCallCtx()
+	info = concatCtx(info, extra)
+	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
-}
-
-func BoolToStr(b bool) string {
-	if b {
-		return "true"
-	} else {
-		return "false"
-	}
 }

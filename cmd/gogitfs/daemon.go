@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/error_handler"
@@ -21,29 +19,14 @@ func (g *gogitfsDaemon) DaemonEnv(_ []string) []string {
 	return nil
 }
 
-type options struct {
-	repoDir  string
-	mountDir string
-	logLevel logging.LogLevelFlag
-}
-
-func (o *options) parse(errHandler error_handler.ErrorHandler) {
-	flag.IntVar((*int)(&o.logLevel), "loglevel", int(logging.Info), "log level")
-	flag.Parse()
-	if flag.NArg() < 2 {
-		err := fmt.Errorf("not enough arguments. Usage: gogitfs <repo-path> <mount-path>")
+func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
+	opts, err := parseDaemonOpts()
+	if err != nil {
 		errHandler.HandleError(err)
 	}
-	o.repoDir = flag.Arg(0)
-	o.mountDir = flag.Arg(1)
-}
-
-func (g *gogitfsDaemon) DaemonProcess(errHandler error_handler.ErrorHandler, succHandler daemon.SuccessHandler) {
-	errHandler = error_handler.MakeLoggingHandler(errHandler)
-	opts := options{}
-	opts.parse(errHandler)
 	logging.Init(opts.logLevel)
-	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel)
+	errHandler = error_handler.MakeLoggingHandler(errHandler, logging.Error)
+	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())
 	logging.InfoLog.Printf("Repository path: %v\n", opts.repoDir)
 	root, err := gitfs.NewRootNode(opts.repoDir)
 	if err != nil {

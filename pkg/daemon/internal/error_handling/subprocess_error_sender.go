@@ -2,7 +2,6 @@ package error_handling
 
 import (
 	"encoding/gob"
-	"log"
 	"os"
 )
 
@@ -24,13 +23,12 @@ func NewSubprocessErrorSender(fifoName string) (*SubprocessErrorSender, error) {
 
 func (s *SubprocessErrorSender) send(wrapper *subprocessErrorWrapper) {
 	if s.errorSent {
-		log.Println("Attempting to send multiple errors!")
-		return
+		panic("Attempted to send multiple errors")
 	}
 	s.errorSent = true
 	err := s.encoder.Encode(wrapper)
 	if err != nil {
-		log.Panicf("Daemon status send error\n%v", err.Error())
+		panic("Failed to send daemon status\nError: " + err.Error())
 	}
 }
 

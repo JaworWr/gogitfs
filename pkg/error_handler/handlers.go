@@ -2,6 +2,7 @@ package error_handler
 
 import (
 	"gogitfs/pkg/logging"
+	"log"
 )
 
 type ErrorHandler interface {
@@ -9,7 +10,8 @@ type ErrorHandler interface {
 }
 
 type LogHandlerWrapper struct {
-	next ErrorHandler
+	next   ErrorHandler
+	logger *log.Logger
 }
 
 func (h *LogHandlerWrapper) HandleError(err error) {
@@ -18,8 +20,8 @@ func (h *LogHandlerWrapper) HandleError(err error) {
 	h.next.HandleError(err)
 }
 
-func MakeLoggingHandler(h ErrorHandler) *LogHandlerWrapper {
-	return &LogHandlerWrapper{next: h}
+func MakeLoggingHandler(h ErrorHandler, level logging.LogLevelFlag) *LogHandlerWrapper {
+	return &LogHandlerWrapper{next: h, logger: logging.LoggerWithLevel(level)}
 }
 
 type noOpErrorHandler struct{}
@@ -28,7 +30,7 @@ func (h noOpErrorHandler) HandleError(_ error) {
 
 }
 
-var Logging = MakeLoggingHandler(noOpErrorHandler{})
+var Logging = MakeLoggingHandler(noOpErrorHandler{}, logging.Warning)
 
 type fatalErrorHandler struct{}
 

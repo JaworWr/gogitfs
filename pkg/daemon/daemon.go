@@ -4,7 +4,6 @@ import (
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
-	"log"
 	"os"
 )
 
@@ -47,7 +46,7 @@ func SpawnDaemon(info ProcessInfo, name string) error {
 func parentProcessPostSpawn(envInfo error_handling.EnvInfo) error {
 	receiver, err := error_handling.NewSubprocessErrorReceiver(envInfo.NamedPipeName)
 	if err != nil {
-		log.Panicf("Unable to setup daemon error receiver\n%v", err.Error())
+		panic("Unable to setup daemon error receiver\nError: " + err.Error())
 	}
 	defer receiver.Close()
 	return receiver.Receive()
@@ -56,7 +55,7 @@ func parentProcessPostSpawn(envInfo error_handling.EnvInfo) error {
 func childProcessPostSpawn(info ProcessInfo, envInfo error_handling.EnvInfo) {
 	sender, err := error_handling.NewSubprocessErrorSender(envInfo.NamedPipeName)
 	if err != nil {
-		log.Panicf("Unable to setup daemon error sender\n%v", err.Error())
+		panic("Unable to setup daemon error sender\nError: " + err.Error())
 	}
 	defer sender.Close()
 	info.DaemonProcess(sender, sender)

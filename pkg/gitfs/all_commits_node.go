@@ -11,7 +11,6 @@ import (
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"io"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -23,22 +22,22 @@ type allCommitsNode struct {
 	headLink *fs.Inode
 }
 
-func (n *allCommitsNode) CallLogInfo() map[string]string {
-	return nil
+func (n *allCommitsNode) GetCallCtx() logging.CallCtx {
+	return utils.NodeCallCtx(n)
 }
 
 type headLinkNode struct {
 	repoNode
 }
 
-func (n *headLinkNode) CallLogInfo() map[string]string {
+func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	commit, err := headCommit(n)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}
-	info := make(map[string]string)
-	info["hash"] = commit.Hash.String()
-	info["msg"] = strings.Replace(commit.Message, "\n", ";", -1)
+	info := utils.NodeCallCtx(n)
+	info["headHash"] = commit.Hash.String()
+	info["headMsg"] = commit.Message
 	return info
 }
 
@@ -138,7 +137,7 @@ func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Err
 }
 
 func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
-	logging.LogCall(n, map[string]string{"name": name})
+	logging.LogCall(n, logging.CallCtx{"name": name})
 	var err error
 	if name == "HEAD" {
 		headLink := n.getHeadLinkNode(ctx)

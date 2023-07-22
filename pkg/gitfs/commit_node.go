@@ -18,10 +18,10 @@ type commitNode struct {
 	commit *object.Commit
 }
 
-func (n *commitNode) CallLogInfo() map[string]string {
-	info := make(map[string]string)
+func (n *commitNode) GetCallCtx() logging.CallCtx {
+	info := utils.NodeCallCtx(n)
 	info["hash"] = n.commit.Hash.String()
-	info["msg"] = strings.Replace(n.commit.Message, "\n", ";", -1)
+	info["msg"] = n.commit.Message
 	return info
 }
 
@@ -67,6 +67,11 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
 	builder := func() (fs.InodeEmbedder, error) {
+		logging.InfoLog.Printf(
+			"Creating new node for commit %v (%v)",
+			commit.Hash,
+			strings.Replace(commit.Message, "\n", ";", -1),
+		)
 		node := commitNode{commit: commit}
 		node.repo = parent.embeddedRepoNode().repo
 		return &node, nil

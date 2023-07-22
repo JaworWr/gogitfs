@@ -2,7 +2,6 @@ package error_handling
 
 import (
 	"encoding/gob"
-	"log"
 	"os"
 )
 
@@ -25,7 +24,7 @@ func (r *SubprocessErrorReceiver) Receive() error {
 	var wrapper subprocessErrorWrapper
 	err := r.decoder.Decode(&wrapper)
 	if err != nil {
-		log.Panicf("Unable to retrieve daemon status\n%v", err.Error())
+		panic("Unable to retrieve daemon status\nError: " + err.Error())
 	}
 	return wrapper.unwrap()
 }
