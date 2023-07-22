@@ -17,7 +17,7 @@ type commitNode struct {
 	commit *object.Commit
 }
 
-func (n *commitNode) CallLogInfo() map[string]string {
+func (n *commitNode) GetCallCtx() map[string]string {
 	info := make(map[string]string)
 	info["hash"] = n.commit.Hash.String()
 	info["msg"] = strings.Replace(n.commit.Message, "\n", ";", -1)

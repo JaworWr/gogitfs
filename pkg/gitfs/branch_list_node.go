@@ -20,7 +20,7 @@ type branchListNode struct {
 	repoNode
 }
 
-func (n *branchListNode) CallLogInfo() map[string]string {
+func (n *branchListNode) GetCallCtx() map[string]string {
 	return nil
 }
 

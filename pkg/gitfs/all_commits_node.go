@@ -22,7 +22,7 @@ type allCommitsNode struct {
 	headLink *fs.Inode
 }
 
-func (n *allCommitsNode) CallLogInfo() map[string]string {
+func (n *allCommitsNode) GetCallCtx() map[string]string {
 	return nil
 }
 
@@ -30,7 +30,7 @@ type headLinkNode struct {
 	repoNode
 }
 
-func (n *headLinkNode) CallLogInfo() map[string]string {
+func (n *headLinkNode) GetCallCtx() map[string]string {
 	commit, err := headCommit(n)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)

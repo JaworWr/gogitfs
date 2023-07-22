@@ -44,13 +44,15 @@ func CurrentFuncName(skip int, kind FuncName) string {
 	return ProcessFuncName(frame.Function, kind)
 }
 
-type CallLogInfoer interface {
-	CallLogInfo() map[string]string
+type CallCtx = map[string]string
+
+type CallCtxGetter interface {
+	GetCallCtx() CallCtx
 }
 
-func formatInfo(info map[string]string) string {
+func formatCtx(ctx CallCtx) string {
 	parts := make([]string, 0)
-	for k, v := range info {
+	for k, v := range ctx {
 		parts = append(parts, fmt.Sprintf("%v=\"%v\"", k, v))
 	}
 	return strings.Join(parts, ", ")
@@ -68,12 +70,12 @@ func concatMaps(dst map[string]string, src map[string]string) map[string]string 
 
 // LogCall log function call
 // the format is Called <method> (<key>=<value>)
-// with key, value returned by CallLogInfo()
-func LogCall(l CallLogInfoer, extra map[string]string) {
+// with key, value returned by GetCallCtx()
+func LogCall(l CallCtxGetter, extra CallCtx) {
 	methodName := CurrentFuncName(1, Class)
-	info := l.CallLogInfo()
+	info := l.GetCallCtx()
 	info = concatMaps(info, extra)
-	methodInfo := formatInfo(info)
+	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
 }
 
