@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
   push:
 
+env:
+  ARTIFACT_NAME: gogitfs-binary
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,6 +24,13 @@ jobs:
 
     - name: Build
       run: go build -v -o . ./...
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ./gogitfs
+        retention-days: 1
 
   unit-test:
     runs-on: ubuntu-latest
