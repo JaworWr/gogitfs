@@ -38,7 +38,7 @@ func (m *branchNodeManager) getOrInsert(
 	lastHash := m.lastCommitHash[branchName]
 	logging.DebugLog.Printf(
 		"Branch %v - last: %v, current: %v",
-		branch.Name,
+		branchName,
 		lastHash.String(),
 		branch.Hash().String(),
 	)
