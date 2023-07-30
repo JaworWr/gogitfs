@@ -3,6 +3,7 @@ package daemon
 import (
 	"flag"
 	"github.com/sevlyar/go-daemon"
+	"gogitfs/pkg/daemon/environment"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
 )
@@ -14,7 +15,8 @@ type ProcessInfo interface {
 }
 
 func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
-	envInfo, err := error_handling.GetDaemonEnv(name)
+	environment.Init(name)
+	envInfo, err := error_handling.GetDaemonEnv()
 	if err != nil {
 		return err
 	}
