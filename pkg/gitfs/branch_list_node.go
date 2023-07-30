@@ -89,7 +89,7 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	branch, err := n.repo.Branch(name)
 	if err != nil {
 		if err == git.ErrBranchNotFound {
-			logging.InfoLog.Printf("Branch %v not found", name)
+			logging.WarningLog.Printf("Branch %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
 			error_handler.Logging.HandleError(err)
