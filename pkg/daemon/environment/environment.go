@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 var DaemonName string
@@ -16,7 +17,8 @@ func Init(name string) {
 	DaemonParentPid = os.Getpid()
 
 	if LogFileName == "" {
-		LogFileName = fmt.Sprintf("/tmp/%s-%d.log", DaemonName, DaemonParentPid)
+		fname := fmt.Sprintf("%s-%d.log", DaemonName, DaemonParentPid)
+		LogFileName = filepath.Join(os.TempDir(), fname)
 	}
 }
 
