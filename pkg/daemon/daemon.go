@@ -18,7 +18,7 @@ func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
 	environment.Init(name)
 	envInfo, err := error_handling.GetDaemonEnv()
 	if err != nil {
-		return err
+		panic("Cannot setup daemon environment.\nError: " + err.Error())
 	}
 	defer error_handling.CleanupDeamonEnv(envInfo)
 
