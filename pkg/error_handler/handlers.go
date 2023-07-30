@@ -30,7 +30,7 @@ func (h noOpErrorHandler) HandleError(_ error) {
 
 }
 
-var Logging = MakeLoggingHandler(noOpErrorHandler{}, logging.Warning)
+var Logging = MakeLoggingHandler(noOpErrorHandler{}, logging.Error)
 
 type fatalErrorHandler struct{}
 
