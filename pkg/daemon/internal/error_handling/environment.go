@@ -15,7 +15,7 @@ type EnvInfo struct {
 	NamedPipeName string
 }
 
-func EnvInit(name string) (info EnvInfo, err error) {
+func GetDaemonEnv(name string) (info EnvInfo, err error) {
 	pipeKey := strings.ToUpper(name) + "_NAMED_PIPE"
 	if daemon.WasReborn() {
 		// this runs in the child process
@@ -38,7 +38,7 @@ func EnvInit(name string) (info EnvInfo, err error) {
 	return
 }
 
-func EnvCleanup(info EnvInfo) {
+func CleanupDeamonEnv(info EnvInfo) {
 	if daemon.WasReborn() {
 		return
 	}

@@ -14,11 +14,11 @@ type ProcessInfo interface {
 }
 
 func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
-	envInfo, err := error_handling.EnvInit(name)
+	envInfo, err := error_handling.GetDaemonEnv(name)
 	if err != nil {
 		return err
 	}
-	defer error_handling.EnvCleanup(envInfo)
+	defer error_handling.CleanupDeamonEnv(envInfo)
 
 	env := append(envInfo.Env, info.DaemonEnv()...)
 	ctx := daemon.Context{
