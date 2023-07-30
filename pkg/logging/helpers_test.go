@@ -57,3 +57,36 @@ func Test_concatCtx(t *testing.T) {
 	}
 	assert.Equal(t, expected, concatCtx(ctx1, ctx2))
 }
+
+func funcNames() (full string, pkg string, class string, method string) {
+	full = CurrentFuncName(0, Full)
+	pkg = CurrentFuncName(0, Package)
+	class = CurrentFuncName(0, Class)
+	method = CurrentFuncName(0, Method)
+	return
+}
+
+type sampleClass struct{}
+
+func (c sampleClass) methodNames() (full string, pkg string, class string, method string) {
+	full = CurrentFuncName(0, Full)
+	pkg = CurrentFuncName(0, Package)
+	class = CurrentFuncName(0, Class)
+	method = CurrentFuncName(0, Method)
+	return
+}
+
+func Test_CurrentFuncName(t *testing.T) {
+	var full, pkg, class, method string
+	full, pkg, class, method = funcNames()
+	assert.Equal(t, "gogitfs/pkg/logging.funcNames", full)
+	assert.Equal(t, "logging.funcNames", pkg)
+	assert.Equal(t, "funcNames", class)
+	assert.Equal(t, "funcNames", method)
+
+	full, pkg, class, method = sampleClass{}.methodNames()
+	assert.Equal(t, "gogitfs/pkg/logging.sampleClass.methodNames", full)
+	assert.Equal(t, "logging.sampleClass.methodNames", pkg)
+	assert.Equal(t, "sampleClass.methodNames", class)
+	assert.Equal(t, "methodNames", method)
+}
