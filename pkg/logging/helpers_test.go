@@ -5,11 +5,55 @@ import (
 	"testing"
 )
 
-func TestFormatCtxValue(t *testing.T) {
+func Test_formatCtxValue(t *testing.T) {
 	assert.Equal(t, "5", formatCtxValue(5), "int should be formatted as a number")
+	assert.Equal(t, "5", formatCtxValue(uint8(5)), "uint8 should be formatted as a number")
 	assert.Equal(t, "5.4", formatCtxValue(5.4), "float should be formatted as a number")
 	assert.Equal(t, "true", formatCtxValue(true), "true should be formatted as \"true\"")
 	assert.Equal(t, "false", formatCtxValue(false), "false should be formatted as \"false\"")
 	assert.Equal(t, "\"abc;def\"", formatCtxValue("abc\ndef"),
 		"strings should be quoted and have newlines removed")
+}
+
+func Test_formatCtx(t *testing.T) {
+	ctx := CallCtx{
+		"a": 5,
+		"b": "foo\nbar",
+	}
+	expected := "a=5, b=\"foo;bar\""
+	assert.Equal(t, expected, formatCtx(ctx))
+}
+
+func Test_concatCtx(t *testing.T) {
+	var ctx1, ctx2 CallCtx
+
+	ctx1 = nil
+	ctx2 = CallCtx{
+		"a": 5,
+		"b": "foo\nbar",
+	}
+	assert.Equal(t, ctx2, concatCtx(ctx1, ctx2))
+
+	ctx1 = CallCtx{
+		"a": 5,
+		"b": "foo\nbar",
+	}
+	ctx2 = nil
+	assert.Equal(t, ctx1, concatCtx(ctx1, ctx2))
+
+	ctx1 = CallCtx{
+		"a": 5,
+		"b": "foo\nbar",
+	}
+	ctx2 = CallCtx{
+		"a1": 5,
+		"b1": "baz",
+	}
+	expected := CallCtx{
+		"a":  5,
+		"b":  "foo\nbar",
+		"a1": 5,
+		"b1": "baz",
+	}
+	assert.Equal(t, expected, concatCtx(ctx1, ctx2))
 }
