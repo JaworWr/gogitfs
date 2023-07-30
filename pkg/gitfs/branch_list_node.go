@@ -86,9 +86,10 @@ func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
 	logging.LogCall(n, logging.CallCtx{"name": name})
-	branch, err := n.repo.Branch(name)
+	refName := plumbing.NewBranchReferenceName(name)
+	branch, err := n.repo.Reference(refName, false)
 	if err != nil {
-		if err == git.ErrBranchNotFound {
+		if err == plumbing.ErrReferenceNotFound {
 			logging.WarningLog.Printf("Branch %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
