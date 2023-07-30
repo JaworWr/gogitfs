@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"gogitfs/pkg/daemon"
-	"gogitfs/pkg/daemon/environment"
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs"
 	"gogitfs/pkg/logging"
@@ -49,6 +47,7 @@ func (g *gogitfsDaemon) DaemonProcess(
 	fsOpts.AttrTimeout = &posTime
 	fsOpts.EntryTimeout = &posTime
 	fsOpts.NegativeTimeout = &negTime
+	fsOpts.Logger = logging.ErrorLog
 
 	server, err := fs.Mount(opts.mountDir, root, fsOpts)
 	if err != nil {
@@ -87,18 +86,6 @@ func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
 		}
 	}
 
-	if o.fuseLog {
-		fuseLogPath := o.fuseLogPath
-		if fuseLogPath == "" {
-			fuseLogPath = fmt.Sprintf("%s-%d-fuse.log", environment.DaemonName, environment.DaemonParentPid)
-		}
-		logger, err := logging.MakeFileLogger(fuseLogPath)
-		if err != nil {
-			return nil, err
-		}
-		opts.Logger = logger
-		opts.Debug = o.fuseDebugLog
-	}
-
+	opts.Debug = o.fuseDebug
 	return opts, nil
 }
