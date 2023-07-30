@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -73,5 +74,15 @@ func SerializeBoolFlag(flag string, value bool) string {
 	} else {
 		valueStr = "false"
 	}
-	return fmt.Sprintf("--%s=%s", flag, valueStr)
+	return SerializeStringFlag(flag, valueStr)
+}
+
+func SerializeIntFlag(flag string, value int64) string {
+	valueStr := strconv.FormatInt(value, 10)
+	return SerializeStringFlag(flag, valueStr)
+}
+
+func SerializeUintFlag(flag string, value uint64) string {
+	valueStr := strconv.FormatUint(value, 10)
+	return SerializeStringFlag(flag, valueStr)
 }
