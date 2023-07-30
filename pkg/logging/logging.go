@@ -93,3 +93,12 @@ func makeLogger(level LogLevelFlag) *log.Logger {
 	prefix := fmt.Sprintf("[%s] ", levelToStr[level])
 	return log.New(output, prefix, log.LstdFlags|log.Lmsgprefix)
 }
+
+func MakeFileLogger(name string) (*log.Logger, error) {
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	logger := log.New(file, "", log.LstdFlags)
+	return logger, nil
+}

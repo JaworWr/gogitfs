@@ -41,7 +41,7 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-func InitArgs(da DaemonArgs) {
+func SetupFlags(da DaemonArgs) {
 	da.Setup()
 	flag.Usage = func() {
 		var argnames string
@@ -60,4 +60,18 @@ func argsToFullList(da DaemonArgs) []string {
 	result := []string{os.Args[0]}
 	result = append(result, da.Serialize()...)
 	return result
+}
+
+func SerializeStringFlag(flag string, value string) string {
+	return fmt.Sprintf("--%s=%s", flag, value)
+}
+
+func SerializeBoolFlag(flag string, value bool) string {
+	var valueStr string
+	if value {
+		valueStr = "true"
+	} else {
+		valueStr = "false"
+	}
+	return fmt.Sprintf("--%s=%s", flag, valueStr)
 }

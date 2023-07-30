@@ -3,6 +3,7 @@ package error_handling
 import (
 	"fmt"
 	"github.com/sevlyar/go-daemon"
+	"gogitfs/pkg/daemon/environment"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,12 +12,11 @@ import (
 
 type EnvInfo struct {
 	Env           []string
-	LogFileName   string
 	NamedPipeName string
 }
 
-func EnvInit(name string) (info EnvInfo, err error) {
-	pipeKey := strings.ToUpper(name) + "_NAMED_PIPE"
+func GetDaemonEnv() (info EnvInfo, err error) {
+	pipeKey := strings.ToUpper(environment.DaemonName) + "_NAMED_PIPE"
 	if daemon.WasReborn() {
 		// this runs in the child process
 		pipeName, ok := os.LookupEnv(pipeKey)
@@ -28,8 +28,7 @@ func EnvInit(name string) (info EnvInfo, err error) {
 		return
 	}
 	// the following only runs in the parent process
-	baseName := fmt.Sprintf("%s-%d", name, os.Getpid())
-	info.LogFileName = filepath.Join(os.TempDir(), baseName+".log")
+	baseName := fmt.Sprintf("%s-%d", environment.DaemonName, environment.DaemonParentPid)
 	info.NamedPipeName = filepath.Join(os.TempDir(), baseName+".pipe")
 	info.Env = []string{
 		pipeKey + "=" + info.NamedPipeName,
@@ -38,7 +37,7 @@ func EnvInit(name string) (info EnvInfo, err error) {
 	return
 }
 
-func EnvCleanup(info EnvInfo) {
+func CleanupDeamonEnv(info EnvInfo) {
 	if daemon.WasReborn() {
 		return
 	}
