@@ -12,6 +12,8 @@ type FuncName int
 const (
 	// Full fully qualified name
 	Full FuncName = iota
+	// Package package + class + method name
+	Package
 	// Class class + method name
 	Class
 	// Method method name only
@@ -25,8 +27,14 @@ func ProcessFuncName(fullName string, kind FuncName) (name string) {
 	switch kind {
 	case Full:
 		name = fullName
+	case Package:
+		name = pathParts[len(pathParts)-1]
 	case Class:
-		name = strings.Join(parts[len(parts)-2:], ".")
+		if len(parts) <= 2 {
+			name = parts[len(parts)-1]
+		} else {
+			name = strings.Join(parts[len(parts)-2:], ".")
+		}
 	case Method:
 		name = parts[len(parts)-1]
 	}
