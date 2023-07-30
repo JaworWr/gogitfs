@@ -61,3 +61,17 @@ func argsToFullList(da DaemonArgs) []string {
 	result = append(result, da.Serialize()...)
 	return result
 }
+
+func SerializeStringFlag(flag string, value string) string {
+	return fmt.Sprintf("--%s=%s", flag, value)
+}
+
+func SerializeBoolFlag(flag string, value bool) string {
+	var valueStr string
+	if value {
+		valueStr = "true"
+	} else {
+		valueStr = "false"
+	}
+	return fmt.Sprintf("--%s=%s", flag, valueStr)
+}

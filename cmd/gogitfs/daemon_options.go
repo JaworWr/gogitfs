@@ -2,9 +2,15 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/logging"
+)
+
+const (
+	logLevelFlag     = "log-level"
+	fuseLogFlag      = "fuse-log"
+	fuseLogPathFlag  = "fuse-log-path"
+	fuseDebugLogFlag = "fuse-log-debug"
 )
 
 type daemonOptions struct {
@@ -20,11 +26,11 @@ type daemonOptions struct {
 
 func (o *daemonOptions) Setup() {
 	o.logLevel = logging.Info
-	flag.Var(&o.logLevel, "log-level", "log level, can be given as upper-case string or an integer")
+	flag.Var(&o.logLevel, logLevelFlag, "log level, can be given as upper-case string or an integer")
 
-	flag.BoolVar(&o.fuseLog, "fuse-log", false, "enable FUSE log")
-	flag.StringVar(&o.fuseLogPath, "fuse-log-path", "", "FUSE log file name")
-	flag.BoolVar(&o.fuseDebugLog, "fuse-log-debug", false, "enable FUSE debug log")
+	flag.BoolVar(&o.fuseLog, fuseLogFlag, false, "enable FUSE log")
+	flag.StringVar(&o.fuseLogPath, fuseLogPathFlag, "", "FUSE log file name")
+	flag.BoolVar(&o.fuseDebugLog, fuseDebugLogFlag, false, "enable FUSE debug log")
 }
 
 func (o *daemonOptions) PositionalArgs() []daemon.PositionalArg {
@@ -47,7 +53,10 @@ func (o *daemonOptions) HandlePositionalArgs(args []string) error {
 
 func (o *daemonOptions) Serialize() []string {
 	return []string{
-		fmt.Sprintf("--loglevel=%v", o.logLevel.String()),
+		daemon.SerializeStringFlag(logLevelFlag, o.logLevel.String()),
+		daemon.SerializeBoolFlag(fuseLogFlag, o.fuseLog),
+		daemon.SerializeStringFlag(fuseLogPathFlag, o.fuseLogPath),
+		daemon.SerializeBoolFlag(fuseDebugLogFlag, o.fuseDebugLog),
 		o.repoDir,
 		o.mountDir,
 	}
