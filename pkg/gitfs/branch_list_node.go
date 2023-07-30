@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"errors"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/storer"
@@ -89,7 +90,7 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	refName := plumbing.NewBranchReferenceName(name)
 	branch, err := n.repo.Reference(refName, false)
 	if err != nil {
-		if err == plumbing.ErrReferenceNotFound {
+		if errors.Is(err, plumbing.ErrReferenceNotFound) {
 			logging.WarningLog.Printf("Branch %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
