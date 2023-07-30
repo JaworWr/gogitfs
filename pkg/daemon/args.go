@@ -82,6 +82,8 @@ func SerializeIntFlag(flag string, value int64) string {
 	return SerializeStringFlag(flag, valueStr)
 }
 
+var _ = SerializeIntFlag
+
 func SerializeUintFlag(flag string, value uint64) string {
 	valueStr := strconv.FormatUint(value, 10)
 	return SerializeStringFlag(flag, valueStr)
