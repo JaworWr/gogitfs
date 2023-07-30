@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"errors"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -154,7 +155,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	hash := plumbing.NewHash(name)
 	commit, err := n.repo.CommitObject(hash)
 	if err != nil {
-		if err == plumbing.ErrObjectNotFound {
+		if errors.Is(err, plumbing.ErrObjectNotFound) {
 			logging.WarningLog.Printf("Commit %v not found", name)
 			return nil, syscall.ENOENT
 		} else {

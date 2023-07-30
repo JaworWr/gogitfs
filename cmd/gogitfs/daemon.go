@@ -6,6 +6,7 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs"
 	"gogitfs/pkg/logging"
+	"gogitfs/pkg/mountpoint"
 	"math"
 	"os/user"
 	"strconv"
@@ -36,7 +37,12 @@ func (g *gogitfsDaemon) DaemonProcess(
 	if err != nil {
 		errHandler.HandleError(err)
 	}
-	logging.InfoLog.Printf("Mounting in %v\n", opts.mountDir)
+
+	mountDir, err := mountpoint.ValidateMountpoint(opts.mountDir, opts.allowNonEmpty)
+	if err != nil {
+		errHandler.HandleError(err)
+	}
+	logging.InfoLog.Printf("Mounting in %v\n", mountDir)
 
 	posTime := 6 * time.Hour
 	negTime := 15 * time.Second
@@ -49,7 +55,7 @@ func (g *gogitfsDaemon) DaemonProcess(
 	fsOpts.NegativeTimeout = &negTime
 	fsOpts.Logger = logging.ErrorLog
 
-	server, err := fs.Mount(opts.mountDir, root, fsOpts)
+	server, err := fs.Mount(mountDir, root, fsOpts)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
