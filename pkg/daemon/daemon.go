@@ -26,7 +26,7 @@ func SpawnDaemon(args DaemonArgs, info ProcessInfo, name string) error {
 	ctx := daemon.Context{
 		Args:        argsToFullList(args),
 		Env:         env,
-		LogFileName: envInfo.LogFileName,
+		LogFileName: environment.LogFileName,
 		LogFilePerm: 0755,
 	}
 	child, err := ctx.Reborn()

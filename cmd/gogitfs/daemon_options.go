@@ -12,7 +12,6 @@ type daemonOptions struct {
 	mountDir string
 
 	logLevel logging.LogLevelFlag
-	logPath  string
 
 	fuseLog      bool
 	fuseLogPath  string
@@ -21,13 +20,11 @@ type daemonOptions struct {
 
 func (o *daemonOptions) Setup() {
 	o.logLevel = logging.Info
-	flag.Var(&o.logLevel, "loglevel", "log level, can be given as upper-case string or an integer")
-	flag.Var(&o.logLevel, "log-level", "alias for loglevel")
-	flag.StringVar(&o.logPath, "log-path", "", "log file path")
+	flag.Var(&o.logLevel, "log-level", "log level, can be given as upper-case string or an integer")
 
 	flag.BoolVar(&o.fuseLog, "fuse-log", false, "enable FUSE log")
 	flag.StringVar(&o.fuseLogPath, "fuse-log-path", "", "FUSE log file name")
-	flag.BoolVar(&o.fuseDebugLog, "fuse-debug-log", false, "enable FUSE debug log")
+	flag.BoolVar(&o.fuseDebugLog, "fuse-log-debug", false, "enable FUSE debug log")
 }
 
 func (o *daemonOptions) PositionalArgs() []daemon.PositionalArg {

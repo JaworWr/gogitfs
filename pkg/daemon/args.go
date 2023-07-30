@@ -41,7 +41,7 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-func InitArgs(da DaemonArgs) {
+func SetupFlags(da DaemonArgs) {
 	da.Setup()
 	flag.Usage = func() {
 		var argnames string

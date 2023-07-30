@@ -12,7 +12,6 @@ import (
 
 type EnvInfo struct {
 	Env           []string
-	LogFileName   string
 	NamedPipeName string
 }
 
@@ -30,7 +29,6 @@ func GetDaemonEnv() (info EnvInfo, err error) {
 	}
 	// the following only runs in the parent process
 	baseName := fmt.Sprintf("%s-%d", environment.DaemonName, environment.DaemonParentPid)
-	info.LogFileName = filepath.Join(os.TempDir(), baseName+".log")
 	info.NamedPipeName = filepath.Join(os.TempDir(), baseName+".pipe")
 	info.Env = []string{
 		pipeKey + "=" + info.NamedPipeName,
