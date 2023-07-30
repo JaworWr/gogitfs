@@ -8,10 +8,12 @@ import (
 )
 
 const (
-	logLevelFlag  = "log-level"
-	fuseDebugFlag = "fuse-debug"
-	uidFlag       = "uid"
-	gidFlag       = "gid"
+	logLevelFlag      = "log-level"
+	fuseDebugFlag     = "fuse-debug"
+	allowNonEmptyFlag = "allow-nonempty"
+	uidFlag           = "uid"
+	gidFlag           = "gid"
+	allowOtherFlag    = "allow-other"
 )
 
 type daemonOptions struct {
@@ -21,8 +23,11 @@ type daemonOptions struct {
 	logLevel  logging.LogLevelFlag
 	fuseDebug bool
 
-	uid uint
-	gid uint
+	allowNonEmpty bool
+
+	uid        uint
+	gid        uint
+	allowOther bool
 }
 
 func (o *daemonOptions) Setup() {
@@ -30,8 +35,11 @@ func (o *daemonOptions) Setup() {
 	flag.Var(&o.logLevel, logLevelFlag, "log level, can be given as upper-case string or an integer")
 	flag.BoolVar(&o.fuseDebug, fuseDebugFlag, false, "show FUSE debug info in logs")
 
+	flag.BoolVar(&o.allowNonEmpty, allowNonEmptyFlag, false, "allow mounting in a non-empty directory")
+
 	flag.UintVar(&o.uid, uidFlag, math.MaxUint32, "UID (user ID) to mount as")
 	flag.UintVar(&o.gid, gidFlag, math.MaxUint32, "GID (group ID) to mount as")
+	flag.BoolVar(&o.allowOther, allowOtherFlag, false, "mount FUSE filesystem with 'allow_other'")
 }
 
 func (o *daemonOptions) PositionalArgs() []daemon.PositionalArg {
@@ -56,6 +64,10 @@ func (o *daemonOptions) Serialize() []string {
 	return []string{
 		daemon.SerializeStringFlag(logLevelFlag, o.logLevel.String()),
 		daemon.SerializeBoolFlag(fuseDebugFlag, o.fuseDebug),
+		daemon.SerializeBoolFlag(allowNonEmptyFlag, o.allowNonEmpty),
+		daemon.SerializeUintFlag(uidFlag, uint64(o.uid)),
+		daemon.SerializeUintFlag(gidFlag, uint64(o.gid)),
+		daemon.SerializeBoolFlag(allowOtherFlag, o.allowOther),
 		o.repoDir,
 		o.mountDir,
 	}
