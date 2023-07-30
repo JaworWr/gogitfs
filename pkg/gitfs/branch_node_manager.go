@@ -52,7 +52,7 @@ func (m *branchNodeManager) getOrInsert(
 	builder := func() (fs.InodeEmbedder, error) {
 		logging.InfoLog.Printf(
 			"Creating new node for branch %v",
-			branch.Name,
+			branchName,
 		)
 		nodeOpts := commitLogNodeOpts{linkLevels: 0, includeHead: true, symlinkHead: true}
 		logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, lastCommit, nodeOpts)
