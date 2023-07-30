@@ -4,6 +4,7 @@ import (
 	"flag"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/logging"
+	"math"
 )
 
 const (
@@ -11,6 +12,8 @@ const (
 	fuseLogFlag      = "fuse-log"
 	fuseLogPathFlag  = "fuse-log-path"
 	fuseDebugLogFlag = "fuse-log-debug"
+	uidFlag          = "uid"
+	gidFlag          = "gid"
 )
 
 type daemonOptions struct {
@@ -22,6 +25,9 @@ type daemonOptions struct {
 	fuseLog      bool
 	fuseLogPath  string
 	fuseDebugLog bool
+
+	uid uint
+	gid uint
 }
 
 func (o *daemonOptions) Setup() {
@@ -31,6 +37,9 @@ func (o *daemonOptions) Setup() {
 	flag.BoolVar(&o.fuseLog, fuseLogFlag, false, "enable FUSE log")
 	flag.StringVar(&o.fuseLogPath, fuseLogPathFlag, "", "FUSE log file name")
 	flag.BoolVar(&o.fuseDebugLog, fuseDebugLogFlag, false, "enable FUSE debug log")
+
+	flag.UintVar(&o.uid, uidFlag, math.MaxUint32, "UID (user ID) to mount as")
+	flag.UintVar(&o.gid, gidFlag, math.MaxUint32, "GID (group ID) to mount as")
 }
 
 func (o *daemonOptions) PositionalArgs() []daemon.PositionalArg {
