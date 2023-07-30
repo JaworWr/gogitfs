@@ -15,14 +15,14 @@ import (
 
 type branchNodeManager struct {
 	inode_manager.InodeManager
-	lock       *sync.Mutex
-	lastCommit map[string]plumbing.Hash
+	lock           *sync.Mutex
+	lastCommitHash map[string]plumbing.Hash
 }
 
 func (m *branchNodeManager) init(initialIno uint64) {
 	m.InodeManager.Init(initialIno)
 	m.lock = &sync.Mutex{}
-	m.lastCommit = make(map[string]plumbing.Hash)
+	m.lastCommitHash = make(map[string]plumbing.Hash)
 }
 
 func (m *branchNodeManager) getOrInsert(
@@ -32,12 +32,18 @@ func (m *branchNodeManager) getOrInsert(
 ) (*object.Commit, *fs.Inode, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	lastHash := m.lastCommit[branch.Name]
-	commit, err := getBranchCommit(parent.embeddedRepoNode().repo, branch)
+	lastHash := m.lastCommitHash[branch.Name]
+	lastCommit, err := getBranchCommit(parent.embeddedRepoNode().repo, branch)
 	if err != nil {
 		return nil, nil, err
 	}
-	overwrite := lastHash != commit.Hash
+	logging.DebugLog.Printf(
+		"Branch %v - last: %v, current: %v",
+		branch.Name,
+		lastHash.String(),
+		lastCommit.Hash.String(),
+	)
+	overwrite := lastHash != lastCommit.Hash
 	if err != nil {
 		return nil, nil, err
 	}
@@ -47,17 +53,18 @@ func (m *branchNodeManager) getOrInsert(
 			branch.Name,
 		)
 		nodeOpts := commitLogNodeOpts{linkLevels: 0, includeHead: true, symlinkHead: true}
-		logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, commit, nodeOpts)
+		logNode, err := newCommitLogNode(parent.embeddedRepoNode().repo, lastCommit, nodeOpts)
 		if err != nil {
 			return nil, err
 		}
+		m.lastCommitHash[branch.Name] = lastCommit.Hash
 		return logNode, nil
 	}
 	node, err := m.InodeManager.GetOrInsert(ctx, branch.Name, fuse.S_IFDIR, parent, builder, overwrite)
 	if err != nil {
 		return nil, nil, err
 	}
-	return commit, node, nil
+	return lastCommit, node, nil
 }
 
 func getBranchCommit(repo *git.Repository, branch *config.Branch) (*object.Commit, error) {
