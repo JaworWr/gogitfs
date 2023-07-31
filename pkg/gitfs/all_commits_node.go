@@ -11,6 +11,7 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -75,8 +76,14 @@ type commitDirStream struct {
 }
 
 func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
+	funcName := logging.CurrentFuncName(0, logging.Package)
 	_ = iter.ForEach(func(commit *object.Commit) error {
-		logging.DebugLog.Println("next commit")
+		logging.DebugLog.Printf(
+			"%s: read commit %v (%v)",
+			funcName,
+			commit.Hash,
+			strings.Replace(commit.Message, "\n", ";", -1),
+		)
 		var entry fuse.DirEntry
 		entry.Name = commit.Hash.String()
 		entry.Ino = commitNodeMgr.InoStore.GetOrInsert(commit.Hash.String(), false).Ino
@@ -93,7 +100,7 @@ func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan in
 }
 
 func newCommitDirStream(iter object.CommitIter, headLink *fs.Inode) *commitDirStream {
-	rest := make(chan *fuse.DirEntry)
+	rest := make(chan *fuse.DirEntry, 5)
 	stop := make(chan int)
 	go readIter(iter, rest, stop)
 	ds := &commitDirStream{headLink: headLink, rest: rest, stop: stop}

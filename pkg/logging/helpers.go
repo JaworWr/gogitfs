@@ -116,7 +116,10 @@ func concatCtx(dst CallCtx, src CallCtx) CallCtx {
 // with key, value returned by GetCallCtx()
 func LogCall(l CallCtxGetter, extra CallCtx) {
 	methodName := CurrentFuncName(1, Class)
-	info := l.GetCallCtx()
+	var info CallCtx
+	if l != nil {
+		info = l.GetCallCtx()
+	}
 	info = concatCtx(info, extra)
 	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
