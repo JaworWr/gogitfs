@@ -33,7 +33,7 @@ type branchDirStream struct {
 
 func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop <-chan int) {
 	funcName := logging.CurrentFuncName(0, logging.Package)
-	_ = iter.ForEach(func(reference *plumbing.Reference) error {
+	err := iter.ForEach(func(reference *plumbing.Reference) error {
 		logging.DebugLog.Printf(
 			"%s: read branch %v",
 			funcName,
@@ -51,6 +51,9 @@ func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop 
 		}
 		return nil
 	})
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+	}
 	close(next)
 }
 

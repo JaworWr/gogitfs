@@ -77,7 +77,7 @@ type commitDirStream struct {
 
 func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
 	funcName := logging.CurrentFuncName(0, logging.Package)
-	_ = iter.ForEach(func(commit *object.Commit) error {
+	err := iter.ForEach(func(commit *object.Commit) error {
 		logging.DebugLog.Printf(
 			"%s: read commit %v (%v)",
 			funcName,
@@ -96,6 +96,9 @@ func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-c
 		}
 		return nil
 	})
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+	}
 	close(next)
 }
 
