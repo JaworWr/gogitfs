@@ -11,6 +11,7 @@ import (
 	"gogitfs/pkg/logging"
 	"strings"
 	"syscall"
+	"time"
 )
 
 type commitNode struct {
@@ -33,6 +34,7 @@ func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrO
 }
 
 func (n *commitNode) OnAdd(ctx context.Context) {
+	defer logging.Benchmark(time.Now())
 	logging.LogCall(n, nil)
 	attr := utils.CommitAttr(n.commit)
 	attr.Mode = 0444

@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 )
 
 type FuncName int
@@ -123,4 +124,11 @@ func LogCall(l CallCtxGetter, extra CallCtx) {
 	info = concatCtx(info, extra)
 	methodInfo := formatCtx(info)
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
+}
+
+// Benchmark usage: defer Benchmark(time.Now())
+func Benchmark(start time.Time) {
+	elapsed := time.Since(start)
+	name := CurrentFuncName(1, Package)
+	DebugLog.Printf("%s took %s", name, elapsed)
 }
