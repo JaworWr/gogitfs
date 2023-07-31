@@ -11,7 +11,6 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
-	"io"
 	"syscall"
 	"time"
 )
@@ -27,52 +26,62 @@ func (n *branchListNode) GetCallCtx() logging.CallCtx {
 }
 
 type branchDirStream struct {
-	next *plumbing.Reference
-	err  error
-	iter storer.ReferenceIter
+	next *fuse.DirEntry
+	rest <-chan *fuse.DirEntry
+	stop chan<- int
+}
+
+func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop <-chan int) {
+	funcName := logging.CurrentFuncName(0, logging.Package)
+	_ = iter.ForEach(func(reference *plumbing.Reference) error {
+		logging.DebugLog.Printf(
+			"%s: read branch %v",
+			funcName,
+			reference.Name(),
+		)
+
+		var entry fuse.DirEntry
+		entry.Name = reference.Name().Short()
+		entry.Ino = branchNodeMgr.InoStore.GetOrInsert(reference.Name().Short(), false).Ino
+		entry.Mode = fuse.S_IFDIR
+		select {
+		case <-stop:
+			return nil
+		case next <- &entry:
+		}
+		return nil
+	})
+	close(next)
 }
 
 func newBranchDirStream(iter storer.ReferenceIter) *branchDirStream {
-	stream := &branchDirStream{iter: iter}
-	stream.update()
+	rest := make(chan *fuse.DirEntry, 5)
+	stop := make(chan int)
+	go readBranchIter(iter, rest, stop)
+	stream := &branchDirStream{rest: rest, stop: stop}
 	return stream
 }
 
-func (s *branchDirStream) update() {
-	next, err := s.iter.Next()
-	if err != nil {
-		next = nil
-		if err != io.EOF {
-			s.err = err
-		}
-	}
-	s.next = next
-}
-
 func (s *branchDirStream) HasNext() bool {
+	if s.next == nil {
+		s.next = <-s.rest
+	}
 	return s.next != nil
 }
 
 func (s *branchDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
-	if s.err != nil {
-		error_handler.Logging.HandleError(s.err)
-		errno = syscall.EIO
-		return
-	}
 	if s.next == nil {
 		errno = syscall.ENOENT
 		return
 	}
-	entry.Name = s.next.Name().Short()
-	entry.Ino = branchNodeMgr.InoStore.GetOrInsert(s.next.Hash().String(), false).Ino
-	entry.Mode = fuse.S_IFDIR
-	s.update()
+	entry = *s.next
+	s.next = nil
 	return
 }
 
 func (s *branchDirStream) Close() {
 	s.next = nil
-	s.iter.Close()
+	s.stop <- 1
 }
 
 func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {

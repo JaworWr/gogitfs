@@ -75,7 +75,7 @@ type commitDirStream struct {
 	stop     chan<- int
 }
 
-func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
+func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
 	funcName := logging.CurrentFuncName(0, logging.Package)
 	_ = iter.ForEach(func(commit *object.Commit) error {
 		logging.DebugLog.Printf(
@@ -84,6 +84,7 @@ func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan in
 			commit.Hash,
 			strings.Replace(commit.Message, "\n", ";", -1),
 		)
+
 		var entry fuse.DirEntry
 		entry.Name = commit.Hash.String()
 		entry.Ino = commitNodeMgr.InoStore.GetOrInsert(commit.Hash.String(), false).Ino
@@ -93,7 +94,6 @@ func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan in
 			return nil
 		case next <- &entry:
 		}
-
 		return nil
 	})
 	close(next)
@@ -102,7 +102,7 @@ func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan in
 func newCommitDirStream(iter object.CommitIter, headLink *fs.Inode) *commitDirStream {
 	rest := make(chan *fuse.DirEntry, 5)
 	stop := make(chan int)
-	go readIter(iter, rest, stop)
+	go readCommitIter(iter, rest, stop)
 	ds := &commitDirStream{headLink: headLink, rest: rest, stop: stop}
 	return ds
 }
