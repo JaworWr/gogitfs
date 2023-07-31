@@ -34,9 +34,7 @@ func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrO
 	return 0
 }
 
-func (n *commitNode) OnAdd(ctx context.Context) {
-	defer logging.Benchmark(time.Now())
-	logging.LogCall(n, nil)
+func (n *commitNode) addHashMsg(ctx context.Context) {
 	attr := utils.CommitAttr(n.commit)
 	attr.Mode = 0444
 	hashNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Hash.String())}
@@ -46,26 +44,38 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	msgNode := &fs.MemRegularFile{Attr: attr, Data: []byte(n.commit.Message)}
 	child = n.NewPersistentInode(ctx, msgNode, fs.StableAttr{Mode: fuse.S_IFREG})
 	n.AddChild("message", child, false)
+}
 
+func (n *commitNode) addParent(ctx context.Context) {
 	parent, err := n.commit.Parent(0)
 	if err == nil {
 		parentAttr := utils.CommitAttr(parent)
 		parentAttr.Mode = 0555
 		path := fmt.Sprintf("../%v", parent.Hash.String())
 		parentNode := &fs.MemSymlink{Attr: parentAttr, Data: []byte(path)}
-		child = n.NewPersistentInode(ctx, parentNode, fs.StableAttr{Mode: fuse.S_IFLNK})
+		child := n.NewPersistentInode(ctx, parentNode, fs.StableAttr{Mode: fuse.S_IFLNK})
 		n.AddChild("parent", child, false)
 	} else if !errors.Is(err, object.ErrParentNotFound) {
 		error_handler.Fatal.HandleError(err)
 	}
+}
 
+func (n *commitNode) addLog(ctx context.Context) {
 	nodeOpts := commitLogNodeOpts{linkLevels: 2}
 	logNode, err := newCommitLogNode(n.repo, n.commit, nodeOpts)
 	if err != nil {
 		error_handler.Fatal.HandleError(err)
 	}
-	child = n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFDIR})
+	child := n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("log", child, false)
+}
+
+func (n *commitNode) OnAdd(ctx context.Context) {
+	defer logging.Benchmark(time.Now())
+	logging.LogCall(n, nil)
+	n.addHashMsg(ctx)
+	n.addParent(ctx)
+	n.addLog(ctx)
 }
 
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
