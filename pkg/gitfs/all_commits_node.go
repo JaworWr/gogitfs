@@ -11,7 +11,6 @@ import (
 	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
-	"io"
 	"syscall"
 	"time"
 )
@@ -70,29 +69,41 @@ var _ fs.NodeGetattrer = (*headLinkNode)(nil)
 
 type commitDirStream struct {
 	headLink *fs.Inode
-	next     *object.Commit
-	err      error
-	iter     object.CommitIter
+	next     *fuse.DirEntry
+	rest     <-chan *fuse.DirEntry
+	stop     chan<- int
+}
+
+func readIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
+	_ = iter.ForEach(func(commit *object.Commit) error {
+		logging.DebugLog.Println("next commit")
+		var entry fuse.DirEntry
+		entry.Name = commit.Hash.String()
+		entry.Ino = commitNodeMgr.InoStore.GetOrInsert(commit.Hash.String(), false).Ino
+		entry.Mode = fuse.S_IFDIR
+		select {
+		case <-stop:
+			return nil
+		case next <- &entry:
+		}
+
+		return nil
+	})
+	close(next)
 }
 
 func newCommitDirStream(iter object.CommitIter, headLink *fs.Inode) *commitDirStream {
-	ds := &commitDirStream{iter: iter, headLink: headLink}
+	rest := make(chan *fuse.DirEntry)
+	stop := make(chan int)
+	go readIter(iter, rest, stop)
+	ds := &commitDirStream{headLink: headLink, rest: rest, stop: stop}
 	return ds
 }
 
-func (s *commitDirStream) update() {
-	s.headLink = nil
-	next, err := s.iter.Next()
-	if err != nil {
-		next = nil
-		if err != io.EOF {
-			s.err = err
-		}
-	}
-	s.next = next
-}
-
 func (s *commitDirStream) HasNext() bool {
+	if s.next == nil {
+		s.next = <-s.rest
+	}
 	return s.next != nil || s.headLink != nil
 }
 
@@ -101,30 +112,22 @@ func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 		entry.Name = "HEAD"
 		entry.Mode = fuse.S_IFLNK
 		entry.Ino = s.headLink.StableAttr().Ino
-		s.update()
-		return
-	}
-	if s.err != nil {
-		error_handler.Logging.HandleError(s.err)
-		errno = syscall.EIO
+		s.headLink = nil
 		return
 	}
 	if s.next == nil {
 		errno = syscall.ENOENT
 		return
 	}
-
-	entry.Name = s.next.Hash.String()
-	entry.Ino = commitNodeMgr.InoStore.GetOrInsert(s.next.Hash.String(), false).Ino
-	entry.Mode = fuse.S_IFDIR
-	s.update()
+	entry = *s.next
+	s.next = nil
 	return
 }
 
 func (s *commitDirStream) Close() {
 	s.next = nil
 	s.headLink = nil
-	s.iter.Close()
+	s.stop <- 1
 }
 
 func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
