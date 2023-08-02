@@ -12,7 +12,6 @@ import (
 	"gogitfs/pkg/logging"
 	"strings"
 	"syscall"
-	"time"
 )
 
 type commitNode struct {
@@ -71,7 +70,6 @@ func (n *commitNode) addLog(ctx context.Context) {
 }
 
 func (n *commitNode) OnAdd(ctx context.Context) {
-	defer logging.Benchmark(time.Now())
 	logging.LogCall(n, nil)
 	n.addHashMsg(ctx)
 	n.addParent(ctx)

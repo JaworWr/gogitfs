@@ -132,3 +132,5 @@ func Benchmark(start time.Time) {
 	name := CurrentFuncName(1, Package)
 	DebugLog.Printf("[BENCHMARK] %s: %v (%vms)", name, elapsed, elapsed.Seconds()*1000)
 }
+
+var _ = Benchmark
