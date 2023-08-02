@@ -130,5 +130,5 @@ func LogCall(l CallCtxGetter, extra CallCtx) {
 func Benchmark(start time.Time) {
 	elapsed := time.Since(start)
 	name := CurrentFuncName(1, Package)
-	DebugLog.Printf("%s took %s", name, elapsed)
+	DebugLog.Printf("[BENCHMARK] %s: %v (%vms)", name, elapsed, elapsed.Seconds()*1000)
 }
