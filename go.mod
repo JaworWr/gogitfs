@@ -7,6 +7,7 @@ require (
 	github.com/hanwen/go-fuse/v2 v2.3.0
 	github.com/sevlyar/go-daemon v0.1.6
 	github.com/stretchr/testify v1.4.0
+	golang.org/x/sys v0.8.0
 )
 
 require (
@@ -30,7 +31,6 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
