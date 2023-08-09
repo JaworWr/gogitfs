@@ -29,8 +29,8 @@ func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 	if err != nil {
 		return
 	}
+	logging.DebugLog.Printf("HEAD points to %v", head.Hash().String())
 	commit, err = repo.CommitObject(head.Hash())
-	logging.DebugLog.Printf("HEAD points to %v", commit.Hash.String())
 	return
 }
 
