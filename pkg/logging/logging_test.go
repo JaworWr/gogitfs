@@ -65,13 +65,13 @@ func Test_MakeFileLogger(t *testing.T) {
 	name := filepath.Join(tempdir, "test.log")
 	logger, err := MakeFileLogger(name)
 	logger.SetFlags(0)
-	assert.Nil(t, err, "Unexpected error when creating file")
+	assert.NoError(t, err, "File creation error")
 	logger.Printf("test")
 
 	file, err := os.Open(name)
-	assert.Nil(t, err, "Unexpected error when opening file")
+	assert.NoError(t, err, "File opening error")
 	data := make([]byte, 20)
 	n, err := file.Read(data)
-	assert.Nil(t, err, "Unexpected error when reading data")
-	assert.Equal(t, "test\n", string(data[:n]))
+	assert.NoError(t, err, "Data reading error")
+	assert.Equal(t, "test\n", string(data[:n]), "Read incorrect data")
 }
