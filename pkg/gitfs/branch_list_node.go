@@ -42,7 +42,7 @@ func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop 
 
 		var entry fuse.DirEntry
 		entry.Name = reference.Name().Short()
-		entry.Ino = branchNodeMgr.InoStore.GetOrInsert(reference.Name().Short(), false).Ino
+		entry.Ino = branchCache.InoStore.GetOrInsert(reference.Name().Short(), false).Ino
 		entry.Mode = fuse.S_IFDIR
 		select {
 		case <-stop:
@@ -110,7 +110,7 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 			return nil, syscall.EIO
 		}
 	}
-	commit, node, err := branchNodeMgr.getOrInsert(ctx, branch, n)
+	commit, node, err := branchCache.getOrInsert(ctx, branch, n)
 	if err != nil {
 		error_handler.Logging.HandleError(err)
 		return nil, syscall.EIO

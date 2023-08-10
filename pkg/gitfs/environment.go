@@ -2,8 +2,8 @@ package gitfs
 
 import "gogitfs/pkg/inode_manager"
 
-var commitNodeMgr *inode_manager.InodeManager
-var branchNodeMgr *branchNodeManager
+var commitCache *inode_manager.InodeCache
+var branchCache *branchNodeCache
 var initRun = false
 
 var commitIno uint64 = 2 << 60
@@ -13,9 +13,9 @@ func Init() {
 	if initRun {
 		return
 	}
-	commitNodeMgr = &inode_manager.InodeManager{}
-	commitNodeMgr.Init(commitIno)
-	branchNodeMgr = &branchNodeManager{}
-	branchNodeMgr.init(branchIno)
+	commitCache = &inode_manager.InodeCache{}
+	commitCache.Init(commitIno)
+	branchCache = &branchNodeCache{}
+	branchCache.init(branchIno)
 	initRun = true
 }

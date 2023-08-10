@@ -87,7 +87,7 @@ func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-c
 
 		var entry fuse.DirEntry
 		entry.Name = commit.Hash.String()
-		entry.Ino = commitNodeMgr.InoStore.GetOrInsert(commit.Hash.String(), false).Ino
+		entry.Ino = commitCache.InoStore.GetOrInsert(commit.Hash.String(), false).Ino
 		entry.Mode = fuse.S_IFDIR
 		select {
 		case <-stop:
