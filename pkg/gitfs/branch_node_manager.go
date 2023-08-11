@@ -11,19 +11,19 @@ import (
 	"sync"
 )
 
-type branchNodeManager struct {
-	inode_manager.InodeManager
+type branchNodeCache struct {
+	inode_manager.InodeCache
 	lock           *sync.Mutex
 	lastCommitHash map[string]plumbing.Hash
 }
 
-func (m *branchNodeManager) init(initialIno uint64) {
-	m.InodeManager.Init(initialIno)
+func (m *branchNodeCache) init(initialIno uint64) {
+	m.InodeCache.Init(initialIno)
 	m.lock = &sync.Mutex{}
 	m.lastCommitHash = make(map[string]plumbing.Hash)
 }
 
-func (m *branchNodeManager) getOrInsert(
+func (m *branchNodeCache) getOrInsert(
 	ctx context.Context,
 	branch *plumbing.Reference,
 	parent repoNodeEmbedder,
@@ -62,7 +62,7 @@ func (m *branchNodeManager) getOrInsert(
 		m.lastCommitHash[branchName] = lastCommit.Hash
 		return logNode, nil
 	}
-	node, err := m.InodeManager.GetOrInsert(ctx, branchName, fuse.S_IFDIR, parent, builder, overwrite)
+	node, err := m.InodeCache.GetOrInsert(ctx, branchName, fuse.S_IFDIR, parent, builder, overwrite)
 	if err != nil {
 		return nil, nil, err
 	}

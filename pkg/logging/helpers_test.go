@@ -25,40 +25,41 @@ func Test_formatCtx(t *testing.T) {
 }
 
 func Test_concatCtx(t *testing.T) {
-	var ctx1, ctx2 CallCtx
+	type args struct {
+		dst, src CallCtx
+	}
 
-	ctx1 = nil
-	ctx2 = CallCtx{
-		"a": 5,
-		"b": "foo\nbar",
+	testCases := []struct {
+		name string
+		args
+		expected CallCtx
+	}{
+		{
+			"nil+ctx",
+			args{nil, CallCtx{"a": 5, "b": "foo\nbar"}},
+			CallCtx{"a": 5, "b": "foo\nbar"},
+		},
+		{
+			"ctx+nil",
+			args{CallCtx{"a": 7, "b": "foo\nbaz"}, nil},
+			CallCtx{"a": 7, "b": "foo\nbaz"},
+		},
+		{
+			"ctx+ctx",
+			args{CallCtx{"a1": 7, "b1": "foo\nbaz"}, CallCtx{"a": 5, "b": "foo\nbar"}},
+			CallCtx{"a1": 7, "b1": "foo\nbaz", "a": 5, "b": "foo\nbar"},
+		},
 	}
-	assert.Equal(t, ctx2, concatCtx(ctx1, ctx2))
 
-	ctx1 = CallCtx{
-		"a": 5,
-		"b": "foo\nbar",
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := concatCtx(tc.dst, tc.src)
+			assert.Equal(t, tc.expected, result)
+		})
 	}
-	ctx2 = nil
-	assert.Equal(t, ctx1, concatCtx(ctx1, ctx2))
-
-	ctx1 = CallCtx{
-		"a": 5,
-		"b": "foo\nbar",
-	}
-	ctx2 = CallCtx{
-		"a1": 5,
-		"b1": "baz",
-	}
-	expected := CallCtx{
-		"a":  5,
-		"b":  "foo\nbar",
-		"a1": 5,
-		"b1": "baz",
-	}
-	assert.Equal(t, expected, concatCtx(ctx1, ctx2))
 }
 
-func funcNames() (full string, pkg string, class string, method string) {
+func funcNames() (full, pkg, class, method string) {
 	full = CurrentFuncName(0, Full)
 	pkg = CurrentFuncName(0, Package)
 	class = CurrentFuncName(0, Class)
@@ -68,7 +69,7 @@ func funcNames() (full string, pkg string, class string, method string) {
 
 type sampleClass struct{}
 
-func (c sampleClass) methodNames() (full string, pkg string, class string, method string) {
+func (c sampleClass) methodNames() (full, pkg, class, method string) {
 	full = CurrentFuncName(0, Full)
 	pkg = CurrentFuncName(0, Package)
 	class = CurrentFuncName(0, Class)
@@ -77,16 +78,44 @@ func (c sampleClass) methodNames() (full string, pkg string, class string, metho
 }
 
 func Test_CurrentFuncName(t *testing.T) {
-	var full, pkg, class, method string
-	full, pkg, class, method = funcNames()
-	assert.Equal(t, "gogitfs/pkg/logging.funcNames", full)
-	assert.Equal(t, "logging.funcNames", pkg)
-	assert.Equal(t, "funcNames", class)
-	assert.Equal(t, "funcNames", method)
+	type expected struct {
+		full, pkg, class, method string
+	}
 
-	full, pkg, class, method = sampleClass{}.methodNames()
-	assert.Equal(t, "gogitfs/pkg/logging.sampleClass.methodNames", full)
-	assert.Equal(t, "logging.sampleClass.methodNames", pkg)
-	assert.Equal(t, "sampleClass.methodNames", class)
-	assert.Equal(t, "methodNames", method)
+	testCases := []struct {
+		name string
+		f    func() (string, string, string, string)
+		expected
+	}{
+		{
+			"function",
+			funcNames,
+			expected{
+				"gogitfs/pkg/logging.funcNames",
+				"logging.funcNames",
+				"funcNames",
+				"funcNames",
+			},
+		},
+		{
+			"method",
+			sampleClass{}.methodNames,
+			expected{
+				"gogitfs/pkg/logging.sampleClass.methodNames",
+				"logging.sampleClass.methodNames",
+				"sampleClass.methodNames",
+				"methodNames",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			full, pkg, class, method := tc.f()
+			assert.Equal(t, tc.full, full)
+			assert.Equal(t, tc.pkg, pkg)
+			assert.Equal(t, tc.class, class)
+			assert.Equal(t, tc.method, method)
+		})
+	}
 }

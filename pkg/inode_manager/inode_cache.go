@@ -6,13 +6,13 @@ import (
 	"sync"
 )
 
-type InodeManager struct {
+type InodeCache struct {
 	lock       *sync.Mutex
 	InoStore   *InoStore
 	InodeStore *InodeStore
 }
 
-func (m *InodeManager) Init(initialIno uint64) {
+func (m *InodeCache) Init(initialIno uint64) {
 	m.lock = &sync.Mutex{}
 	m.InoStore = &InoStore{}
 	m.InoStore.Init(initialIno)
@@ -20,7 +20,7 @@ func (m *InodeManager) Init(initialIno uint64) {
 	m.InodeStore.Init()
 }
 
-func (m *InodeManager) GetOrInsert(
+func (m *InodeCache) GetOrInsert(
 	ctx context.Context,
 	key string,
 	mode uint32,
