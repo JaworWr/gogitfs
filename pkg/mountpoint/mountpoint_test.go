@@ -9,13 +9,13 @@ import (
 )
 
 func Test_ValidateMountpoint(t *testing.T) {
-	// helper function
+	// helper functions
 	tmpdir := t.TempDir()
 	tmpPath := func(parts ...string) string {
 		parts = append([]string{tmpdir}, parts...)
 		return path.Join(parts...)
 	}
-	mkfile := func(parts ...string) {
+	mkFile := func(parts ...string) {
 		p := tmpPath(parts...)
 		f, err := os.Create(p)
 		if err != nil {
@@ -23,7 +23,7 @@ func Test_ValidateMountpoint(t *testing.T) {
 		}
 		_ = f.Close()
 	}
-	mkdir := func(perm os.FileMode, parts ...string) {
+	mkDir := func(perm os.FileMode, parts ...string) {
 		p := tmpPath(parts...)
 		err := os.Mkdir(p, perm)
 		if err != nil {
@@ -32,12 +32,12 @@ func Test_ValidateMountpoint(t *testing.T) {
 	}
 
 	// setup files for tests
-	mkfile("file")
-	mkdir(0555, "readonly")
-	mkdir(0777|fs.ModeSticky, "sticky")
-	mkdir(0777, "empty")
-	mkdir(0777, "nonempty")
-	mkfile("nonempty", "foo")
+	mkFile("file")
+	mkDir(0555, "readonly")
+	mkDir(0777|fs.ModeSticky, "sticky")
+	mkDir(0777, "empty")
+	mkDir(0777, "nonempty")
+	mkFile("nonempty", "foo")
 
 	// run tests
 	type args struct {
