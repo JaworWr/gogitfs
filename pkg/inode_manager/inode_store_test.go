@@ -9,7 +9,7 @@ import (
 )
 
 func TestInodeStore_GetOrInsert(t *testing.T) {
-	testWithNode(t, func(t *testing.T, ctx context.Context, root *fs.Inode) {
+	testWithMount(t, func(t *testing.T, ctx context.Context, root *fs.Inode) {
 		store := &InodeStore{}
 		store.Init()
 
