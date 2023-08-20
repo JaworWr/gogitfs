@@ -7,6 +7,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/stretchr/testify/assert"
+	"gogitfs/pkg/logging"
 	"testing"
 	"time"
 )
@@ -45,6 +47,10 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	if err != nil {
 		errHandler(err)
 	}
+	_, err = worktree.Add(msg)
+	if err != nil {
+		errHandler(err)
+	}
 	sig := commitSignatures[msg]
 	opts := git.CommitOptions{Author: &sig}
 	hash, err := worktree.Commit(msg, &opts)
@@ -55,6 +61,7 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 }
 
 func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.Hash) {
+	logging.Init(logging.Debug)
 	errHandler := func(err error) {
 		t.Fatalf("Error during repo creation: %v", err)
 	}
@@ -83,9 +90,32 @@ func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.H
 		errHandler(err)
 	}
 	commits["baz"] = addCommit(t, worktree, fs, "baz")
-	err = worktree.Checkout(&git.CheckoutOptions{})
+	opts = git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName("main"),
+	}
+	err = worktree.Checkout(&opts)
 	if err != nil {
 		errHandler(err)
 	}
 	return
+}
+
+func Test_headCommit(t *testing.T) {
+	repo, commits := makeRepo(t)
+	n := &repoNode{repo: repo}
+
+	c, err := headCommit(n)
+	assert.NoError(t, err)
+	assert.Equal(t, commits["bar"], c.Hash)
+}
+
+func Test_headAttr(t *testing.T) {
+	repo, _ := makeRepo(t)
+	n := &repoNode{repo: repo}
+
+	attr, err := headAttr(n)
+	assert.NoError(t, err)
+	assert.Equal(t, attr.Atime, uint64(commitSignatures["bar"].When.Unix()))
+	assert.Equal(t, attr.Ctime, uint64(commitSignatures["bar"].When.Unix()))
+	assert.Equal(t, attr.Mtime, uint64(commitSignatures["bar"].When.Unix()))
 }
