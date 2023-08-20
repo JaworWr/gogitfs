@@ -13,6 +13,10 @@ import (
 
 type MountCb = func(t *testing.T, ctx context.Context, inode *fs.Inode)
 
+func noOpCb(_ *testing.T, _ context.Context, _ *fs.Inode) {
+
+}
+
 func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Server, mountPath string) {
 	tmpdir := t.TempDir()
 	mountPath = path.Join(tmpdir, "root")
@@ -43,9 +47,7 @@ func Test_RootNode(t *testing.T) {
 	node := &RootNode{}
 	repo, _ := makeRepo(t)
 	node.repo = repo
-	server, mountPath := mountNode(t, node, func(t *testing.T, ctx context.Context, inode *fs.Inode) {
-
-	})
+	server, mountPath := mountNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()
