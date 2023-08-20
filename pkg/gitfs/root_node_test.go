@@ -1,27 +1,43 @@
 package gitfs
 
 import (
-	"context"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
-	"path"
+	"github.com/stretchr/testify/assert"
+	"os"
+	"sort"
 	"testing"
 )
 
-type MountCb = func(t *testing.T, ctx context.Context, path string, root *fs.Inode)
-
-func testWithMount(t *testing.T, n fs.InodeEmbedder, cb MountCb) {
-	tmpdir := t.TempDir()
-	root := &fs.Inode{}
-	opts := &fs.Options{}
-	opts.OnAdd = func(ctx context.Context) {
-		node := root.NewPersistentInode(ctx, n, fs.StableAttr{Mode: fuse.S_IFDIR})
-		root.AddChild("root", node, false)
-		cb(t, ctx, path.Join(tmpdir, "root"), root)
-	}
-	server, err := fs.Mount(tmpdir, root, opts)
+func mountNode(t *testing.T, n fs.InodeEmbedder) (server *fuse.Server, path string) {
+	path = t.TempDir()
+	server, err := fs.Mount(path, n, &fs.Options{})
 	if err != nil {
 		t.Fatalf("Cannot mount server. Error: %v", err)
 	}
-	_ = server.Unmount()
+	return
+}
+
+func getSortedNames(entries []os.DirEntry) []string {
+	names := make([]string, len(entries))
+	for i, e := range entries {
+		names[i] = e.Name()
+	}
+	sort.Strings(names)
+	return names
+}
+
+func Test_RootNode(t *testing.T) {
+	node := &RootNode{}
+	repo, _ := makeRepo(t)
+	node.repo = repo
+	server, path := mountNode(t, node)
+	defer func() {
+		_ = server.Unmount()
+	}()
+	entries, err := os.ReadDir(path)
+	names := getSortedNames(entries)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"branches", "commits"}, names)
+
 }
