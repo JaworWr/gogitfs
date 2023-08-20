@@ -54,14 +54,15 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	return hash
 }
 
-func makeRepo(t *testing.T) *git.Repository {
+func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.Hash) {
 	errHandler := func(err error) {
 		t.Fatalf("Error during repo creation: %v", err)
 	}
 	tempdir := t.TempDir()
 	fs := osfs.New(tempdir)
 	storage := memory.NewStorage()
-	repo, err := git.Init(storage, fs)
+	initOpts := git.InitOptions{DefaultBranch: plumbing.NewBranchReferenceName("main")}
+	repo, err := git.InitWithOptions(storage, fs, initOpts)
 	if err != nil {
 		errHandler(err)
 	}
@@ -69,6 +70,22 @@ func makeRepo(t *testing.T) *git.Repository {
 	if err != nil {
 		errHandler(err)
 	}
-	_ = worktree
-	return repo
+	commits = make(map[string]plumbing.Hash)
+	commits["foo"] = addCommit(t, worktree, fs, "foo")
+	commits["bar"] = addCommit(t, worktree, fs, "bar")
+	opts := git.CheckoutOptions{
+		Hash:   commits["foo"],
+		Branch: plumbing.NewBranchReferenceName("branch"),
+		Create: true,
+	}
+	err = worktree.Checkout(&opts)
+	if err != nil {
+		errHandler(err)
+	}
+	commits["baz"] = addCommit(t, worktree, fs, "baz")
+	err = worktree.Checkout(&git.CheckoutOptions{})
+	if err != nil {
+		errHandler(err)
+	}
+	return
 }
