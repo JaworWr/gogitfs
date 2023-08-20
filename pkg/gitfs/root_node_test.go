@@ -23,7 +23,7 @@ func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Serve
 		root.AddChild("root", node, false)
 		cb(t, ctx, node)
 	}
-	server, err := fs.Mount(tmpdir, root, &fs.Options{})
+	server, err := fs.Mount(tmpdir, root, opts)
 	if err != nil {
 		t.Fatalf("Cannot mount server. Error: %v", err)
 	}
@@ -53,5 +53,7 @@ func Test_RootNode(t *testing.T) {
 	names := getSortedNames(entries)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"branches", "commits"}, names)
-
+	stat, err := os.Stat(mountPath)
+	assert.NoError(t, err)
+	assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
 }
