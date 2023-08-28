@@ -62,7 +62,7 @@ func Test_RootNode(t *testing.T) {
 		_ = server.Unmount()
 	}()
 	expected := []string{"branches", "commits"}
-	assertDirEntries(t, mountPath, expected, "ls returned unexpected result")
+	assertDirEntries(t, mountPath, expected, "unexpected ls result")
 	stat, err := os.Stat(mountPath)
 	assert.NoError(t, err)
 	assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
