@@ -43,11 +43,14 @@ func getSortedNames(entries []os.DirEntry) []string {
 	return names
 }
 
-func assertSortedEntries(t *testing.T, path string, expected []string, msg_and_args ...interface{}) {
+func assertDirEntries(t *testing.T, path string, expected []string, msg_and_args ...interface{}) {
 	entries, err := os.ReadDir(path)
 	names := getSortedNames(entries)
+	sorted := make([]string, len(expected))
+	copy(sorted, expected)
+	sort.Strings(sorted)
 	assert.NoError(t, err)
-	assert.Equal(t, expected, names, msg_and_args...)
+	assert.Equal(t, sorted, names, msg_and_args...)
 }
 
 func Test_RootNode(t *testing.T) {
@@ -59,7 +62,7 @@ func Test_RootNode(t *testing.T) {
 		_ = server.Unmount()
 	}()
 	expected := []string{"branches", "commits"}
-	assertSortedEntries(t, mountPath, expected, "ls returned unexpected result")
+	assertDirEntries(t, mountPath, expected, "ls returned unexpected result")
 	stat, err := os.Stat(mountPath)
 	assert.NoError(t, err)
 	assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
