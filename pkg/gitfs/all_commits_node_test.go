@@ -15,7 +15,13 @@ func Test_allCommitsNode(t *testing.T) {
 	for _, hash := range extras.commits {
 		expected = append(expected, hash.String())
 	}
-	assertDirEntries(t, mountPath, expected, "unexpected ls result")
+	t.Run("ls", func(t *testing.T) {
+		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+	})
 
-	//hash = add
+	t.Run("ls with added commit", func(t *testing.T) {
+		hash := addCommit(t, extras.worktree, extras.fs, "aaa")
+		expected = append(expected, hash.String())
+		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+	})
 }
