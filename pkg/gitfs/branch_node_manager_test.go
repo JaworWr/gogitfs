@@ -32,6 +32,26 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 				args{"foo_branch", extras.commits["foo"]},
 				fs.StableAttr{Mode: fuse.S_IFDIR, Ino: 16, Gen: 0},
 			},
+			{
+				"repeat foo",
+				args{"foo_branch", extras.commits["foo"]},
+				fs.StableAttr{Mode: fuse.S_IFDIR, Ino: 16, Gen: 0},
+			},
+			{
+				"insert bar",
+				args{"bar_branch", extras.commits["bar"]},
+				fs.StableAttr{Mode: fuse.S_IFDIR, Ino: 17, Gen: 0},
+			},
+			{
+				"update foo",
+				args{"foo_branch", extras.commits["baz"]},
+				fs.StableAttr{Mode: fuse.S_IFDIR, Ino: 16, Gen: 1},
+			},
+			{
+				"update foo again",
+				args{"foo_branch", extras.commits["foo"]},
+				fs.StableAttr{Mode: fuse.S_IFDIR, Ino: 16, Gen: 2},
+			},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
