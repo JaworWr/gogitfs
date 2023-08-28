@@ -4,7 +4,7 @@ import "testing"
 
 func Test_allCommitsNode(t *testing.T) {
 	Init()
-	repo, commits := makeRepo(t)
+	repo, extras := makeRepo(t)
 	node := newAllCommitsNode(repo)
 	server, mountPath := mountNode(t, node, noOpCb)
 	defer func() {
@@ -12,8 +12,10 @@ func Test_allCommitsNode(t *testing.T) {
 	}()
 
 	expected := []string{"HEAD"}
-	for _, hash := range commits {
+	for _, hash := range extras.commits {
 		expected = append(expected, hash.String())
 	}
 	assertDirEntries(t, mountPath, expected, "unexpected ls result")
+
+	//hash = add
 }

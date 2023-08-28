@@ -60,7 +60,13 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	return hash
 }
 
-func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.Hash) {
+type repoExtras struct {
+	commits  map[string]plumbing.Hash
+	worktree *git.Worktree
+	fs       billy.Filesystem
+}
+
+func makeRepo(t *testing.T) (repo *git.Repository, extras repoExtras) {
 	logging.Init(logging.Debug)
 	errHandler := func(err error) {
 		t.Fatalf("Error during repo creation: %v", err)
@@ -77,7 +83,7 @@ func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.H
 	if err != nil {
 		errHandler(err)
 	}
-	commits = make(map[string]plumbing.Hash)
+	commits := make(map[string]plumbing.Hash)
 	commits["foo"] = addCommit(t, worktree, fs, "foo")
 	commits["bar"] = addCommit(t, worktree, fs, "bar")
 	opts := git.CheckoutOptions{
@@ -97,16 +103,19 @@ func makeRepo(t *testing.T) (repo *git.Repository, commits map[string]plumbing.H
 	if err != nil {
 		errHandler(err)
 	}
+	extras.commits = commits
+	extras.worktree = worktree
+	extras.fs = fs
 	return
 }
 
 func Test_headCommit(t *testing.T) {
-	repo, commits := makeRepo(t)
+	repo, extras := makeRepo(t)
 	n := &repoNode{repo: repo}
 
 	c, err := headCommit(n)
 	assert.NoError(t, err)
-	assert.Equal(t, commits["bar"], c.Hash)
+	assert.Equal(t, extras.commits["bar"], c.Hash)
 }
 
 func Test_headAttr(t *testing.T) {
