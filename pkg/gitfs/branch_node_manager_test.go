@@ -65,6 +65,17 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 				assert.Equal(t, tc.expectedAttr, inode.StableAttr(), "attributes are not equal")
 			})
 		}
+
+		t.Run("non-existent commit", func(t *testing.T) {
+			reference := plumbing.NewHashReference(
+				plumbing.NewBranchReferenceName("aaa"),
+				plumbing.Hash{},
+			)
+			commit, inode, err := cache.getOrInsert(ctx, reference, node)
+			assert.Nil(t, commit)
+			assert.Nil(t, inode)
+			assert.Error(t, err)
+		})
 	})
 	_ = server.Unmount()
 }
