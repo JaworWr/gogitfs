@@ -75,6 +75,10 @@ type commitDirStream struct {
 	stop     chan<- int
 }
 
+func (s *commitDirStream) GetCallCtx() logging.CallCtx {
+	return nil
+}
+
 func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-chan int) {
 	funcName := logging.CurrentFuncName(0, logging.Package)
 	err := iter.ForEach(func(commit *object.Commit) error {
@@ -104,13 +108,14 @@ func readCommitIter(iter object.CommitIter, next chan<- *fuse.DirEntry, stop <-c
 
 func newCommitDirStream(iter object.CommitIter, headLink *fs.Inode) *commitDirStream {
 	rest := make(chan *fuse.DirEntry, 5)
-	stop := make(chan int)
+	stop := make(chan int, 1)
 	go readCommitIter(iter, rest, stop)
 	ds := &commitDirStream{headLink: headLink, rest: rest, stop: stop}
 	return ds
 }
 
 func (s *commitDirStream) HasNext() bool {
+	logging.LogCall(s, logging.CallCtx{})
 	if s.next == nil {
 		s.next = <-s.rest
 	}
@@ -118,6 +123,7 @@ func (s *commitDirStream) HasNext() bool {
 }
 
 func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
+	logging.LogCall(s, logging.CallCtx{})
 	if s.headLink != nil {
 		entry.Name = "HEAD"
 		entry.Mode = fuse.S_IFLNK
@@ -135,6 +141,7 @@ func (s *commitDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 }
 
 func (s *commitDirStream) Close() {
+	logging.LogCall(s, logging.CallCtx{})
 	s.next = nil
 	s.headLink = nil
 	s.stop <- 1

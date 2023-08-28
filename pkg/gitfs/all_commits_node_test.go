@@ -3,6 +3,7 @@ package gitfs
 import "testing"
 
 func Test_allCommitsNode(t *testing.T) {
+	Init()
 	repo, commits := makeRepo(t)
 	node := newAllCommitsNode(repo)
 	server, mountPath := mountNode(t, node, noOpCb)
@@ -10,7 +11,7 @@ func Test_allCommitsNode(t *testing.T) {
 		_ = server.Unmount()
 	}()
 
-	expected := make([]string, 0)
+	expected := []string{"HEAD"}
 	for _, hash := range commits {
 		expected = append(expected, hash.String())
 	}
