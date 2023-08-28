@@ -29,6 +29,11 @@ var commitSignatures = map[string]object.Signature{
 		Email: "ef@ef.com",
 		When:  time.Date(2023, 2, 7, 9, 32, 10, 0, time.UTC),
 	},
+	"new": {
+		Name:  "New Commiter",
+		Email: "new.commiter@git.com",
+		When:  time.Date(2024, 2, 7, 9, 38, 10, 0, time.UTC),
+	},
 }
 
 func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg string) plumbing.Hash {
