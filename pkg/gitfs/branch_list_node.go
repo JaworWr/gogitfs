@@ -59,7 +59,7 @@ func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop 
 
 func newBranchDirStream(iter storer.ReferenceIter) *branchDirStream {
 	rest := make(chan *fuse.DirEntry, 5)
-	stop := make(chan int)
+	stop := make(chan int, 1)
 	go readBranchIter(iter, rest, stop)
 	stream := &branchDirStream{rest: rest, stop: stop}
 	return stream
