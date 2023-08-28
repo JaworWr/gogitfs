@@ -65,6 +65,13 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	return hash
 }
 
+func checkout(t *testing.T, worktree *git.Worktree, opts *git.CheckoutOptions) {
+	err := worktree.Checkout(opts)
+	if err != nil {
+		t.Fatalf("Error during checkout: %v", err)
+	}
+}
+
 type repoExtras struct {
 	commits  map[string]plumbing.Hash
 	worktree *git.Worktree
@@ -96,18 +103,12 @@ func makeRepo(t *testing.T) (repo *git.Repository, extras repoExtras) {
 		Branch: plumbing.NewBranchReferenceName("branch"),
 		Create: true,
 	}
-	err = worktree.Checkout(&opts)
-	if err != nil {
-		errHandler(err)
-	}
+	checkout(t, worktree, &opts)
 	commits["baz"] = addCommit(t, worktree, fs, "baz")
 	opts = git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName("main"),
 	}
-	err = worktree.Checkout(&opts)
-	if err != nil {
-		errHandler(err)
-	}
+	checkout(t, worktree, &opts)
 	extras.commits = commits
 	extras.worktree = worktree
 	extras.fs = fs
