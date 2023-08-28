@@ -61,7 +61,7 @@ func Test_RootNode(t *testing.T) {
 	defer func() {
 		_ = server.Unmount()
 	}()
-	t.Run("entries", func(t *testing.T) {
+	t.Run("ls", func(t *testing.T) {
 		expected := []string{"branches", "commits"}
 		assertDirEntries(t, mountPath, expected, "unexpected ls result")
 	})
