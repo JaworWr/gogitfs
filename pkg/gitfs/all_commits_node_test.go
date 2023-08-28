@@ -36,6 +36,12 @@ func Test_allCommitsNode(t *testing.T) {
 		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
 	})
 
+	t.Run("HEAD stat", func(t *testing.T) {
+		stat, err := os.Stat(path.Join(mountPath, "HEAD"))
+		assert.NoError(t, err)
+		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
+	})
+
 	hash := addCommit(t, extras.worktree, extras.fs, "new")
 	expected = append(expected, hash.String())
 
