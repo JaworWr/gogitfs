@@ -97,11 +97,12 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 		_ = server.Unmount()
 	}()
 
+	expectedCommits := make([]string, len(expected.commits))
+	for i, c := range expected.commits {
+		expectedCommits[i] = extras.commits[c].String()
+	}
 	t.Run("ls", func(t *testing.T) {
-		expectedEntries := make([]string, len(expected.commits))
-		for i, c := range expected.commits {
-			expectedEntries[i] = extras.commits[c].String()
-		}
+		expectedEntries := expectedCommits
 		if expected.expectHeadLink {
 			expectedEntries = append(expectedEntries, "HEAD")
 		}
@@ -115,6 +116,20 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 		p, err := os.Readlink(path.Join(mountPath, "HEAD"))
 		assert.NoError(t, err, "unexpected Readlink error")
 		assert.Equal(t, expected.headLink, p)
+	})
+
+	t.Run("symlinks", func(t *testing.T) {
+		p := path.Join(mountPath, expectedCommits[0])
+		stat, err := os.Lstat(p)
+		assert.NoError(t, err, "unexpected Stat error")
+		if expected.expectSymlinks {
+			assert.Equal(t, os.ModeSymlink, stat.Mode()&os.ModeSymlink, "commit node should be a symlink")
+			p1, err := os.Readlink(p)
+			assert.NoError(t, err, "unexpected Readlink error")
+			assert.Equal(t, expected.symlinkPrefix+expectedCommits[0], p1, "incorrect symlink path")
+		} else {
+			assert.Equal(t, os.ModeDir, stat.Mode()&os.ModeDir, "commit node should be a directory")
+		}
 	})
 }
 
