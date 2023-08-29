@@ -2,7 +2,6 @@ package gitfs
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
@@ -42,6 +41,17 @@ func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.At
 	return fs.OK
 }
 
+func commitSymlink(commit *object.Commit, basePath *string) *fs.MemSymlink {
+	attr := utils.CommitAttr(commit)
+	attr.Mode = 0555
+	p := commit.Hash.String()
+	if basePath != nil {
+		p = path.Join(*basePath, p)
+	}
+	link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
+	return link
+}
+
 func (n *commitLogNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
 	if n.basePath == nil {
@@ -50,10 +60,7 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 		n.addSymlinks(ctx, *n.basePath)
 	}
 	if n.symlinkHead {
-		attr := utils.CommitAttr(n.from)
-		attr.Mode = 0555
-		p := n.from.Hash.String()
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
+		link := commitSymlink(n.from, nil)
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		n.AddChild("HEAD", node, false)
 	}
@@ -78,10 +85,7 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		if !n.includeHead && commit.Hash == n.from.Hash {
 			return nil
 		}
-		attr := utils.CommitAttr(commit)
-		attr.Mode = 0555
-		p := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
+		link := commitSymlink(commit, &basePath)
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
