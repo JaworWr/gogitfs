@@ -9,13 +9,8 @@ import (
 )
 
 func catFile(t *testing.T, path string) string {
-	errHandler := func(err error) {
-		t.Fatalf("Error reading file %v: %v", path, err)
-	}
 	data, err := os.ReadFile(path)
-	if err != nil {
-		errHandler(err)
-	}
+	assert.NoError(t, err, "unexpected error when reading %v", path)
 	return string(data)
 }
 
@@ -47,10 +42,22 @@ func commitNodeTestCase(t *testing.T, repo *git.Repository, extras repoExtras, c
 		assert.Equal(t, commitSignatures[commit].When, stat.ModTime().UTC(), "incorrect time for commit node")
 
 		for _, c := range []string{"message", "hash"} {
-			stat, err := os.Stat(path.Join(mountPath, c))
-			assert.NoError(t, err, "unexpected error for %v", c)
-			assert.Equal(t, commitSignatures[commit].When, stat.ModTime().UTC(), "incorrect time for %v", c)
+			t.Run(c, func(t *testing.T) {
+				stat, err := os.Stat(path.Join(mountPath, c))
+				assert.NoError(t, err, "unexpected error")
+				assert.Equal(t, commitSignatures[commit].When, stat.ModTime().UTC(), "incorrect time")
+			})
 		}
+	})
+	t.Run("cat", func(t *testing.T) {
+		t.Run("message", func(t *testing.T) {
+			result := catFile(t, path.Join(mountPath, "message"))
+			assert.Equal(t, commit, result)
+		})
+		t.Run("hash", func(t *testing.T) {
+			result := catFile(t, path.Join(mountPath, "hash"))
+			assert.Equal(t, extras.commits[commit].String(), result)
+		})
 	})
 }
 
