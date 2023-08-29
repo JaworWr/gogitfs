@@ -2,14 +2,13 @@ package gitfs
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
-	"strings"
+	"path"
 	"syscall"
 )
 
@@ -42,6 +41,17 @@ func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.At
 	return fs.OK
 }
 
+func commitSymlink(commit *object.Commit, basePath *string) *fs.MemSymlink {
+	attr := utils.CommitAttr(commit)
+	attr.Mode = 0555
+	p := commit.Hash.String()
+	if basePath != nil {
+		p = path.Join(*basePath, p)
+	}
+	link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
+	return link
+}
+
 func (n *commitLogNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
 	if n.basePath == nil {
@@ -50,10 +60,7 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 		n.addSymlinks(ctx, *n.basePath)
 	}
 	if n.symlinkHead {
-		attr := utils.CommitAttr(n.from)
-		attr.Mode = 0555
-		path := n.from.Hash.String()
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		link := commitSymlink(n.from, nil)
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		n.AddChild("HEAD", node, false)
 	}
@@ -78,10 +85,7 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		if !n.includeHead && commit.Hash == n.from.Hash {
 			return nil
 		}
-		attr := utils.CommitAttr(commit)
-		attr.Mode = 0555
-		path := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		link := commitSymlink(commit, &basePath)
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
@@ -89,6 +93,20 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		}
 		return nil
 	})
+}
+
+func getBasePath(linkLevels int) (basePath *string) {
+	if linkLevels == 0 {
+		basePath = nil
+	} else {
+		elems := make([]string, linkLevels)
+		for i := range elems {
+			elems[i] = ".."
+		}
+		p := path.Join(elems...)
+		basePath = &p
+	}
+	return
 }
 
 type commitLogNodeOpts struct {
@@ -111,16 +129,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	node.symlinkHead = nodeOpts.symlinkHead
 	node.attr = utils.CommitAttr(from)
 	node.attr.Mode = 0555
-	if nodeOpts.linkLevels == 0 {
-		node.basePath = nil
-	} else {
-		elems := make([]string, nodeOpts.linkLevels)
-		for i := range elems {
-			elems[i] = ".."
-		}
-		basePath := strings.Join(elems, "/")
-		node.basePath = &basePath
-	}
+	node.basePath = getBasePath(nodeOpts.linkLevels)
 	return node, nil
 }
 
