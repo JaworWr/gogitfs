@@ -32,14 +32,14 @@ func Test_allCommitsNode(t *testing.T) {
 
 	t.Run("stat", func(t *testing.T) {
 		stat, err := os.Stat(mountPath)
-		assert.NoError(t, err)
-		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
+		assert.NoError(t, err, "unexpected error")
+		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC(), "incorrect time")
 	})
 
 	t.Run("HEAD stat", func(t *testing.T) {
-		stat, err := os.Stat(path.Join(mountPath, "HEAD"))
-		assert.NoError(t, err)
-		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
+		stat, err := os.Lstat(path.Join(mountPath, "HEAD"))
+		assert.NoError(t, err, "unexpected error")
+		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC(), "incorrect time")
 	})
 
 	hash := addCommit(t, extras.worktree, extras.fs, "new")
