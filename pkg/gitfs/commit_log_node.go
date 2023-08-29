@@ -9,7 +9,7 @@ import (
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
-	"strings"
+	"path"
 	"syscall"
 )
 
@@ -52,8 +52,8 @@ func (n *commitLogNode) OnAdd(ctx context.Context) {
 	if n.symlinkHead {
 		attr := utils.CommitAttr(n.from)
 		attr.Mode = 0555
-		path := n.from.Hash.String()
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		p := n.from.Hash.String()
+		link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		n.AddChild("HEAD", node, false)
 	}
@@ -80,8 +80,8 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		}
 		attr := utils.CommitAttr(commit)
 		attr.Mode = 0555
-		path := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
-		link := &fs.MemSymlink{Attr: attr, Data: []byte(path)}
+		p := fmt.Sprintf("%v/%v", basePath, commit.Hash.String())
+		link := &fs.MemSymlink{Attr: attr, Data: []byte(p)}
 		node := n.NewPersistentInode(ctx, link, fs.StableAttr{Mode: fuse.S_IFLNK})
 		succ := n.AddChild(commit.Hash.String(), node, false)
 		if !succ {
@@ -89,6 +89,20 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 		}
 		return nil
 	})
+}
+
+func getBasePath(linkLevels int) (basePath *string) {
+	if linkLevels == 0 {
+		basePath = nil
+	} else {
+		elems := make([]string, linkLevels)
+		for i := range elems {
+			elems[i] = ".."
+		}
+		p := path.Join(elems...)
+		basePath = &p
+	}
+	return
 }
 
 type commitLogNodeOpts struct {
@@ -111,16 +125,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	node.symlinkHead = nodeOpts.symlinkHead
 	node.attr = utils.CommitAttr(from)
 	node.attr.Mode = 0555
-	if nodeOpts.linkLevels == 0 {
-		node.basePath = nil
-	} else {
-		elems := make([]string, nodeOpts.linkLevels)
-		for i := range elems {
-			elems[i] = ".."
-		}
-		basePath := strings.Join(elems, "/")
-		node.basePath = &basePath
-	}
+	node.basePath = getBasePath(nodeOpts.linkLevels)
 	return node, nil
 }
 
