@@ -39,8 +39,8 @@ func Test_commitSymlink(t *testing.T) {
 			}
 			node := commitSymlink(commit, tc.basePath)
 
-			path := string(node.Data)
-			assert.Equal(t, tc.expectedPrefix+hash.String(), path, "incorrect path")
+			p := string(node.Data)
+			assert.Equal(t, tc.expectedPrefix+hash.String(), p, "incorrect path")
 
 			commitTime := commitSignatures[tc.commit].When.Unix()
 			assert.EqualValues(t, commitTime, node.Attr.Mtime, "incorrect mtime")
