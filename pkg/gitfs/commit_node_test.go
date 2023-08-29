@@ -8,6 +8,17 @@ import (
 	"testing"
 )
 
+func catFile(t *testing.T, path string) string {
+	errHandler := func(err error) {
+		t.Fatalf("Error reading file %v: %v", path, err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		errHandler(err)
+	}
+	return string(data)
+}
+
 func commitNodeTestCase(t *testing.T, repo *git.Repository, extras repoExtras, commit string, hasParent bool) {
 	node := &commitNode{}
 	node.repo = repo
