@@ -94,7 +94,17 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 	defer func() {
 		_ = server.Unmount()
 	}()
-	_ = mountPath
+
+	t.Run("ls", func(t *testing.T) {
+		expectedEntries := make([]string, len(expected.commits))
+		for i, c := range expected.commits {
+			expectedEntries[i] = extras.commits[c].String()
+		}
+		if expected.expectHeadLink {
+			expectedEntries = append(expectedEntries, "HEAD")
+		}
+		assertDirEntries(t, mountPath, expectedEntries, "unexpected ls result")
+	})
 }
 
 func Test_CommitLogNode(t *testing.T) {
@@ -138,7 +148,7 @@ func Test_CommitLogNode(t *testing.T) {
 		},
 		{
 			"head symlink",
-			args{"bar", commitLogNodeOpts{0, false, false}},
+			args{"bar", commitLogNodeOpts{0, true, true}},
 			commitLogNodeTestExpected{
 				commits:        []string{"bar", "foo"},
 				expectHeadLink: true,
@@ -148,7 +158,7 @@ func Test_CommitLogNode(t *testing.T) {
 		},
 		{
 			"symlinks",
-			args{"bar", commitLogNodeOpts{2, false, false}},
+			args{"bar", commitLogNodeOpts{2, true, false}},
 			commitLogNodeTestExpected{
 				commits:        []string{"bar", "foo"},
 				expectHeadLink: false,
@@ -158,12 +168,14 @@ func Test_CommitLogNode(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		commitObj, err := repo.CommitObject(extras.commits[tc.from])
-		if err != nil {
-			t.Fatalf("Error during commit retrieval: %v", err)
-		}
-		node, err := newCommitLogNode(repo, commitObj, tc.opts)
-		assert.NoError(t, err, "unexpected error during node creation")
-		commitLogNodeTestCase(t, extras, node, tc.expected)
+		t.Run(tc.name, func(t *testing.T) {
+			commitObj, err := repo.CommitObject(extras.commits[tc.from])
+			if err != nil {
+				t.Fatalf("Error during commit retrieval: %v", err)
+			}
+			node, err := newCommitLogNode(repo, commitObj, tc.opts)
+			assert.NoError(t, err, "unexpected error during node creation")
+			commitLogNodeTestCase(t, extras, node, tc.expected)
+		})
 	}
 }
