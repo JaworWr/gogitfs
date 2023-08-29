@@ -2,6 +2,8 @@ package gitfs
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
+	"path"
 	"testing"
 )
 
@@ -104,6 +106,15 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 			expectedEntries = append(expectedEntries, "HEAD")
 		}
 		assertDirEntries(t, mountPath, expectedEntries, "unexpected ls result")
+	})
+
+	t.Run("head link", func(t *testing.T) {
+		if !expected.expectHeadLink {
+			return
+		}
+		p, err := os.Readlink(path.Join(mountPath, "HEAD"))
+		assert.NoError(t, err, "unexpected Readlink error")
+		assert.Equal(t, expected.headLink, p)
 	})
 }
 
