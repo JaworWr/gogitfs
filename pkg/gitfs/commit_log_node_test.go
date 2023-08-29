@@ -80,3 +80,44 @@ func Test_getBasePath(t *testing.T) {
 		})
 	}
 }
+
+type commitLogNodeTestExpected struct {
+	commits        []string
+	expectHead     bool
+	expectHeadLink bool
+	headLink       string
+	expectSymlinks bool
+	symlinkPrefix  string
+}
+
+func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode, expected commitLogNodeTestExpected) {
+	server, mountPath := mountNode(t, node, noOpCb)
+	defer func() {
+		_ = server.Unmount()
+	}()
+	_ = mountPath
+}
+
+func Test_CommitLogNode(t *testing.T) {
+	repo, extras := makeRepo(t)
+	type args struct {
+		from string
+		opts commitLogNodeOpts
+	}
+	testCases := []struct {
+		name string
+		args
+		expected commitLogNodeTestExpected
+	}{
+		// TODO cases
+	}
+	for _, tc := range testCases {
+		commitObj, err := repo.CommitObject(extras.commits[tc.from])
+		if err != nil {
+			t.Fatalf("Error during commit retrieval: %v", err)
+		}
+		node, err := newCommitLogNode(repo, commitObj, tc.opts)
+		assert.NoError(t, err, "unexpected error during node creation")
+		commitLogNodeTestCase(t, extras, node, tc.expected)
+	}
+}
