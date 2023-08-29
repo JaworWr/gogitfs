@@ -52,7 +52,21 @@ func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	return []byte(head.Hash().String()), fs.OK
 }
 
+func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	logging.LogCall(n, nil)
+	attr, err := headAttr(n)
+	if err != nil {
+		error_handler.Logging.HandleError(err)
+		return syscall.EIO
+	}
+	out.Attr = attr
+	out.Attr.Mode = 0555
+	out.SetTimeout(HeadAttrValid)
+	return fs.OK
+}
+
 var _ fs.NodeReadlinker = (*headLinkNode)(nil)
+var _ fs.NodeGetattrer = (*headLinkNode)(nil)
 
 type commitDirStream struct {
 	headLink *fs.Inode
