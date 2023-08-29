@@ -83,7 +83,6 @@ func Test_getBasePath(t *testing.T) {
 
 type commitLogNodeTestExpected struct {
 	commits        []string
-	expectHead     bool
 	expectHeadLink bool
 	headLink       string
 	expectSymlinks bool
@@ -99,6 +98,7 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 }
 
 func Test_CommitLogNode(t *testing.T) {
+	Init()
 	repo, extras := makeRepo(t)
 	type args struct {
 		from string
@@ -109,7 +109,53 @@ func Test_CommitLogNode(t *testing.T) {
 		args
 		expected commitLogNodeTestExpected
 	}{
-		// TODO cases
+		{
+			"from bar",
+			args{"bar", commitLogNodeOpts{0, true, false}},
+			commitLogNodeTestExpected{
+				commits:        []string{"bar", "foo"},
+				expectHeadLink: false,
+				expectSymlinks: false,
+			},
+		},
+		{
+			"from baz",
+			args{"baz", commitLogNodeOpts{0, true, false}},
+			commitLogNodeTestExpected{
+				commits:        []string{"baz", "foo"},
+				expectHeadLink: false,
+				expectSymlinks: false,
+			},
+		},
+		{
+			"no head",
+			args{"bar", commitLogNodeOpts{0, false, false}},
+			commitLogNodeTestExpected{
+				commits:        []string{"foo"},
+				expectHeadLink: false,
+				expectSymlinks: false,
+			},
+		},
+		{
+			"head symlink",
+			args{"bar", commitLogNodeOpts{0, false, false}},
+			commitLogNodeTestExpected{
+				commits:        []string{"bar", "foo"},
+				expectHeadLink: true,
+				headLink:       extras.commits["bar"].String(),
+				expectSymlinks: false,
+			},
+		},
+		{
+			"symlinks",
+			args{"bar", commitLogNodeOpts{2, false, false}},
+			commitLogNodeTestExpected{
+				commits:        []string{"bar", "foo"},
+				expectHeadLink: false,
+				expectSymlinks: true,
+				symlinkPrefix:  "../../",
+			},
+		},
 	}
 	for _, tc := range testCases {
 		commitObj, err := repo.CommitObject(extras.commits[tc.from])
