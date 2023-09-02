@@ -1,3 +1,4 @@
+// Package logging provides utilities for log formatting and level-based filtering.
 package logging
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strconv"
 )
 
+// LogLevelFlag represents log levels, with 0 (DEBUG) being the most detailed
 type LogLevelFlag int
 
 const (
@@ -31,10 +33,12 @@ var strToLevel = map[string]LogLevelFlag{
 	"ERROR":   Error,
 }
 
+// String returns a string representation of a log level flag
 func (f *LogLevelFlag) String() string {
 	return levelToStr[*f]
 }
 
+// Set parses log level flag, either from an integer or an all-caps name.
 func (f *LogLevelFlag) Set(s string) error {
 	val, ok := strToLevel[s]
 	if ok {
@@ -53,13 +57,22 @@ func (f *LogLevelFlag) Set(s string) error {
 	return nil
 }
 
+// current logging level
 var logLevel = Info
 
+// DebugLog writes messages with level DEBUG
 var DebugLog *log.Logger
+
+// InfoLog writes messages with level INFO
 var InfoLog *log.Logger
+
+// WarningLog writes messages with level WARNING
 var WarningLog *log.Logger
+
+// ErrorLog writes messages with level ERROR
 var ErrorLog *log.Logger
 
+// LoggerWithLevel returns the logger for the specified level
 func LoggerWithLevel(l LogLevelFlag) *log.Logger {
 	switch l {
 	case Debug:
@@ -94,6 +107,7 @@ func makeLogger(level LogLevelFlag) *log.Logger {
 	return log.New(output, prefix, log.LstdFlags|log.Lmsgprefix)
 }
 
+// MakeFileLogger returns a logger writing to the specified file
 func MakeFileLogger(name string) (*log.Logger, error) {
 	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
