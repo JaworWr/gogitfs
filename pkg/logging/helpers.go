@@ -115,6 +115,13 @@ func concatCtx(dst CallCtx, src CallCtx) CallCtx {
 	return dst
 }
 
+// NilCtx is a helper value to run LogCall when context is irrelevant.
+type NilCtx struct{}
+
+func (n NilCtx) GetCallCtx() CallCtx {
+	return nil
+}
+
 // LogCall logs information about the function call.
 // The format is Called <method> (<key>=<value>), with key, value as specified by extra and GetCallCtx()
 func LogCall(l CallCtxGetter, extra CallCtx) {
