@@ -1,6 +1,8 @@
 // Package error_handling deals with sending errors from the daemon to the parent process.
 package error_handling
 
+import "errors"
+
 type subprocessError struct {
 	Msg string
 }
@@ -33,8 +35,5 @@ func (w *subprocessErrorWrapper) unwrap() error {
 	return &w.Err
 }
 
-type UnknownError struct{}
-
-func (_ *UnknownError) Error() string {
-	return "unknown error in daemon - see log file"
-}
+// UnknownError is a generic error for subprocess failures.
+var UnknownError = errors.New("unknown error in daemon - see log file")

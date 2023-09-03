@@ -45,7 +45,7 @@ func (s *SubprocessErrorSender) HandleSuccess() {
 
 func (s *SubprocessErrorSender) Close() {
 	if !s.errorSent {
-		s.HandleError(&UnknownError{})
+		s.HandleError(UnknownError)
 	}
 	_ = s.fifo.Close()
 	return
