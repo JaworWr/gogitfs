@@ -35,6 +35,11 @@ func TestAttrStore_GetOrInsert(t *testing.T) {
 			fs.StableAttr{Ino: 16, Gen: 1},
 		},
 		{
+			"repeat first again",
+			args{"a", false},
+			fs.StableAttr{Ino: 16, Gen: 1},
+		},
+		{
 			"insert another",
 			args{"b", false},
 			fs.StableAttr{Ino: 17, Gen: 0},

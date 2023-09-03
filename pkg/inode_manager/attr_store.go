@@ -5,21 +5,30 @@ import (
 	"sync"
 )
 
+type attrEntry struct {
+	ino, gen uint64
+}
+
+func (e *attrEntry) toStableAttr() fs.StableAttr {
+	return fs.StableAttr{
+		Ino: e.ino,
+		Gen: e.gen,
+	}
+}
+
 // AttrStore stores and generates inode and generation numbers for each key.
 // Each new key gets the next available number.
 type AttrStore struct {
 	lock    *sync.Mutex
 	nextIno uint64
-	inos    map[string]uint64
-	gens    map[string]uint64
+	attrs   map[string]*attrEntry
 }
 
 // Init performs initialization. initialIno specifies the number that wil lbe received by the first added key.
 func (s *AttrStore) Init(initialIno uint64) {
 	s.lock = &sync.Mutex{}
 	s.nextIno = initialIno
-	s.inos = make(map[string]uint64)
-	s.gens = make(map[string]uint64)
+	s.attrs = make(map[string]*attrEntry)
 }
 
 // GetOrInsert for a given key returns fs.StableAttr containing inode and generation number for the given key.
@@ -29,18 +38,15 @@ func (s *AttrStore) Init(initialIno uint64) {
 func (s *AttrStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	ino, keyPresent := s.inos[key]
+	attr, keyPresent := s.attrs[key]
 	if keyPresent {
-		gen := s.gens[key]
 		if updateGen {
-			gen += 1
-			s.gens[key] += 1
+			attr.gen += 1
 		}
-		return fs.StableAttr{Ino: ino, Gen: gen}
+	} else {
+		attr = &attrEntry{ino: s.nextIno, gen: 0}
+		s.nextIno += 1
+		s.attrs[key] = attr
 	}
-	result := fs.StableAttr{Ino: s.nextIno, Gen: 0}
-	s.inos[key] = s.nextIno
-	s.nextIno += 1
-	s.gens[key] = 0
-	return result
+	return attr.toStableAttr()
 }
