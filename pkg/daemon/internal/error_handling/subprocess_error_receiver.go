@@ -5,13 +5,14 @@ import (
 	"os"
 )
 
+// SubprocessErrorReceiver receives the error or success notification from the daemon.
 type SubprocessErrorReceiver struct {
 	fifo    *os.File
 	decoder *gob.Decoder
 }
 
-func NewSubprocessErrorReceiver(fifoName string) (*SubprocessErrorReceiver, error) {
-	fifo, err := os.OpenFile(fifoName, os.O_RDONLY, os.ModeNamedPipe)
+func NewSubprocessErrorReceiver(namedPipeName string) (*SubprocessErrorReceiver, error) {
+	fifo, err := os.OpenFile(namedPipeName, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
 		return nil, err
 	}
@@ -20,6 +21,7 @@ func NewSubprocessErrorReceiver(fifoName string) (*SubprocessErrorReceiver, erro
 	return &receiver, nil
 }
 
+// Receive waits until status information is available from the daemon. Received error, if any, is returned.
 func (r *SubprocessErrorReceiver) Receive() error {
 	var wrapper subprocessErrorWrapper
 	err := r.decoder.Decode(&wrapper)
