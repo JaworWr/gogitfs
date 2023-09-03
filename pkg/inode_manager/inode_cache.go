@@ -8,13 +8,13 @@ import (
 
 type InodeCache struct {
 	lock       *sync.Mutex
-	InoStore   *InoStore
+	InoStore   *AttrStore
 	InodeStore *InodeStore
 }
 
 func (m *InodeCache) Init(initialIno uint64) {
 	m.lock = &sync.Mutex{}
-	m.InoStore = &InoStore{}
+	m.InoStore = &AttrStore{}
 	m.InoStore.Init(initialIno)
 	m.InodeStore = &InodeStore{}
 	m.InodeStore.Init()

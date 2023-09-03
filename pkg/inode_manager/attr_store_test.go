@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestInoStore_GetOrInsert(t *testing.T) {
-	store := InoStore{}
+func TestAttrStore_GetOrInsert(t *testing.T) {
+	store := AttrStore{}
 	store.Init(16)
 
 	type args struct {

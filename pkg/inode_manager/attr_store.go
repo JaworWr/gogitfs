@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-// InoStore stores and generates inode and generation numbers for each key.
+// AttrStore stores and generates inode and generation numbers for each key.
 // Each new key gets the next available number.
-type InoStore struct {
+type AttrStore struct {
 	lock    *sync.Mutex
 	nextIno uint64
 	inos    map[string]uint64
@@ -15,7 +15,7 @@ type InoStore struct {
 }
 
 // Init performs initialization. initialIno specifies the number that wil lbe received by the first added key.
-func (s *InoStore) Init(initialIno uint64) {
+func (s *AttrStore) Init(initialIno uint64) {
 	s.lock = &sync.Mutex{}
 	s.nextIno = initialIno
 	s.inos = make(map[string]uint64)
@@ -26,7 +26,7 @@ func (s *InoStore) Init(initialIno uint64) {
 // If the key was absent, it returns the next available inode number and generation number equal to 0.
 // Subsequent calls will return the same inode number and the same generation number if updateGen == false.
 // If updateGen == tre, the returned generation number will be increased.
-func (s *InoStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
+func (s *AttrStore) GetOrInsert(key string, updateGen bool) fs.StableAttr {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	ino, keyPresent := s.inos[key]
