@@ -11,15 +11,17 @@ func main() {
 	var err error
 
 	daemonObj := &gogitfsDaemon{}
-	da := &gogitfsDaemon{}
-	err = parseArgs(da)
+	d := &gogitfsDaemon{}
+	err = daemon.ParseFlags(d, func() {
+
+	})
 	if err != nil {
 		fmt.Println(err.Error())
 		flag.Usage()
 		os.Exit(2)
 	}
 
-	err = daemon.SpawnDaemon(da, nil, daemonObj, "gogitfs")
+	err = daemon.SpawnDaemon(d, nil, daemonObj, "gogitfs")
 	if err != nil {
 		fmt.Printf("cannot start the filesystem daemon\n%v\n", err.Error())
 		os.Exit(1)

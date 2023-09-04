@@ -4,7 +4,7 @@ package daemon
 import (
 	"flag"
 	"github.com/sevlyar/go-daemon"
-	"gogitfs/pkg/daemon/environment"
+	"gogitfs/pkg/daemon/internal/environment"
 	"gogitfs/pkg/daemon/internal/error_handling"
 	"gogitfs/pkg/error_handler"
 )

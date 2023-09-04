@@ -3,7 +3,7 @@ package error_handling
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"gogitfs/pkg/daemon/environment"
+	"gogitfs/pkg/daemon/internal/environment"
 	"testing"
 )
 

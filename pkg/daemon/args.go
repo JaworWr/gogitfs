@@ -3,10 +3,14 @@ package daemon
 import (
 	"flag"
 	"fmt"
+	"github.com/sevlyar/go-daemon"
+	"gogitfs/pkg/daemon/internal/environment"
 	"os"
 	"strconv"
 	"strings"
 )
+
+var showHelp = false
 
 // PositionalArg represents a positional command line argument.
 // This struct is used to generate better help messages.
@@ -50,9 +54,20 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-// SetupFlags sets up command line flags and usage string for the given CliArgs object.
-func SetupFlags(ca CliArgs, extraSetup func()) {
+func setupHelpFlag() {
+	flag.BoolVar(&showHelp, "help", false, "show help and exit")
+	flag.BoolVar(&showHelp, "h", false, "shorthand for --help")
+}
+
+// ParseFlags sets up command line flags and usage string for the given CliArgs object.
+// parentSetup is meant to set up flags
+func ParseFlags(ca CliArgs, parentSetup func()) error {
+	setupHelpFlag()
+	environment.SetupFlags()
 	ca.Setup()
+	if !daemon.WasReborn() {
+		parentSetup()
+	}
 	flag.Usage = func() {
 		var argnames string
 		for _, arg := range ca.PositionalArgs() {
@@ -64,6 +79,9 @@ func SetupFlags(ca CliArgs, extraSetup func()) {
 		}
 		flag.PrintDefaults()
 	}
+	flag.Parse()
+	err := ca.HandlePositionalArgs(flag.Args())
+	return err
 }
 
 func argsToFullList(ca CliArgs) []string {
