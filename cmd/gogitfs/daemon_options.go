@@ -73,4 +73,4 @@ func (d *gogitfsDaemon) Serialize() []string {
 	}
 }
 
-var _ daemon.CliArgs = (*gogitfsDaemon)(nil)
+var _ daemon.SerializableCliArgs = (*gogitfsDaemon)(nil)

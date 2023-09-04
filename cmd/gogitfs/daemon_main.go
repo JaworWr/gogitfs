@@ -14,21 +14,19 @@ import (
 )
 
 func (d *gogitfsDaemon) DaemonMain(
-	args daemon.CliArgs,
 	errHandler error_handler.ErrorHandler,
 	succHandler daemon.SuccessHandler,
 ) {
-	opts := args.(*gogitfsDaemon)
-	logging.Init(opts.logLevel)
+	logging.Init(d.logLevel)
 	errHandler = error_handler.MakeLoggingHandler(errHandler, logging.Error)
-	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())
-	logging.InfoLog.Printf("Repository path: %v\n", opts.repoDir)
-	root, err := gitfs.NewRootNode(opts.repoDir)
+	logging.InfoLog.Printf("Log level: %v\n", d.logLevel.String())
+	logging.InfoLog.Printf("Repository path: %v\n", d.repoDir)
+	root, err := gitfs.NewRootNode(d.repoDir)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
 
-	mountDir, err := mountpoint.ValidateMountpoint(opts.mountDir, opts.allowNonEmpty)
+	mountDir, err := mountpoint.ValidateMountpoint(d.mountDir, d.allowNonEmpty)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
@@ -36,7 +34,7 @@ func (d *gogitfsDaemon) DaemonMain(
 
 	posTime := 6 * time.Hour
 	negTime := 15 * time.Second
-	fsOpts, err := getFuseOpts(opts)
+	fsOpts, err := getFuseOpts(d)
 	if err != nil {
 		errHandler.HandleError(err)
 	}

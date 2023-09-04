@@ -28,6 +28,9 @@ type CliArgs interface {
 	PositionalArgs() []PositionalArg
 	// HandlePositionalArgs parses positional arguments provided on the command line
 	HandlePositionalArgs([]string) error
+}
+
+type SerializableCliArgs interface {
 	// Serialize converts current values into parseable command line arguments.
 	Serialize() []string
 }
@@ -84,7 +87,7 @@ func ParseFlags(ca CliArgs, parentSetup func()) error {
 	return err
 }
 
-func argsToFullList(ca CliArgs) []string {
+func argsToFullList(ca SerializableCliArgs) []string {
 	// prepend process name to arguments
 	result := []string{os.Args[0]}
 	result = append(result, ca.Serialize()...)
