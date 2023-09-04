@@ -15,8 +15,10 @@ func setupHelp() {
 	flag.BoolVar(&shouldShowHelp, "h", false, "shorthand for --help")
 }
 
-func parseArgs(da daemon.DaemonArgs) error {
-	daemon.SetupFlags(da)
+func parseArgs(da daemon.CliArgs) error {
+	daemon.SetupFlags(da, func() {
+
+	})
 	if !goDaemon.WasReborn() {
 		setupHelp()
 		environment.SetupFlags()

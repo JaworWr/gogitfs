@@ -11,7 +11,7 @@ func main() {
 	var err error
 
 	daemonObj := &gogitfsDaemon{}
-	da := &daemonOptions{}
+	da := &gogitfsDaemon{}
 	err = parseArgs(da)
 	if err != nil {
 		fmt.Println(err.Error())

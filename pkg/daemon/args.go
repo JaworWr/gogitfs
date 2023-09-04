@@ -15,9 +15,9 @@ type PositionalArg struct {
 	Usage string
 }
 
-// DaemonArgs manages command line arguments required by the daemon.
+// CliArgs manages command line arguments required by the daemon.
 // This interface should be implemented by structs describing daemon options.
-type DaemonArgs interface {
+type CliArgs interface {
 	// Setup sets up parsing of command line flags.
 	Setup()
 	// PositionalArgs returns an array of expected positional arguments.
@@ -50,26 +50,26 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-// SetupFlags sets up command line flags and usage string for the given DaemonArgs object.
-func SetupFlags(da DaemonArgs) {
-	da.Setup()
+// SetupFlags sets up command line flags and usage string for the given CliArgs object.
+func SetupFlags(ca CliArgs, extraSetup func()) {
+	ca.Setup()
 	flag.Usage = func() {
 		var argnames string
-		for _, arg := range da.PositionalArgs() {
+		for _, arg := range ca.PositionalArgs() {
 			argnames += " <" + arg.Name + ">"
 		}
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s%s\n", os.Args[0], argnames)
-		for _, arg := range da.PositionalArgs() {
+		for _, arg := range ca.PositionalArgs() {
 			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  %s\t%s\n", arg.Name, arg.Usage)
 		}
 		flag.PrintDefaults()
 	}
 }
 
-func argsToFullList(da DaemonArgs) []string {
+func argsToFullList(ca CliArgs) []string {
 	// prepend process name to arguments
 	result := []string{os.Args[0]}
-	result = append(result, da.Serialize()...)
+	result = append(result, ca.Serialize()...)
 	return result
 }
 

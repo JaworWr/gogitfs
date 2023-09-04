@@ -13,14 +13,12 @@ import (
 	"time"
 )
 
-type gogitfsDaemon struct{}
-
-func (g *gogitfsDaemon) DaemonMain(
-	args daemon.DaemonArgs,
+func (d *gogitfsDaemon) DaemonMain(
+	args daemon.CliArgs,
 	errHandler error_handler.ErrorHandler,
 	succHandler daemon.SuccessHandler,
 ) {
-	opts := args.(*daemonOptions)
+	opts := args.(*gogitfsDaemon)
 	logging.Init(opts.logLevel)
 	errHandler = error_handler.MakeLoggingHandler(errHandler, logging.Error)
 	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())
@@ -58,11 +56,11 @@ func (g *gogitfsDaemon) DaemonMain(
 
 var _ daemon.Daemon = (*gogitfsDaemon)(nil)
 
-func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
+func getFuseOpts(d *gogitfsDaemon) (*fs.Options, error) {
 	opts := &fs.Options{}
 	// get current UID and GID if not specified
-	opts.UID = uint32(o.uid)
-	opts.GID = uint32(o.gid)
+	opts.UID = uint32(d.uid)
+	opts.GID = uint32(d.gid)
 	if opts.UID == math.MaxUint32 || opts.GID == math.MaxUint32 {
 		currentUser, err := user.Current()
 		if err != nil {
@@ -84,6 +82,6 @@ func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
 		}
 	}
 
-	opts.Debug = o.fuseDebug
+	opts.Debug = d.fuseDebug
 	return opts, nil
 }
