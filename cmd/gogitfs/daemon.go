@@ -15,15 +15,7 @@ import (
 
 type gogitfsDaemon struct{}
 
-func (g *gogitfsDaemon) DaemonArgs() daemon.DaemonArgs {
-	return &daemonOptions{}
-}
-
-func (g *gogitfsDaemon) DaemonEnv() []string {
-	return nil
-}
-
-func (g *gogitfsDaemon) DaemonProcess(
+func (g *gogitfsDaemon) DaemonMain(
 	args daemon.DaemonArgs,
 	errHandler error_handler.ErrorHandler,
 	succHandler daemon.SuccessHandler,
@@ -64,7 +56,7 @@ func (g *gogitfsDaemon) DaemonProcess(
 	logging.InfoLog.Printf("Exiting")
 }
 
-var _ daemon.ProcessInfo = (*gogitfsDaemon)(nil)
+var _ daemon.Daemon = (*gogitfsDaemon)(nil)
 
 func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
 	opts := &fs.Options{}
