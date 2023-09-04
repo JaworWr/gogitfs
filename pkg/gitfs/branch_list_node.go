@@ -42,7 +42,7 @@ func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop 
 
 		var entry fuse.DirEntry
 		entry.Name = reference.Name().Short()
-		entry.Ino = branchCache.InoStore.GetOrInsert(reference.Name().Short(), false).Ino
+		entry.Ino = branchCache.AttrStore.GetOrInsert(reference.Name().Short(), false).Ino
 		entry.Mode = fuse.S_IFDIR
 		select {
 		case <-stop:

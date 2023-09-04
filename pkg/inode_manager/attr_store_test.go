@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestInoStore_GetOrInsert(t *testing.T) {
-	store := InoStore{}
+func TestAttrStore_GetOrInsert(t *testing.T) {
+	store := AttrStore{}
 	store.Init(16)
 
 	type args struct {
@@ -32,6 +32,11 @@ func TestInoStore_GetOrInsert(t *testing.T) {
 		{
 			"update gen",
 			args{"a", true},
+			fs.StableAttr{Ino: 16, Gen: 1},
+		},
+		{
+			"repeat first again",
+			args{"a", false},
 			fs.StableAttr{Ino: 16, Gen: 1},
 		},
 		{

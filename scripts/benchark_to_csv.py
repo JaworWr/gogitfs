@@ -1,3 +1,7 @@
+"""Extract benchmark results from logs and save them in CSV files.
+
+For usage see benchmark_to_csv.py -h
+"""
 import argparse
 import csv
 import re
@@ -5,42 +9,70 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
-
 BENCHMARK_RE = re.compile(
     re.escape("[BENCHMARK]") + r" (.+): ([0-9.]+.{1,2}) \(([0-9.]+)ms\)$"
 )
 
 
-def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--funcs", nargs="+", help="functions to extract. By default - all.")
-    parser.add_argument("logfiles", nargs="+", help="log files to process", type=Path)
+def get_parser() -> argparse.ArgumentParser:
+    """Get parser for command-line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Parse application logs and extract running times of benchmarked functions, "
+                    "then save them in CSV files."
+    )
+    parser.add_argument(
+        "-f", "--funcs", nargs="+",
+        help="names of functions, for which corresponding times should be extracted. By default - all."
+    )
+    parser.add_argument(
+        "logfiles", nargs="+", type=Path,
+        help="log files to process. For each file, "
+             "a corresponding .csv file will be generated."
+    )
     return parser
 
 
-def get_times(lines: Iterable[str], funcs):
+def get_times(lines: Iterable[str], function_names=None):
+    """Extract benchmark times from lines.
+
+    Args:
+        lines: lines from log to process
+        function_names: names of functions to extract. Pass None to extract times for all functions.
+
+    Returns:
+        A generator yielding tuples of function name, human-readable time and time in milliseconds as float.
+    """
     for line in lines:
         m = BENCHMARK_RE.search(line)
         if not m:
             continue
         func, htime, time = m.groups()
-        if funcs is not None and func not in funcs:
+        if function_names is not None and func not in function_names:
             continue
         yield func, htime, float(time)
 
 
-def times_to_csv(file, times: Iterable[tuple[str, str, float]]):
+def write_times_to_csv(file, times: Iterable[tuple[str, str, float]]):
     fieldnames = ["function", "time", "time_ms"]
     writer = csv.DictWriter(file, fieldnames)
     writer.writeheader()
     writer.writerows(dict(zip(fieldnames, t)) for t in times)
 
 
-def process_logfile(path: Path, funcs) -> Path:
+def process_logfile(path: Path, function_names=None) -> Path:
+    """Generate CSV file for a single log file.
+
+    Args:
+        path: path of the input file
+        function_names: names of functions to process - see `get_lines`
+
+    Returns:
+        path of the generated CSV file
+    """
     path_out = path.with_suffix(".csv")
     with open(path) as f_in, open(path_out, "w") as f_out:
-        times = get_times(f_in, funcs)
-        times_to_csv(f_out, times)
+        times = get_times(f_in, function_names)
+        write_times_to_csv(f_out, times)
     return path_out
 
 

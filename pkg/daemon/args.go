@@ -8,15 +8,23 @@ import (
 	"strings"
 )
 
+// PositionalArg represents a positional command line argument.
+// This struct is used to generate better help messages.
 type PositionalArg struct {
 	Name  string
 	Usage string
 }
 
+// DaemonArgs manages command line arguments required by the daemon.
+// This interface should be implemented by structs describing daemon options.
 type DaemonArgs interface {
+	// Setup sets up parsing of command line flags.
 	Setup()
+	// PositionalArgs returns an array of expected positional arguments.
 	PositionalArgs() []PositionalArg
+	// HandlePositionalArgs parses positional arguments provided on the command line
 	HandlePositionalArgs([]string) error
+	// Serialize converts current values into parseable command line arguments.
 	Serialize() []string
 }
 
@@ -42,6 +50,7 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
+// SetupFlags sets up command line flags and usage string for the given DaemonArgs object.
 func SetupFlags(da DaemonArgs) {
 	da.Setup()
 	flag.Usage = func() {
@@ -58,14 +67,19 @@ func SetupFlags(da DaemonArgs) {
 }
 
 func argsToFullList(da DaemonArgs) []string {
+	// prepend process name to arguments
 	result := []string{os.Args[0]}
 	result = append(result, da.Serialize()...)
 	return result
 }
 
+// helper functions for flag serialization
+
 func SerializeStringFlag(flag string, value string) string {
 	return fmt.Sprintf("--%s=%s", flag, value)
 }
+
+var _ = SerializeStringFlag
 
 func SerializeBoolFlag(flag string, value bool) string {
 	var valueStr string
@@ -76,6 +90,8 @@ func SerializeBoolFlag(flag string, value bool) string {
 	}
 	return SerializeStringFlag(flag, valueStr)
 }
+
+var _ = SerializeBoolFlag
 
 func SerializeIntFlag(flag string, value int64) string {
 	valueStr := strconv.FormatInt(value, 10)
@@ -88,3 +104,5 @@ func SerializeUintFlag(flag string, value uint64) string {
 	valueStr := strconv.FormatUint(value, 10)
 	return SerializeStringFlag(flag, valueStr)
 }
+
+var _ = SerializeUintFlag

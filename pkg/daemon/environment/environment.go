@@ -1,3 +1,4 @@
+// Package environment describes environment used by the daemon.
 package environment
 
 import (
@@ -12,8 +13,10 @@ var DaemonParentPid int
 
 var LogFileName string
 
-func Init(name string) {
-	DaemonName = name
+// Init initializes global variables defined in this package, setting daemon name according to args
+// and daemon parent PID by taking current process' PID.
+func Init(daemonName string) {
+	DaemonName = daemonName
 	DaemonParentPid = os.Getpid()
 
 	if LogFileName == "" {
@@ -22,6 +25,7 @@ func Init(name string) {
 	}
 }
 
+// SetupFlags adds necessary command-line flags.
 func SetupFlags() {
 	flag.StringVar(&LogFileName, "log-path", "", "log file name")
 }

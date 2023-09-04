@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// InodeStore stores a unique Inode per key.
 type InodeStore struct {
 	lock   *sync.Mutex
 	inodes map[string]*fs.Inode
@@ -16,6 +17,12 @@ func (s *InodeStore) Init() {
 	s.lock = &sync.Mutex{}
 }
 
+// GetOrInsert returns the Inode corresponding to the given key, or creates one if it doesn't exist.
+// Subsequent calls will return the same node, unless called with overwrite == true.
+// When the key is absent or overwrite == true, new node will be created by calling builder()
+// and then calling NewPersistentInode on parent passing attr and the result.
+// builder() will not be called if key is present and overwrite == false. Use overwrite to force creation
+// of a new node.
 func (s *InodeStore) GetOrInsert(
 	ctx context.Context,
 	key string,

@@ -8,20 +8,21 @@ import (
 	"time"
 )
 
+// FuncName specifies how the function name should be formatted.
 type FuncName int
 
 const (
-	// Full fully qualified name
+	// Full - fully qualified name
 	Full FuncName = iota
-	// Package package + class + method name
+	// Package - package + class + method name
 	Package
-	// Class class + method name
+	// Class - class + method name
 	Class
-	// Method method name only
+	// Method - method name only
 	Method
 )
 
-// ProcessFuncName extract desired parts from fully qualified function name
+// ProcessFuncName extracts desired parts from fully qualified function name.
 func ProcessFuncName(fullName string, kind FuncName) (name string) {
 	pathParts := strings.Split(fullName, "/")
 	parts := strings.Split(pathParts[len(pathParts)-1], ".")
@@ -42,7 +43,7 @@ func ProcessFuncName(fullName string, kind FuncName) (name string) {
 	return
 }
 
-// CurrentFuncName get current function name
+// CurrentFuncName gets current function name.
 // skip: how many frames to skip after the caller of CurrentFuncName
 // i.e. pass 0 to call the coller of CurrentFuncName, 1 for its caller etc.
 // kind: which part of the function name to return
@@ -56,7 +57,9 @@ func CurrentFuncName(skip int, kind FuncName) string {
 
 type CallCtx = map[string]any
 
+// CallCtxGetter specifies extra information that should be saved when logging method calls.
 type CallCtxGetter interface {
+	// GetCallCtx returns the relevant information.
 	GetCallCtx() CallCtx
 }
 
@@ -119,9 +122,8 @@ func (n NilCtx) GetCallCtx() CallCtx {
 	return nil
 }
 
-// LogCall log function call
-// the format is Called <method> (<key>=<value>)
-// with key, value returned by GetCallCtx()
+// LogCall logs information about the function call.
+// The format is Called <method> (<key>=<value>), with key, value as specified by extra and GetCallCtx()
 func LogCall(l CallCtxGetter, extra CallCtx) {
 	methodName := CurrentFuncName(1, Class)
 	var info CallCtx
@@ -133,7 +135,7 @@ func LogCall(l CallCtxGetter, extra CallCtx) {
 	DebugLog.Printf("Called %v (%v)", methodName, methodInfo)
 }
 
-// Benchmark usage: defer Benchmark(time.Now())
+// Benchmark can be used to measure running time of functions. Usage: `defer Benchmark(time.Now())`
 func Benchmark(start time.Time) {
 	elapsed := time.Since(start)
 	name := CurrentFuncName(1, Package)
