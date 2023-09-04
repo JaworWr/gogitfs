@@ -16,12 +16,11 @@ func setupHelp() {
 }
 
 func parseArgs(da daemon.DaemonArgs) error {
-	if goDaemon.WasReborn() {
-		return nil
-	}
-	setupHelp()
-	environment.SetupFlags()
 	daemon.SetupFlags(da)
+	if !goDaemon.WasReborn() {
+		setupHelp()
+		environment.SetupFlags()
+	}
 	flag.Parse()
 
 	if shouldShowHelp {

@@ -43,14 +43,14 @@ func getSortedNames(entries []os.DirEntry) []string {
 	return names
 }
 
-func assertDirEntries(t *testing.T, path string, expected []string, msg_and_args ...interface{}) {
+func assertDirEntries(t *testing.T, path string, expected []string, msgAndArgs ...interface{}) {
 	entries, err := os.ReadDir(path)
 	names := getSortedNames(entries)
 	sorted := make([]string, len(expected))
 	copy(sorted, expected)
 	sort.Strings(sorted)
 	assert.NoError(t, err)
-	assert.Equal(t, sorted, names, msg_and_args...)
+	assert.Equal(t, sorted, names, msgAndArgs...)
 }
 
 func Test_RootNode(t *testing.T) {
