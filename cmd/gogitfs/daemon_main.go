@@ -13,32 +13,20 @@ import (
 	"time"
 )
 
-type gogitfsDaemon struct{}
-
-func (g *gogitfsDaemon) DaemonArgs() daemon.DaemonArgs {
-	return &daemonOptions{}
-}
-
-func (g *gogitfsDaemon) DaemonEnv() []string {
-	return nil
-}
-
-func (g *gogitfsDaemon) DaemonProcess(
-	args daemon.DaemonArgs,
+func (d *gogitfsDaemon) DaemonMain(
 	errHandler error_handler.ErrorHandler,
 	succHandler daemon.SuccessHandler,
 ) {
-	opts := args.(*daemonOptions)
-	logging.Init(opts.logLevel)
+	logging.Init(d.logLevel)
 	errHandler = error_handler.MakeLoggingHandler(errHandler, logging.Error)
-	logging.InfoLog.Printf("Log level: %v\n", opts.logLevel.String())
-	logging.InfoLog.Printf("Repository path: %v\n", opts.repoDir)
-	root, err := gitfs.NewRootNode(opts.repoDir)
+	logging.InfoLog.Printf("Log level: %v\n", d.logLevel.String())
+	logging.InfoLog.Printf("Repository path: %v\n", d.repoDir)
+	root, err := gitfs.NewRootNode(d.repoDir)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
 
-	mountDir, err := mountpoint.ValidateMountpoint(opts.mountDir, opts.allowNonEmpty)
+	mountDir, err := mountpoint.ValidateMountpoint(d.mountDir, d.allowNonEmpty)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
@@ -46,7 +34,7 @@ func (g *gogitfsDaemon) DaemonProcess(
 
 	posTime := 6 * time.Hour
 	negTime := 15 * time.Second
-	fsOpts, err := getFuseOpts(opts)
+	fsOpts, err := getFuseOpts(d)
 	if err != nil {
 		errHandler.HandleError(err)
 	}
@@ -64,13 +52,13 @@ func (g *gogitfsDaemon) DaemonProcess(
 	logging.InfoLog.Printf("Exiting")
 }
 
-var _ daemon.ProcessInfo = (*gogitfsDaemon)(nil)
+var _ daemon.Daemon = (*gogitfsDaemon)(nil)
 
-func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
+func getFuseOpts(d *gogitfsDaemon) (*fs.Options, error) {
 	opts := &fs.Options{}
 	// get current UID and GID if not specified
-	opts.UID = uint32(o.uid)
-	opts.GID = uint32(o.gid)
+	opts.UID = uint32(d.uid)
+	opts.GID = uint32(d.gid)
 	if opts.UID == math.MaxUint32 || opts.GID == math.MaxUint32 {
 		currentUser, err := user.Current()
 		if err != nil {
@@ -92,6 +80,6 @@ func getFuseOpts(o *daemonOptions) (*fs.Options, error) {
 		}
 	}
 
-	opts.Debug = o.fuseDebug
+	opts.Debug = d.fuseDebug
 	return opts, nil
 }

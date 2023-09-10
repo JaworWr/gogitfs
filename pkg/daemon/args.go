@@ -3,10 +3,14 @@ package daemon
 import (
 	"flag"
 	"fmt"
+	"github.com/sevlyar/go-daemon"
+	"gogitfs/pkg/daemon/internal/environment"
 	"os"
 	"strconv"
 	"strings"
 )
+
+var showHelp = false
 
 // PositionalArg represents a positional command line argument.
 // This struct is used to generate better help messages.
@@ -15,15 +19,19 @@ type PositionalArg struct {
 	Usage string
 }
 
-// DaemonArgs manages command line arguments required by the daemon.
+// CliArgs manages command line arguments required by the daemon.
 // This interface should be implemented by structs describing daemon options.
-type DaemonArgs interface {
+type CliArgs interface {
 	// Setup sets up parsing of command line flags.
 	Setup()
 	// PositionalArgs returns an array of expected positional arguments.
 	PositionalArgs() []PositionalArg
 	// HandlePositionalArgs parses positional arguments provided on the command line
 	HandlePositionalArgs([]string) error
+}
+
+type SerializableCliArgs interface {
+	CliArgs
 	// Serialize converts current values into parseable command line arguments.
 	Serialize() []string
 }
@@ -50,26 +58,40 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-// SetupFlags sets up command line flags and usage string for the given DaemonArgs object.
-func SetupFlags(da DaemonArgs) {
-	da.Setup()
+func setupHelpFlag() {
+	flag.BoolVar(&showHelp, "help", false, "show help and exit")
+	flag.BoolVar(&showHelp, "h", false, "shorthand for --help")
+}
+
+// ParseFlags sets up command line flags and usage string for the given CliArgs object.
+// parentSetup is meant to set up flags
+func ParseFlags(ca CliArgs, parentSetup func()) error {
+	setupHelpFlag()
+	environment.SetupFlags()
+	ca.Setup()
+	if !daemon.WasReborn() {
+		parentSetup()
+	}
 	flag.Usage = func() {
 		var argnames string
-		for _, arg := range da.PositionalArgs() {
+		for _, arg := range ca.PositionalArgs() {
 			argnames += " <" + arg.Name + ">"
 		}
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s%s\n", os.Args[0], argnames)
-		for _, arg := range da.PositionalArgs() {
+		for _, arg := range ca.PositionalArgs() {
 			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  %s\t%s\n", arg.Name, arg.Usage)
 		}
 		flag.PrintDefaults()
 	}
+	flag.Parse()
+	err := ca.HandlePositionalArgs(flag.Args())
+	return err
 }
 
-func argsToFullList(da DaemonArgs) []string {
+func argsToFullList(ca SerializableCliArgs) []string {
 	// prepend process name to arguments
 	result := []string{os.Args[0]}
-	result = append(result, da.Serialize()...)
+	result = append(result, ca.Serialize()...)
 	return result
 }
 

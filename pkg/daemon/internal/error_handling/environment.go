@@ -3,7 +3,7 @@ package error_handling
 import (
 	"fmt"
 	"github.com/sevlyar/go-daemon"
-	"gogitfs/pkg/daemon/environment"
+	"gogitfs/pkg/daemon/internal/environment"
 	"os"
 	"path/filepath"
 	"strings"
