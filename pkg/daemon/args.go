@@ -31,6 +31,7 @@ type CliArgs interface {
 }
 
 type SerializableCliArgs interface {
+	CliArgs
 	// Serialize converts current values into parseable command line arguments.
 	Serialize() []string
 }

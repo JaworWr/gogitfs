@@ -18,7 +18,7 @@ type Daemon interface {
 }
 
 // SpawnDaemon spawns the daemon process. args will be serialised and passed as command line arguments.
-// env should contains entries of the form "key=value"; these will be available as environment variables.
+// env should contain entries of the form "key=value"; these will be available as environment variables.
 // processName is used to define environment variables and file names. If the daemon process calls errHandler,
 // the error will be returned by this function in the parent process. Otherwise, this function returns nil
 // as soon as the child process calls succHandler.
