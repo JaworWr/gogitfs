@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var showHelp = false
-
 // PositionalArg represents a positional command line argument.
 // This struct is used to generate better help messages.
 type PositionalArg struct {
