@@ -121,6 +121,16 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	if err != nil {
 		return nil, err
 	}
+	node := newCommitLogNodeFromIter(iter, repo, from, nodeOpts)
+	return node, nil
+}
+
+func newCommitLogNodeFromIter(
+	iter object.CommitIter,
+	repo *git.Repository,
+	from *object.Commit,
+	nodeOpts commitLogNodeOpts,
+) *commitLogNode {
 	node := &commitLogNode{}
 	node.repo = repo
 	node.from = from
@@ -130,7 +140,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	node.attr = utils.CommitAttr(from)
 	node.attr.Mode = 0555
 	node.basePath = getBasePath(nodeOpts.linkLevels)
-	return node, nil
+	return node
 }
 
 var _ fs.NodeOnAdder = (*commitLogNode)(nil)

@@ -59,6 +59,14 @@ func (n *commitNode) addParent(ctx context.Context) {
 	}
 }
 
+func (n *commitNode) addParents(ctx context.Context) {
+	nodeOpts := commitLogNodeOpts{linkLevels: 2}
+	iter := n.commit.Parents()
+	logNode := newCommitLogNodeFromIter(iter, n.repo, n.commit, nodeOpts)
+	child := n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFDIR})
+	n.AddChild("parents", child, false)
+}
+
 func (n *commitNode) addLog(ctx context.Context) {
 	nodeOpts := commitLogNodeOpts{linkLevels: 2}
 	logNode, err := newCommitLogNode(n.repo, n.commit, nodeOpts)
@@ -73,6 +81,7 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
 	n.addHashMsg(ctx)
 	n.addParent(ctx)
+	n.addParents(ctx)
 	n.addLog(ctx)
 }
 
