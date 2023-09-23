@@ -58,15 +58,9 @@ func (err *TooManyArgsError) Error() string {
 	return "unexpected arguments: " + unexpected
 }
 
-func setupHelpFlag() {
-	flag.BoolVar(&showHelp, "help", false, "show help and exit")
-	flag.BoolVar(&showHelp, "h", false, "shorthand for --help")
-}
-
 // ParseFlags sets up command line flags and usage string for the given CliArgs object.
 // parentSetup is meant to set up flags
 func ParseFlags(ca CliArgs, parentSetup func()) error {
-	setupHelpFlag()
 	environment.SetupFlags()
 	ca.Setup()
 	if !daemon.WasReborn() {
