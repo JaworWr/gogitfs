@@ -29,9 +29,9 @@ func commitNodeTestCase(t *testing.T, repo *git.Repository, extras repoExtras, c
 
 	var children []string
 	if hasParent {
-		children = []string{"message", "hash", "log", "parent"}
+		children = []string{"message", "hash", "log", "parent", "parents"}
 	} else {
-		children = []string{"message", "hash", "log"}
+		children = []string{"message", "hash", "log", "parents"}
 	}
 	t.Run("ls", func(t *testing.T) {
 		assertDirEntries(t, mountPath, children)
