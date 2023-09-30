@@ -3,7 +3,7 @@ from pathlib import Path
 
 import git
 
-from repo import schema, resolve
+from test.repo import schema, resolve
 
 
 def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
