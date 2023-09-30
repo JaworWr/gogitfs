@@ -15,7 +15,7 @@ def small_repo_schema() -> schema.Repo:
     return repo_schema
 
 
-def test_repo_graph(small_repo_schema):
+def test_repo_graph(small_repo_schema: schema.Repo):
     graph = utils.make_graph_for_repo_schema(small_repo_schema)
     expected = {
         "main:0": [],
@@ -28,5 +28,9 @@ def test_repo_graph(small_repo_schema):
     assert graph == expected
 
 
-def test_commit_files(tmp_path):
-    pass
+def test_commit_files(small_repo_schema: schema.Repo, tmp_path: Path):
+    files = small_repo_schema.branches["main"].commits[0].files
+    for f in files:
+        utils.make_commit_file(tmp_path, f)
+        assert (tmp_path / f.path).exists(), f"{f.path} should exist"
+        assert (tmp_path / f.path).read_text() == f.contents, f"{f.path} contents should match"
