@@ -77,15 +77,17 @@ def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
 
     commit_schema = main_commits[2]
     assert isinstance(commit_schema, schema.MergeCommit), "selected commit should be a merge commit"
-    branch, idx = commit_schema.other_commit.split(":")
-    assert idx == "0", "unexpected index; you may need to update the test"
+    branch = commit_schema.other_commit.split(":")[0]
+
     start_commit = utils.get_commit_by_id(small_repo_schema, small_repo_schema.branches[branch].from_commit)
     h = utils.get_commit_hash(start_commit)
     utils.checkout_branch(repo, branch, h)
-    other_commit = small_repo_schema.branches[branch].commits[0]
+
+    other_commit = small_repo_schema.branches[branch].commits[-1]
     utils.make_commit(repo, tmp_path, other_commit)
     utils.checkout_branch(repo, "main")
     commit = utils.make_merge_commit(repo, small_repo_schema, commit_schema)
+
     assert commit_schema.hash is not None
     assert commit.hexsha == commit_schema.hash
     assert commit.authored_date == commit_schema.time.timestamp()
@@ -99,8 +101,23 @@ def test_build_repo(small_repo_schema: schema.Repo, tmp_path: Path):
     repo = utils.build_repo(small_repo_schema, tmp_path)
     assert repo.active_branch.name == small_repo_schema.active_branch
     assert sorted(h.name for h in repo.heads) == sorted(small_repo_schema.branches)
+
     repo_commits = [c.hexsha for c in repo.iter_commits()]
-    schema_commits = [
+    commit_schemas = [
         c.hash for c in small_repo_schema.branches["main"].commits + small_repo_schema.branches["bar"].commits
     ]
-    assert sorted(repo_commits) == sorted(schema_commits)
+    assert sorted(repo_commits) == sorted(commit_schemas)
+
+    for c in commit_schemas:
+        if not isinstance(c, schema.Commit):
+            continue
+        for f in c.files:
+            assert (tmp_path / f.path).exists(), f"{f.path} should exist"
+            assert (tmp_path / f.path).read_text() == f.contents, f"{f.path} contents should match"
+
+    repo.heads["baz"].checkout()
+    repo_commits = [c.hexsha for c in repo.iter_commits()]
+    commit_schemas = [
+        c.hash for c in small_repo_schema.branches["main"].commits[:2] + small_repo_schema.branches["baz"].commits
+    ]
+    assert sorted(repo_commits) == sorted(commit_schemas)
