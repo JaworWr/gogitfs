@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import git
 import pytest
 
 from test.repo import schema, utils
@@ -34,3 +35,15 @@ def test_commit_files(small_repo_schema: schema.Repo, tmp_path: Path):
         utils.make_commit_file(tmp_path, f)
         assert (tmp_path / f.path).exists(), f"{f.path} should exist"
         assert (tmp_path / f.path).read_text() == f.contents, f"{f.path} contents should match"
+
+
+def test_commit(small_repo_schema: schema.Repo, tmp_path: Path):
+    commit_schema = small_repo_schema.branches["main"].commits[0]
+    assert isinstance(commit_schema, schema.Commit), "selected commit should not be a merge commit"
+    repo = git.Repo.init(tmp_path)
+    commit = utils.make_commit(repo, tmp_path, commit_schema)
+    assert commit.hexsha == commit_schema.hash
+    assert commit.authored_date == commit_schema.time.timestamp()
+    assert commit.message == commit_schema.message
+    for f in commit_schema.files:
+        assert (tmp_path / f.path).exists()

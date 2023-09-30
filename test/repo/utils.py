@@ -97,6 +97,7 @@ def make_merge_commit(
         message=commit_schema.message,
         parent_commits=[head.commit, other_commit],
     )
+    commit_schema.hash = merge_commit.hexsha
     return merge_commit
 
 
