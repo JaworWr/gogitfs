@@ -33,7 +33,7 @@ class Commit:
 class MergeCommit:
     message: str
     time: dt.datetime
-    other_hash: str
+    other_commit: str
     hash: str | None = None
 
 
