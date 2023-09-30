@@ -26,6 +26,11 @@ def test_repo_graph(small_repo_schema: schema.Repo):
     assert graph == expected
 
 
+def test_get_commit_by_id(small_repo_schema: schema.Repo):
+    commit_schema = utils.get_commit_by_id(small_repo_schema, "baz:1")
+    assert commit_schema.message == "baz2"
+
+
 def test_commit_files(small_repo_schema: schema.Repo, tmp_path: Path):
     files = small_repo_schema.branches["main"].commits[0].files
     for f in files:
