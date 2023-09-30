@@ -23,3 +23,13 @@ def repo():
         schema = load_repo_schema(REPO_JSON)
         build_repo(schema, tmpdir)
         yield RepoInfo(path=tmpdir, schema=schema)
+
+
+@pytest.fixture(scope="session")
+def repo_path(repo):
+    return repo.path
+
+
+@pytest.fixture(scope="session")
+def repo_schema(repo):
+    return repo.schema
