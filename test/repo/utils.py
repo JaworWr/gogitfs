@@ -3,7 +3,7 @@ from pathlib import Path
 
 import git
 
-from test.repo import schema
+from test.repo import schema, resolve
 
 
 def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
@@ -16,7 +16,30 @@ def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
 def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> git.Repo:
     repo_path = Path(repo_path)
     repo = git.Repo.init(repo_path)
+
+    repo_graph = make_graph_for_repo_schema(repo_schema)
+    commit_order = resolve.resolve_graph(repo_graph)
+
     return repo
+
+
+def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
+    graph = {}
+    for branch_name, branch in repo_schema.branches.items():
+        for idx, commit in enumerate(branch.commits):
+            commit_id = f"{branch}:{idx}"
+            parents = []
+            if idx == 0:
+                if branch.from_commit is not None:
+                    parents.append(branch.from_commit)
+            else:
+                parents.append(f"{branch}:{idx-1}")
+            if isinstance(commit, schema.MergeCommit):
+                if not parents:
+                    raise RuntimeError(f"Merge commit with only one parent: {commit.message}")
+                parents.append(commit.other_commit)
+            graph[commit_id] = parents
+    return graph
 
 
 def checkout_branch(repo: git.Repo, branch: str, branch_hash: str | None = None) -> git.Head:
