@@ -1,3 +1,5 @@
-def test_dummy(repo):
-    print(repo.path)
-    print(repo.schema.branches.keys())
+from test.gogitfs_tests.conftest import RepoInfo
+
+
+def test_dummy(repo: RepoInfo):
+    assert repo.path.is_dir()
