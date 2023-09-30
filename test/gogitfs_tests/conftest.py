@@ -1,13 +1,25 @@
 import os
 import pathlib
 import tempfile
+from dataclasses import dataclass
+from test.repo import Repo, load_repo_schema, build_repo
 
 import pytest
 
 GOGITFS_BINARY = os.environ["GOGITFS_BINARY"]
+REPO_JSON = pathlib.Path(__file__).resolve().parent / "repo.json"
+
+
+@dataclass
+class RepoInfo:
+    path: pathlib.Path
+    schema: Repo
 
 
 @pytest.fixture(scope="session")
 def repo():
     with tempfile.TemporaryDirectory() as tmpdir:
-        yield pathlib.Path(tmpdir)
+        tmpdir = pathlib.Path(tmpdir)
+        schema = load_repo_schema(REPO_JSON)
+        build_repo(schema, tmpdir)
+        yield RepoInfo(path=tmpdir, schema=schema)
