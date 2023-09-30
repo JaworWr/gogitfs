@@ -1,4 +1,5 @@
 import contextlib
+import os
 import pathlib
 import subprocess
 from typing import Iterable
@@ -10,6 +11,8 @@ from test.gogitfs_tests.conftest import RepoInfo, GOGITFS_BINARY
 
 @contextlib.contextmanager
 def mount_with_flags(repo_path, mount_point, flags: Iterable[str]):
+    print(os.stat(GOGITFS_BINARY))
+    print(os.access(GOGITFS_BINARY, os.X_OK))
     process = subprocess.run(
         [GOGITFS_BINARY, *flags, str(repo_path), str(mount_point)]
     )
