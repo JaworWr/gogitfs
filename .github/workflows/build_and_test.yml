@@ -78,7 +78,6 @@ jobs:
     - name: Run integration tests
       run: |
         chmod +x $GOGITFS_BINARY
-        $GOGITFS_BINARY -h
-#        python -m pytest -v test/gogitfs_tests
+        python -m pytest -v test/gogitfs_tests
       env:
         GOGITFS_BINARY: ./gogitfs/gogitfs
