@@ -16,7 +16,6 @@ def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
 def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> git.Repo:
     repo_path = Path(repo_path)
     repo = git.Repo.init(repo_path, initial_branch=repo_schema.main_branch)
-    print(repo.active_branch)
 
     repo_graph = make_graph_for_repo_schema(repo_schema)
     commit_order = resolve.resolve_graph(repo_graph)
@@ -24,7 +23,12 @@ def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> g
     for commit_id in commit_order:
         branch = commit_id.split(":")[0]
         if branch != repo.active_branch.name:
-            checkout_branch(repo, branch)
+            from_commit_id = repo_schema.branches[branch].from_commit
+            if from_commit_id is not None:
+                from_commit_hash = get_commit_hash(get_commit_by_id(repo_schema, from_commit_id))
+            else:
+                from_commit_hash = None
+            checkout_branch(repo, branch, from_commit_hash)
         commit_schema = get_commit_by_id(repo_schema, commit_id)
         if isinstance(commit_schema, schema.Commit):
             make_commit(repo, repo_path, commit_schema)

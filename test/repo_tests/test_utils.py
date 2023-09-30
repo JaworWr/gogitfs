@@ -95,4 +95,5 @@ def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
     assert sorted(parent_hashes) == sorted(expected_hahses)
 
 
-
+def test_build_repo(small_repo_schema: schema.Repo, tmp_path: Path):
+    repo = utils.build_repo(small_repo_schema, tmp_path)
