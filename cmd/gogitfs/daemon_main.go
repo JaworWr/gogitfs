@@ -7,7 +7,6 @@ import (
 	"gogitfs/pkg/gitfs"
 	"gogitfs/pkg/logging"
 	"gogitfs/pkg/mountpoint"
-	"math"
 	"os/user"
 	"strconv"
 	"time"
@@ -57,27 +56,28 @@ var _ daemon.Daemon = (*gogitfsDaemon)(nil)
 func getFuseOpts(d *gogitfsDaemon) (*fs.Options, error) {
 	opts := &fs.Options{}
 	// get current UID and GID if not specified
-	opts.UID = uint32(d.uid)
-	opts.GID = uint32(d.gid)
-	if opts.UID == math.MaxUint32 || opts.GID == math.MaxUint32 {
+	if d.uid == -1 || d.gid == -1 {
 		currentUser, err := user.Current()
 		if err != nil {
 			return nil, err
 		}
-		if opts.UID == math.MaxUint32 {
+		if d.uid == -1 {
 			uid, err := strconv.ParseUint(currentUser.Uid, 10, 32)
 			if err != nil {
 				panic("Cannot parse UID.\nError: " + err.Error())
 			}
 			opts.UID = uint32(uid)
 		}
-		if opts.GID == math.MaxUint32 {
+		if d.gid == -1 {
 			gid, err := strconv.ParseUint(currentUser.Gid, 10, 32)
 			if err != nil {
 				panic("Cannot parse UID.\nError: " + err.Error())
 			}
 			opts.GID = uint32(gid)
 		}
+	} else {
+		opts.UID = uint32(d.uid)
+		opts.GID = uint32(d.gid)
 	}
 
 	opts.Debug = d.fuseDebug
