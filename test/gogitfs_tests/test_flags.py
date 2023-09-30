@@ -14,6 +14,7 @@ def mount_with_flags(repo_path, mount_point, flags: Iterable[str], capture_outpu
     process = subprocess.run(
         [GOGITFS_BINARY, *flags, str(repo_path), str(mount_point)],
         capture_output=capture_output,
+        encoding="utf-8",
     )
     try:
         yield process
@@ -26,8 +27,7 @@ def test_help_flag(repo: RepoInfo):
     flags = ["-help"]
     with mount_with_flags(repo.path, "dummy", flags, True, False) as process:
         assert process.returncode == 0
-        decoded_stderr = process.stderr.decode("utf-8")
-        assert decoded_stderr.startswith(f"Usage: {GOGITFS_BINARY} <repo-dir> <mount-dir>\n")
+        assert process.stderr.startswith(f"Usage: {GOGITFS_BINARY} <repo-dir> <mount-dir>\n")
 
 
 def test_uid_gid(repo: RepoInfo, tmp_path: pathlib.Path):
