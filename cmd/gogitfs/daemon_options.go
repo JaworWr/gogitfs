@@ -4,7 +4,6 @@ import (
 	"flag"
 	"gogitfs/pkg/daemon"
 	"gogitfs/pkg/logging"
-	"math"
 )
 
 const (
@@ -25,8 +24,8 @@ type gogitfsDaemon struct {
 
 	allowNonEmpty bool
 
-	uid        uint
-	gid        uint
+	uid        int64
+	gid        int64
 	allowOther bool
 }
 
@@ -37,8 +36,8 @@ func (d *gogitfsDaemon) Setup() {
 
 	flag.BoolVar(&d.allowNonEmpty, allowNonEmptyFlag, false, "allow mounting in a non-empty directory")
 
-	flag.UintVar(&d.uid, uidFlag, math.MaxUint32, "UID (user ID) to mount as")
-	flag.UintVar(&d.gid, gidFlag, math.MaxUint32, "GID (group ID) to mount as")
+	flag.Int64Var(&d.uid, uidFlag, -1, "UID (user ID) to mount as; pass -1 to use current user's ID")
+	flag.Int64Var(&d.gid, gidFlag, -1, "GID (group ID) to mount as; pass -1 to use current user group's ID")
 	flag.BoolVar(&d.allowOther, allowOtherFlag, false, "mount FUSE filesystem with 'allow_other'")
 }
 
@@ -65,8 +64,8 @@ func (d *gogitfsDaemon) Serialize() []string {
 		daemon.SerializeStringFlag(logLevelFlag, d.logLevel.String()),
 		daemon.SerializeBoolFlag(fuseDebugFlag, d.fuseDebug),
 		daemon.SerializeBoolFlag(allowNonEmptyFlag, d.allowNonEmpty),
-		daemon.SerializeUintFlag(uidFlag, uint64(d.uid)),
-		daemon.SerializeUintFlag(gidFlag, uint64(d.gid)),
+		daemon.SerializeIntFlag(uidFlag, d.uid),
+		daemon.SerializeIntFlag(gidFlag, d.gid),
 		daemon.SerializeBoolFlag(allowOtherFlag, d.allowOther),
 		d.repoDir,
 		d.mountDir,
