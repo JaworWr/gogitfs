@@ -81,4 +81,4 @@ jobs:
         $GOGITFS_BINARY -h
 #        python -m pytest -v test/gogitfs_tests
       env:
-        GOGITFS_BINARY: ./gogitfs
+        GOGITFS_BINARY: ./gogitfs/gogitfs
