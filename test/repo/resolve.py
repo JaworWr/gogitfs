@@ -11,6 +11,7 @@ class CyclicGraphException(Exception):
 
 
 def resolve_graph(graph: Graph) -> list[str]:
+    """Apply topological sorting to the given graph."""
     visited = set()
     resolved = set()
     result = []
