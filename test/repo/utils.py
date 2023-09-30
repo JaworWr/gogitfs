@@ -30,7 +30,7 @@ def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> g
             make_commit(repo, repo_path, commit_schema)
         else:
             make_merge_commit(repo, repo_schema, commit_schema)
-
+    checkout_branch(repo, repo_schema.current_branch)
     return repo
 
 

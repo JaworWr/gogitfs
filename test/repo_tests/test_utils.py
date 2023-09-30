@@ -93,3 +93,6 @@ def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
     parent_hashes = [c.hexsha for c in commit.parents]
     expected_hahses = [main_commits[1].hash, other_commit.hash]
     assert sorted(parent_hashes) == sorted(expected_hahses)
+
+
+

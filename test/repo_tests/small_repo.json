@@ -1,5 +1,6 @@
 {
   "main_branch": "main",
+  "current_branch": "main",
   "branches": {
     "main": {
       "from_commit": null,

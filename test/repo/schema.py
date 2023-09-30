@@ -49,3 +49,4 @@ class Branch:
 class Repo:
     branches: dict[str, Branch]
     main_branch: str
+    current_branch: str
