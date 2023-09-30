@@ -6,7 +6,7 @@ import git
 from test.repo import schema, resolve
 
 
-def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
+def load_repo_schema(path: str | os.PathLike[str]) -> schema.Repo:
     with open(path) as f:
         repo_json = f.read()
     repo = schema.Repo.from_json(repo_json)

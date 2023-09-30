@@ -10,7 +10,7 @@ REPO_PATH = Path(__file__).resolve().parent / "small_repo.json"
 
 @pytest.fixture
 def small_repo_schema() -> schema.Repo:
-    return utils.load_repo(REPO_PATH)
+    return utils.load_repo_schema(REPO_PATH)
 
 
 def test_repo_graph(small_repo_schema: schema.Repo):
