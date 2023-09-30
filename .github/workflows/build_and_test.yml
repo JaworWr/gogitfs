@@ -60,4 +60,7 @@ jobs:
         path: "test/requirements.txt"
 
     - name: Test helper code
-      run: python -m pytest -v test/repo_tests
+      run: |
+        export PYTHONPATH="$PWD:$PYTHONPATH"
+        echo "$PYTHONPATH"
+        python -m pytest -v test/repo_tests
