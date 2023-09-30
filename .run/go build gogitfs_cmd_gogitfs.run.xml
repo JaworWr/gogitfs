@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="gogitfs gesslerbot" type="GoApplicationRunConfiguration" factoryName="Go Application">
+  <configuration default="false" name="go build gogitfs/cmd/gogitfs" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
     <module name="gogitfs" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="$USER_HOME$/gesslerbot ./mnt" />
     <kind value="DIRECTORY" />
     <package value="gogitfs" />
     <directory value="$PROJECT_DIR$/cmd/gogitfs" />
     <filePath value="$PROJECT_DIR$" />
+    <option name="run" value="false" />
     <method v="2" />
   </configuration>
 </component>

@@ -1,0 +1,80 @@
+{
+  "main_branch": "main",
+  "active_branch": "main",
+  "branches": {
+    "main": {
+      "from_commit": null,
+      "commits": [
+        {
+          "message": "foo",
+          "time": "2020-01-15T00:00:00Z",
+          "files": [
+            {
+              "path": "dir/foo",
+              "contents": "zzz foo"
+            },
+            {
+              "path": "README.md",
+              "contents": "# This is a readme"
+            }
+          ]
+        },
+        {
+          "message": "foo2",
+          "time": "2020-01-15T01:23:45Z",
+          "files": [
+            {
+              "path": "foo2",
+              "contents": "aaa\nfoo2"
+            }
+          ]
+        },
+        {
+          "message": "merge bar",
+          "time": "2020-01-18T12:00:05+01",
+          "other_commit": "bar:0"
+        }
+      ]
+    },
+    "bar": {
+      "from_commit": "main:0",
+      "commits": [
+        {
+          "message": "bar",
+          "time": "2020-01-16T00:00:10Z",
+          "files": [
+            {
+              "path": "bar",
+              "contents": "aaa123 bar"
+            }
+          ]
+        }
+      ]
+    },
+    "baz": {
+      "from_commit": "main:1",
+      "commits": [
+        {
+          "message": "baz",
+          "time": "2020-01-19T00:00:00Z",
+          "files": [
+            {
+              "path": "baz",
+              "contents": "baz"
+            }
+          ]
+        },
+        {
+          "message": "baz2",
+          "time": "2020-01-19T18:00:00Z",
+          "files": [
+            {
+              "path": "baz2",
+              "contents": "baz2"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
