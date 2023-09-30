@@ -15,10 +15,21 @@ def load_repo(path: str | os.PathLike[str]) -> schema.Repo:
 
 def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> git.Repo:
     repo_path = Path(repo_path)
-    repo = git.Repo.init(repo_path)
+    repo = git.Repo.init(repo_path, initial_branch=repo_schema.main_branch)
+    print(repo.active_branch)
 
     repo_graph = make_graph_for_repo_schema(repo_schema)
     commit_order = resolve.resolve_graph(repo_graph)
+
+    for commit_id in commit_order:
+        branch = commit_id.split(":")[0]
+        if branch != repo.active_branch.name:
+            checkout_branch(repo, branch)
+        commit_schema = get_commit_by_id(repo_schema, commit_id)
+        if isinstance(commit_schema, schema.Commit):
+            make_commit(repo, repo_path, commit_schema)
+        else:
+            make_merge_commit(repo, repo_schema, commit_schema)
 
     return repo
 
@@ -26,6 +37,8 @@ def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> g
 def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
     graph = {}
     for branch_name, branch in repo_schema.branches.items():
+        if branch_name != repo_schema.main_branch and branch.from_commit is None:
+            raise RuntimeError(f"Only main branch ({repo_schema.main_branch}) can have from_commit == None")
         for idx, commit in enumerate(branch.commits):
             commit_id = f"{branch_name}:{idx}"
             parents = []
