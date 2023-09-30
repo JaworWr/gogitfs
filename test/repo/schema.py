@@ -9,9 +9,6 @@ dataclasses_json.cfg.global_config.encoders[dt.datetime] = dt.datetime.isoformat
 dataclasses_json.cfg.global_config.decoders[dt.datetime] = dt.datetime.fromisoformat
 
 
-__all__ = ["CommitFile", "Commit", "Branch", "Repo"]
-
-
 @dataclass_json
 @dataclass
 class CommitFile:
