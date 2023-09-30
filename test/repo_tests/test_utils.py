@@ -3,7 +3,7 @@ from pathlib import Path
 import git
 import pytest
 
-from test.repo import schema, utils
+from repo import schema, utils
 
 REPO_PATH = Path(__file__).resolve().parent / "small_repo.json"
 

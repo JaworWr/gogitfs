@@ -1,6 +1,6 @@
 import pytest
 
-from test.repo import resolve
+from repo import resolve
 
 
 def validate_result(graph: resolve.Graph, result: list[str]) -> None:
