@@ -1,0 +1,65 @@
+{
+  "main_branch": "main",
+  "branches": {
+    "main": {
+      "from_commit": null,
+      "commits": [
+        {
+          "message": "foo",
+          "time": "2020-01-15",
+          "files": [
+            {
+              "path": "foo",
+              "contents": "zzz foo"
+            }
+          ]
+        },
+        {
+          "message": "merge bar",
+          "time": "2020-01-18T12:00:05",
+          "other_commit": "bar:0"
+        }
+      ]
+    },
+    "bar": {
+      "from_commit": "main:0",
+      "commits": [
+        {
+          "message": "bar",
+          "time": "2020-01-16",
+          "files": [
+            {
+              "path": "bar",
+              "contents": "aaa123 bar"
+            }
+          ]
+        }
+      ]
+    },
+    "baz": {
+      "from_commit": "main:1",
+      "commits": [
+        {
+          "message": "baz",
+          "time": "2020-01-19",
+          "files": [
+            {
+              "path": "baz",
+              "contents": "baz"
+            }
+          ]
+        },
+        {
+          "message": "baz2",
+          "time": "2020-01-19T18:00:00",
+          "files": [
+            {
+              "path": "baz2",
+              "contents": "baz2"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

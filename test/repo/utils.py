@@ -27,13 +27,13 @@ def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
     graph = {}
     for branch_name, branch in repo_schema.branches.items():
         for idx, commit in enumerate(branch.commits):
-            commit_id = f"{branch}:{idx}"
+            commit_id = f"{branch_name}:{idx}"
             parents = []
             if idx == 0:
                 if branch.from_commit is not None:
                     parents.append(branch.from_commit)
             else:
-                parents.append(f"{branch}:{idx-1}")
+                parents.append(f"{branch_name}:{idx-1}")
             if isinstance(commit, schema.MergeCommit):
                 if not parents:
                     raise RuntimeError(f"Merge commit with only one parent: {commit.message}")
