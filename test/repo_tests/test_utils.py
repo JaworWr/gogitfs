@@ -97,3 +97,10 @@ def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
 
 def test_build_repo(small_repo_schema: schema.Repo, tmp_path: Path):
     repo = utils.build_repo(small_repo_schema, tmp_path)
+    assert repo.active_branch.name == small_repo_schema.active_branch
+    assert sorted(h.name for h in repo.heads) == sorted(small_repo_schema.branches)
+    repo_commits = [c.hexsha for c in repo.iter_commits()]
+    schema_commits = [
+        c.hash for c in small_repo_schema.branches["main"].commits + small_repo_schema.branches["bar"].commits
+    ]
+    assert sorted(repo_commits) == sorted(schema_commits)
