@@ -10,17 +10,24 @@ from test.gogitfs_tests.conftest import RepoInfo, GOGITFS_BINARY
 
 
 @contextlib.contextmanager
-def mount_with_flags(repo_path, mount_point, flags: Iterable[str]):
-    print(os.stat(GOGITFS_BINARY))
-    print(os.access(GOGITFS_BINARY, os.X_OK))
+def mount_with_flags(repo_path, mount_point, flags: Iterable[str], capture_output: bool = False, unmount: bool = True):
     process = subprocess.run(
-        [GOGITFS_BINARY, *flags, str(repo_path), str(mount_point)]
+        [GOGITFS_BINARY, *flags, str(repo_path), str(mount_point)],
+        capture_output=capture_output,
     )
     try:
         yield process
     finally:
-        if process.returncode == 0:
+        if unmount and process.returncode == 0:
             sh.umount(str(mount_point))
+
+
+def test_help_flag(repo: RepoInfo):
+    flags = ["-help"]
+    with mount_with_flags(repo.path, "dummy", flags, True, False) as process:
+        assert process.returncode == 0
+        decoded_stderr = process.stderr.decode("utf-8")
+        assert decoded_stderr.startswith(f"Usage: {GOGITFS_BINARY} <repo-dir> <mount-dir>\n")
 
 
 def test_uid_gid(repo: RepoInfo, tmp_path: pathlib.Path):
