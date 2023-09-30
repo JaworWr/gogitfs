@@ -33,9 +33,18 @@ class Commit:
 
 @dataclass_json
 @dataclass
+class MergeCommit:
+    message: str
+    time: dt.datetime
+    other_hash: str
+    hash: str = NULL_HASH
+
+
+@dataclass_json
+@dataclass
 class Branch:
     from_commit: str | None
-    commits: list[Commit]
+    commits: list[Commit | MergeCommit]
 
 
 @dataclass_json
