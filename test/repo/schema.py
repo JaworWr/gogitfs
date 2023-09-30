@@ -12,9 +12,6 @@ dataclasses_json.cfg.global_config.decoders[dt.datetime] = dt.datetime.fromisofo
 __all__ = ["CommitFile", "Commit", "Branch", "Repo"]
 
 
-NULL_HASH = "<NIL>"
-
-
 @dataclass_json
 @dataclass
 class CommitFile:
@@ -28,7 +25,7 @@ class Commit:
     message: str
     time: dt.datetime
     files: list[CommitFile]
-    hash: str = NULL_HASH
+    hash: str | None = None
 
 
 @dataclass_json
@@ -37,7 +34,7 @@ class MergeCommit:
     message: str
     time: dt.datetime
     other_hash: str
-    hash: str = NULL_HASH
+    hash: str | None = None
 
 
 @dataclass_json

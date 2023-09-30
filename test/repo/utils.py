@@ -34,3 +34,11 @@ def make_commit(repo_path: Path, repo: git.Repo, commit_schema: schema.Commit) -
     commit = repo.index.commit(commit_schema.message, author_date=commit_schema.time)
     commit_schema.hash = commit.hexsha
     return commit
+
+
+def get_commit_hash(commit_schema: schema.Commit | schema.MergeCommit) -> str:
+    h = commit_schema.hash
+    if h is None:
+        raise RuntimeError(f"Commit {commit_schema.message} not yet created")
+    return h
+
