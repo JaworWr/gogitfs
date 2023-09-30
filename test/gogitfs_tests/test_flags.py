@@ -16,7 +16,8 @@ def mount_with_flags(repo_path, mount_point, flags: Iterable[str]):
     try:
         yield process
     finally:
-        sh.umount(str(mount_point))
+        if process.returncode == 0:
+            sh.umount(str(mount_point))
 
 
 def test_uid_gid(repo: RepoInfo, tmp_path: pathlib.Path):
