@@ -64,7 +64,5 @@ jobs:
         path: "test/requirements.txt"
 
     - name: Test helper code
-      run: |
-        ls -alh
-        python -m pytest -v test/repo_tests
+      run: python -m pytest -v test/repo_tests
         
