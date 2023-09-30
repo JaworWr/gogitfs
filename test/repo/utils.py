@@ -55,11 +55,11 @@ def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
     return graph
 
 
-def checkout_branch(repo: git.Repo, branch: str, branch_hash: str | None = None) -> git.Head:
+def checkout_branch(repo: git.Repo, branch: str, branch_ref: str | None = None) -> git.Head:
     if branch not in repo.heads:
-        if branch_hash is None:
+        if branch_ref is None:
             raise RuntimeError(f"Branch {branch} doesn't exist and hash wasn't provided")
-        repo.create_head(branch, branch_hash)
+        repo.create_head(branch, branch_ref)
 
     repo.heads[branch].checkout()
     return repo.heads[branch]

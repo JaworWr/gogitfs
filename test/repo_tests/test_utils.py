@@ -44,3 +44,18 @@ def test_commit(small_repo_schema: schema.Repo, tmp_path: Path):
     assert commit.message == commit_schema.message
     for f in commit_schema.files:
         assert (tmp_path / f.path).exists()
+
+
+def test_checkout(tmp_path: Path):
+    repo = git.Repo.init(tmp_path, initial_branch="main")
+    repo.index.commit("foo1")
+    assert sorted(h.name for h in repo.heads) == ["main"]
+    utils.checkout_branch(repo, "branch", "HEAD")
+    assert repo.active_branch.name == "branch"
+    assert sorted(h.name for h in repo.heads) == ["branch", "main"]
+    utils.checkout_branch(repo, "main")
+    assert repo.active_branch.name == "main"
+    assert sorted(h.name for h in repo.heads) == ["branch", "main"]
+    utils.checkout_branch(repo, "branch")
+    assert repo.active_branch.name == "branch"
+    assert sorted(h.name for h in repo.heads) == ["branch", "main"]
