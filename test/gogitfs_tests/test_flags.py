@@ -43,3 +43,20 @@ def test_uid_gid(repo: RepoInfo, tmp_path: pathlib.Path):
             stat = f.stat()
             assert stat.st_uid == uid
             assert stat.st_gid == gid
+
+
+def test_allow_empty(repo: RepoInfo, tmp_path: pathlib.Path):
+    mount_point = tmp_path / "mount"
+    mount_point.mkdir()
+    (mount_point / "foo").mkdir()
+
+    flags = []
+    with mount_with_flags(repo.path, mount_point, flags, True) as process:
+        assert process.returncode == 1
+        assert (mount_point / "foo").exists(), "repo should not be mounted"
+
+    flags = ["-allow-nonempty"]
+    with mount_with_flags(repo.path, mount_point, flags) as process:
+        assert process.returncode == 0
+        assert (mount_point / "commits").exists(), "repo should be mounted"
+        assert not (mount_point / "foo").exists(), "repo should be mounted"
