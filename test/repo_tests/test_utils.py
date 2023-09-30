@@ -39,6 +39,7 @@ def test_commit(small_repo_schema: schema.Repo, tmp_path: Path):
     assert isinstance(commit_schema, schema.Commit), "selected commit should not be a merge commit"
     repo = git.Repo.init(tmp_path)
     commit = utils.make_commit(repo, tmp_path, commit_schema)
+    assert commit_schema.hash is not None
     assert commit.hexsha == commit_schema.hash
     assert commit.authored_date == commit_schema.time.timestamp()
     assert commit.message == commit_schema.message
@@ -59,3 +60,31 @@ def test_checkout(tmp_path: Path):
     utils.checkout_branch(repo, "branch")
     assert repo.active_branch.name == "branch"
     assert sorted(h.name for h in repo.heads) == ["branch", "main"]
+
+
+def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
+    repo = git.Repo.init(tmp_path, initial_branch="main")
+    main_commits = small_repo_schema.branches["main"].commits
+    assert isinstance(main_commits[0], schema.Commit), "selected commit should not be a merge commit"
+    utils.make_commit(repo, tmp_path, main_commits[0])
+    assert isinstance(main_commits[1], schema.Commit), "selected commit should not be a merge commit"
+    utils.make_commit(repo, tmp_path, main_commits[1])
+
+    commit_schema = main_commits[2]
+    assert isinstance(commit_schema, schema.MergeCommit), "selected commit should be a merge commit"
+    branch, idx = commit_schema.other_commit.split(":")
+    assert idx == "0", "unexpected index; you may need to update the test"
+    start_commit = utils.get_commit_by_id(small_repo_schema, small_repo_schema.branches[branch].from_commit)
+    h = utils.get_commit_hash(start_commit)
+    utils.checkout_branch(repo, branch, h)
+    other_commit = small_repo_schema.branches[branch].commits[0]
+    utils.make_commit(repo, tmp_path, other_commit)
+    utils.checkout_branch(repo, "main")
+    commit = utils.make_merge_commit(repo, small_repo_schema, commit_schema)
+    assert commit_schema.hash is not None
+    assert commit.hexsha == commit_schema.hash
+    assert commit.authored_date == commit_schema.time.timestamp()
+    assert commit.message == commit_schema.message
+    parent_hashes = [c.hexsha for c in commit.parents]
+    expected_hahses = [main_commits[1].hash, other_commit.hash]
+    assert sorted(parent_hashes) == sorted(expected_hahses)

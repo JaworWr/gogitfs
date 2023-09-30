@@ -95,6 +95,7 @@ def make_merge_commit(
     repo.index.merge_tree(other_commit, base=merge_base)
     merge_commit = repo.index.commit(
         message=commit_schema.message,
+        author_date=commit_schema.time,
         parent_commits=[head.commit, other_commit],
     )
     commit_schema.hash = merge_commit.hexsha
