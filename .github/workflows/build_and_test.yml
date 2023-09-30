@@ -46,3 +46,18 @@ jobs:
 
     - name: Run tests
       run: go test -v ./...
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v3
+      name: Checkout
+
+    - name: Install Python dependencies
+      uses: py-actions/py-dependency-install@v4
+      with:
+        path: "test/requirements.txt"
+
+    - name: Test helper code
+      run: python -m pytest -v test/repo_tests
