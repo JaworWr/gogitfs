@@ -19,9 +19,14 @@ def test_repo_graph(small_repo_schema):
     graph = utils.make_graph_for_repo_schema(small_repo_schema)
     expected = {
         "main:0": [],
-        "main:1": ["main:0", "bar:0"],
+        "main:1": ["main:0"],
+        "main:2": ["main:1", "bar:0"],
         "bar:0": ["main:0"],
         "baz:0": ["main:1"],
         "baz:1": ["baz:0"],
     }
     assert graph == expected
+
+
+def test_commit_files(tmp_path):
+    pass

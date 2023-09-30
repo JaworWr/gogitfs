@@ -9,8 +9,22 @@
           "time": "2020-01-15",
           "files": [
             {
-              "path": "foo",
+              "path": "dir/foo",
               "contents": "zzz foo"
+            },
+            {
+              "path": "README.md",
+              "contents": "# This is a readme"
+            }
+          ]
+        },
+        {
+          "message": "foo2",
+          "time": "2020-01-15T01:23:45",
+          "files": [
+            {
+              "path": "foo2",
+              "contents": "aaa\nfoo2"
             }
           ]
         },
