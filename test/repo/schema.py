@@ -12,6 +12,9 @@ dataclasses_json.cfg.global_config.decoders[dt.datetime] = dt.datetime.fromisofo
 __all__ = ["CommitFile", "Commit", "Branch", "Repo"]
 
 
+NULL_HASH = "<NIL>"
+
+
 @dataclass_json
 @dataclass
 class CommitFile:
@@ -25,18 +28,18 @@ class Commit:
     message: str
     time: dt.datetime
     files: list[CommitFile]
-    hash: str = "<NIL>"
+    hash: str = NULL_HASH
 
 
 @dataclass_json
 @dataclass
 class Branch:
     from_commit: str | None
-    commits: dict[str, Commit]
-    is_main: bool = False
+    commits: list[Commit]
 
 
 @dataclass_json
 @dataclass
 class Repo:
     branches: dict[str, Branch]
+    main_branch: str
