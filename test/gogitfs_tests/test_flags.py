@@ -33,6 +33,11 @@ def is_usage_line(line: str) -> bool:
     return line.strip() == f"Usage: {GOGITFS_BINARY} <repo-dir> <mount-dir>"
 
 
+def is_filesystem_error(msg: str, err: str) -> bool:
+    err_msg = f"cannot start the filesystem daemon\n{err}"
+    return msg.startswith(err_msg)
+
+
 def test_help_flag():
     for flags in [["-help"], ["-h"]]:
         with mount_with_flags(None, None, flags, True, False) as process:
@@ -59,7 +64,6 @@ def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):
                 second_line = process.stderr.splitlines()[1]
             except IndexError:
                 second_line = "TOO SHORT"
-            print(process.stderr)
             assert is_usage_line(second_line), f"help wasn't shown for case {name}"
 
 
@@ -86,6 +90,7 @@ def test_allow_empty(repo_path: pathlib.Path, tmp_path: pathlib.Path):
     flags = []
     with mount_with_flags(repo_path, mount_point, flags, True) as process:
         assert process.returncode == 1
+        assert is_filesystem_error(process.stderr, "directory not empty")
         assert (mount_point / "foo").exists(), "repo should not be mounted"
 
     flags = ["-allow-nonempty"]
