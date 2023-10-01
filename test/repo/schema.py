@@ -1,9 +1,9 @@
-from dataclasses import dataclass
 import datetime as dt
+from dataclasses import dataclass
+from typing import Iterable
 
 import dataclasses_json
 from dataclasses_json import dataclass_json
-
 
 dataclasses_json.cfg.global_config.encoders[dt.datetime] = dt.datetime.isoformat
 dataclasses_json.cfg.global_config.decoders[dt.datetime] = dt.datetime.fromisoformat
@@ -47,3 +47,7 @@ class Repo:
     branches: dict[str, Branch]
     main_branch: str
     active_branch: str
+
+    def iter_commits(self) -> Iterable[Commit | MergeCommit]:
+        for branch in self.branches.values():
+            yield from branch.commits
