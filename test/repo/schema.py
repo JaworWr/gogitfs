@@ -54,8 +54,16 @@ class Repo:
                 id_ = f"{name}:{i}"
                 yield id_, commit
 
-
     def get_commit_by_id(self, id_: str) -> Commit | MergeCommit:
         branch, idx = id_.split(":")
         idx = int(idx)
         return self.branches[branch].commits[idx]
+
+    def get_parent_commit_id(self, id_: str) -> str | None:
+        branch, idx = id_.split(":")
+        idx = int(idx)
+        if idx != 0:
+            parent_id = f"{branch}:{idx - 1}"
+        else:
+            parent_id = self.branches[branch].from_commit
+        return parent_id
