@@ -49,12 +49,17 @@ class Repo:
     active_branch: str
 
     def iter_commits(self) -> Iterable[tuple[str, Commit | MergeCommit]]:
+        """Iterate over all commits, each commit exactly once"""
         for name, branch in self.branches.items():
             for i, commit in enumerate(branch.commits):
                 id_ = f"{name}:{i}"
                 yield id_, commit
 
     def iter_branch_commits(self, branch: str, up_to: int | None = None) -> Iterable[tuple[str, Commit | MergeCommit]]:
+        """Iterate over all commits reachable from a branch
+
+        Note that this method makes no attempt to deduplicate, result size may be exponential.
+        """
         commits = self.branches[branch].commits
         if up_to is not None:
             commits = commits[:up_to + 1]

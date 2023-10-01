@@ -75,3 +75,24 @@ def test_commits(mount: pathlib.Path, repo_schema: schema.Repo):
 def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
     assert sorted(repo_schema.branches) == sorted(f.name for f in (mount / "branches").iterdir()), \
         "directories and branches should match"
+
+    for branch in repo_schema.branches:
+        branch_dir = mount / "branches" / branch
+        hashes = [c.hash for _, c in repo_schema.iter_branch_commits(branch)]
+        assert set(hashes + ["HEAD"]) == set(f.name for f in branch_dir.iterdir()), \
+            f"directories and commits should match for branch {branch}"
+
+        checked = set()
+        for name, commit in repo_schema.iter_branch_commits(branch):
+            if name in checked:
+                continue
+            checked.add(name)
+            commit_dir = branch_dir / commit.hash
+            if isinstance(commit, schema.Commit):
+                check_commit(repo_schema, commit_dir, name, commit)
+            else:
+                check_merge_commit(repo_schema, commit_dir, name, commit)
+
+        check_commit(
+            repo_schema, branch_dir / "HEAD", f"{branch}:-1", repo_schema.get_commit_by_id(f"{branch}:-1")
+        )
