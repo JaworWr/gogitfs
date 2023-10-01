@@ -54,6 +54,17 @@ class Repo:
                 id_ = f"{name}:{i}"
                 yield id_, commit
 
+    def iter_branch_commits(self, branch: str, up_to: int | None = None) -> Iterable[tuple[str, Commit | MergeCommit]]:
+        commits = self.branches[branch].commits
+        if up_to is not None:
+            commits = commits[:up_to + 1]
+        commits = list(enumerate(commits))
+        for i, commit in commits[::-1]:
+            yield f"{branch}:{i}", commit
+        if self.branches[branch].from_commit is not None:
+            next_branch, idx = self.branches[branch].from_commit.split(":")[0]
+            yield from self.iter_branch_commits(next_branch, int(idx))
+
     def get_commit_by_id(self, id_: str) -> Commit | MergeCommit:
         branch, idx = id_.split(":")
         idx = int(idx)

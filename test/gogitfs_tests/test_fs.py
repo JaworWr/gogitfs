@@ -70,3 +70,8 @@ def test_commits(mount: pathlib.Path, repo_schema: schema.Repo):
             check_merge_commit(repo_schema, commit_dir, name, commit)
 
     check_commit(repo_schema, mount / "commits" / "HEAD", "main:-1", repo_schema.get_commit_by_id("main:-1"))
+
+
+def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
+    assert sorted(repo_schema.branches) == sorted(f.name for f in (mount / "branches").iterdir()), \
+        "directories and branches should match"
