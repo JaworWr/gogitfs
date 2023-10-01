@@ -1,5 +1,6 @@
 import contextlib
 import os
+import re
 import subprocess
 from typing import Iterable
 
@@ -33,6 +34,10 @@ def is_usage_line(line: str) -> bool:
     return line.strip() == f"Usage: {GOGITFS_BINARY} <repo-dir> <mount-dir>"
 
 
-def is_filesystem_error(msg: str, err: str) -> bool:
-    err_msg = f"cannot start the filesystem daemon\n{err}"
-    return msg.startswith(err_msg)
+def is_filesystem_error(msg: str, err_pattern: str) -> bool:
+    lines = msg.splitlines()
+    if len(lines) < 2:
+        return False
+    if lines[0].strip() != "cannot start the filesystem daemon":
+        return False
+    return bool(re.match(err_pattern, lines[1]))
