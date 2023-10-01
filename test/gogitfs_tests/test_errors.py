@@ -1,6 +1,6 @@
 import pathlib
 
-from test.gogitfs_tests.conftest import mount_with_flags, is_usage_line
+from test.gogitfs_tests.common import mount_with_flags, is_usage_line
 
 
 def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):

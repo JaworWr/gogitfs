@@ -1,6 +1,6 @@
 import pathlib
 
-from test.gogitfs_tests.conftest import mount_with_flags, is_usage_line, is_filesystem_error
+from test.gogitfs_tests.common import mount_with_flags, is_usage_line, is_filesystem_error
 
 
 def test_help_flag():

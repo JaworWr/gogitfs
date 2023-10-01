@@ -4,7 +4,7 @@ import subprocess
 import pytest
 import sh
 
-from test.gogitfs_tests.conftest import GOGITFS_BINARY
+from test.gogitfs_tests.common import GOGITFS_BINARY
 
 
 @pytest.fixture
