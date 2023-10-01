@@ -45,6 +45,12 @@ def test_iter_branch_commits(small_repo_schema: schema.Repo):
     names = list(x[0] for x in small_repo_schema.iter_branch_commits("baz"))
     expected = [f"baz:{i}" for i in range(len(small_repo_schema.branches["baz"].commits))]
     expected = expected[::-1] + ["main:1", "main:0"]
+
+    names = list(x[0] for x in small_repo_schema.iter_branch_commits("main"))
+    expected = ["main:2"]
+    expected += [f"bar:{i}" for i in range(len(small_repo_schema.branches["bar"].commits))][::-1]
+    expected += ["main:0"]
+    expected += ["main:1", "main:0"]
     assert names == expected
 
 

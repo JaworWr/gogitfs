@@ -61,6 +61,9 @@ class Repo:
         commits = list(enumerate(commits))
         for i, commit in commits[::-1]:
             yield f"{branch}:{i}", commit
+            if isinstance(commit, MergeCommit):
+                merged_branch, idx = commit.other_commit.split(":")
+                yield from self.iter_branch_commits(merged_branch, int(idx))
         if self.branches[branch].from_commit is not None:
             next_branch, idx = self.branches[branch].from_commit.split(":")
             yield from self.iter_branch_commits(next_branch, int(idx))
