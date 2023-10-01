@@ -18,7 +18,7 @@ def mount_with_flags(repo_path, mount_point, flags: Iterable[str], capture_outpu
     else:
         unmount = False
     process = subprocess.run(
-        [GOGITFS_BINARY, *flags, str(repo_path), str(mount_point)],
+        args,
         capture_output=capture_output,
         encoding="utf-8",
     )
@@ -39,6 +39,28 @@ def test_help_flag():
             assert process.returncode == 0, f"error for flags {flags}"
             first_line = process.stderr.splitlines()[0]
             assert is_usage_line(first_line), f"invalid first line for flags {flags}"
+
+
+def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):
+    examples = [
+        ("both missing", None, None, [], "not enough arguments"),
+        ("second missing", repo_path, None, [], "not enough arguments"),
+        ("too many args", repo_path, tmp_path, ["foo"], "unexpected arguments"),
+        ("invalid flag", repo_path, tmp_path, ["-foo"], "flag provided but not defined"),
+        ("invalid arg", repo_path, tmp_path, ["-uid", "aaa"], "invalid value"),
+        ("missing arg", None, None, ["-uid"], "flag needs an argument")
+    ]
+
+    for name, path1, path2, flags, err in examples:
+        with mount_with_flags(path1, path2, flags, True) as process:
+            assert process.returncode != 0, f"process didn't fail for case {name}"
+            assert process.stderr.startswith(err), f"wrong error message for case {name}"
+            try:
+                second_line = process.stderr.splitlines()[1]
+            except IndexError:
+                second_line = "TOO SHORT"
+            print(process.stderr)
+            assert is_usage_line(second_line), f"help wasn't shown for case {name}"
 
 
 def test_uid_gid(repo_path: pathlib.Path, tmp_path: pathlib.Path):
