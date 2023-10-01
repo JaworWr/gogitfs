@@ -48,6 +48,14 @@ class Repo:
     main_branch: str
     active_branch: str
 
-    def iter_commits(self) -> Iterable[Commit | MergeCommit]:
-        for branch in self.branches.values():
-            yield from branch.commits
+    def iter_commits(self) -> Iterable[tuple[str, Commit | MergeCommit]]:
+        for name, branch in self.branches.items():
+            for i, commit in enumerate(branch.commits):
+                id_ = f"{name}:{i}"
+                yield id_, commit
+
+
+    def get_commit_by_id(self, id_: str) -> Commit | MergeCommit:
+        branch, idx = id_.split(":")
+        idx = int(idx)
+        return self.branches[branch].commits[idx]

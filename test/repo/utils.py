@@ -25,11 +25,11 @@ def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> g
         if branch != repo.active_branch.name:
             from_commit_id = repo_schema.branches[branch].from_commit
             if from_commit_id is not None:
-                from_commit_hash = get_commit_hash(get_commit_by_id(repo_schema, from_commit_id))
+                from_commit_hash = get_commit_hash(repo_schema.get_commit_by_id(from_commit_id))
             else:
                 from_commit_hash = None
             checkout_branch(repo, branch, from_commit_hash)
-        commit_schema = get_commit_by_id(repo_schema, commit_id)
+        commit_schema = repo_schema.get_commit_by_id(commit_id)
         if isinstance(commit_schema, schema.Commit):
             make_commit(repo, repo_path, commit_schema)
         else:
@@ -91,7 +91,7 @@ def make_merge_commit(
         repo_schema: schema.Repo,
         commit_schema: schema.MergeCommit,
 ) -> git.Commit:
-    other_commit_schema = get_commit_by_id(repo_schema, commit_schema.other_commit)
+    other_commit_schema = repo_schema.get_commit_by_id(commit_schema.other_commit)
     other_hash = get_commit_hash(other_commit_schema)
     head = repo.head
     other_commit = repo.commit(other_hash)
@@ -111,9 +111,3 @@ def get_commit_hash(commit_schema: schema.Commit | schema.MergeCommit) -> str:
     if h is None:
         raise RuntimeError(f"Commit {commit_schema.message} not yet created")
     return h
-
-
-def get_commit_by_id(repo_schema: schema.Repo, id_: str) -> schema.Commit | schema.MergeCommit:
-    branch, idx = id_.split(":")
-    idx = int(idx)
-    return repo_schema.branches[branch].commits[idx]

@@ -24,7 +24,7 @@ def test_mount_subdirs(mount: pathlib.Path):
 
 
 def test_commits(mount: pathlib.Path, repo_schema: schema.Repo):
-    hashes = [c.hash for c in repo_schema.iter_commits()]
+    hashes = [c.hash for _, c in repo_schema.iter_commits()]
     assert sorted(hashes + ["HEAD"]) == sorted(f.name for f in (mount / "commits").iterdir()), \
         "directories and commits should match"
 
