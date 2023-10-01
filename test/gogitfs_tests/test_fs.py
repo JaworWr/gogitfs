@@ -96,3 +96,9 @@ def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
         check_commit(
             repo_schema, branch_dir / "HEAD", f"{branch}:-1", repo_schema.get_commit_by_id(f"{branch}:-1")
         )
+
+
+# TODO: check if new commits cause updates
+# TODO: check if new / deleted / renamed branches cause updates
+# TODO: dump logs on error
+# TODO: option for debug logging (env var)
