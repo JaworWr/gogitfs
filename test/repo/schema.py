@@ -62,7 +62,7 @@ class Repo:
         for i, commit in commits[::-1]:
             yield f"{branch}:{i}", commit
         if self.branches[branch].from_commit is not None:
-            next_branch, idx = self.branches[branch].from_commit.split(":")[0]
+            next_branch, idx = self.branches[branch].from_commit.split(":")
             yield from self.iter_branch_commits(next_branch, int(idx))
 
     def get_commit_by_id(self, id_: str) -> Commit | MergeCommit:

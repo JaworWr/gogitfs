@@ -26,6 +26,28 @@ def test_repo_graph(small_repo_schema: schema.Repo):
     assert graph == expected
 
 
+def test_iter_commits(small_repo_schema: schema.Repo):
+    for name, commit in small_repo_schema.iter_commits():
+        assert commit is small_repo_schema.get_commit_by_id(name)
+
+    names = sorted(x[0] for x in small_repo_schema.iter_commits())
+    expected = []
+    for name, branch in small_repo_schema.branches.items():
+        for i in range(len(branch.commits)):
+            expected.append(f"{name}:{i}")
+    assert names == sorted(expected)
+
+
+def test_iter_branch_commits(small_repo_schema: schema.Repo):
+    for name, commit in small_repo_schema.iter_branch_commits("baz"):
+        assert commit is small_repo_schema.get_commit_by_id(name)
+
+    names = list(x[0] for x in small_repo_schema.iter_branch_commits("baz"))
+    expected = [f"baz:{i}" for i in range(len(small_repo_schema.branches["baz"].commits))]
+    expected = expected[::-1] + ["main:1", "main:0"]
+    assert names == expected
+
+
 def test_get_commit_by_id(small_repo_schema: schema.Repo):
     commit_schema = small_repo_schema.get_commit_by_id("baz:1")
     assert commit_schema.message == "baz2"
