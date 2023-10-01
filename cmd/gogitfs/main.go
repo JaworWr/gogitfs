@@ -15,7 +15,7 @@ func main() {
 
 	})
 	if err != nil {
-		fmt.Println(err.Error())
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
 		os.Exit(2)
 	}

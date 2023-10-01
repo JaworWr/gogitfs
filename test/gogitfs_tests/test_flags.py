@@ -43,8 +43,8 @@ def test_help_flag():
 
 def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):
     examples = [
-        ("both missing", None, None, [], "not enough arguments"),
-        ("second missing", repo_path, None, [], "not enough arguments"),
+        ("both missing", None, None, [], "not enough positional arguments"),
+        ("second missing", repo_path, None, [], "not enough positional arguments"),
         ("too many args", repo_path, tmp_path, ["foo"], "unexpected arguments"),
         ("invalid flag", repo_path, tmp_path, ["-foo"], "flag provided but not defined"),
         ("invalid arg", repo_path, tmp_path, ["-uid", "aaa"], "invalid value"),
