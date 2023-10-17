@@ -3,12 +3,29 @@ import tempfile
 from dataclasses import dataclass
 
 import git
+import pytest
+from _pytest.nodes import Item
+from _pytest.reports import CollectReport
+from _pytest.runner import CallInfo
 
 from test.repo import Repo, load_repo_schema, build_repo
 
-import pytest
-
 REPO_JSON = pathlib.Path(__file__).resolve().parent / "repo.json"
+
+
+phase_report_key = pytest.StashKey[dict[str, pytest.CollectReport]]()
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item: Item, call: CallInfo) -> CollectReport:
+    # execute all other hooks to obtain the report object
+    rep: CollectReport = yield
+
+    # store test results for each phase of a call, which can
+    # be "setup", "call", "teardown"
+    item.stash.setdefault(phase_report_key, {})[rep.when] = rep
+
+    return rep
 
 
 @dataclass

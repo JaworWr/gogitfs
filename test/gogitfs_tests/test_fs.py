@@ -1,21 +1,35 @@
 import os
 import pathlib
 import subprocess
+import sys
 
 import pytest
 import sh
 
 from test.gogitfs_tests.common import GOGITFS_BINARY
+from test.gogitfs_tests.conftest import phase_report_key
 from test.repo import schema
 
 
+def dump_logs(pid: int) -> None:
+    log_path = pathlib.Path(f"/tmp/gogitfs-{pid}.log")
+    if log_path.exists():
+        with open(log_path) as f:
+            for line in f:
+                print(line.strip(), file=sys.stderr)
+
+
 @pytest.fixture
-def mount(repo_path: pathlib.Path, tmp_path: pathlib.Path):
+def mount(request, repo_path: pathlib.Path, tmp_path: pathlib.Path) -> pathlib.Path:
     args = [GOGITFS_BINARY, str(repo_path), str(tmp_path)]
     p = subprocess.Popen(args)
     p.wait()
     assert p.returncode == 0
     yield tmp_path
+    # if test failed - dump logs
+    report = request.node.stash[phase_report_key]
+    if report["setup"].passed and ("call" not in report or report["call"].failed):
+        dump_logs(p.pid)
     sh.umount(tmp_path)
 
 
@@ -100,5 +114,4 @@ def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
 
 # TODO: check if new commits cause updates
 # TODO: check if new / deleted / renamed branches cause updates
-# TODO: dump logs on error
 # TODO: option for debug logging (env var)
