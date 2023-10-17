@@ -21,7 +21,10 @@ def dump_logs(pid: int) -> None:
 
 @pytest.fixture
 def mount(request, repo_path: pathlib.Path, tmp_path: pathlib.Path) -> pathlib.Path:
-    args = [GOGITFS_BINARY, str(repo_path), str(tmp_path)]
+    args = [GOGITFS_BINARY]
+    if "GOGITFS_LOGLEVEL" in os.environ:
+        args += ["-log-level", os.environ["GOGITFS_LOGLEVEL"]]
+    args += [str(repo_path), str(tmp_path)]
     p = subprocess.Popen(args)
     p.wait()
     assert p.returncode == 0
@@ -114,4 +117,3 @@ def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
 
 # TODO: check if new commits cause updates
 # TODO: check if new / deleted / renamed branches cause updates
-# TODO: option for debug logging (env var)
