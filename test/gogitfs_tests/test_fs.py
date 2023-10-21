@@ -122,8 +122,8 @@ def test_new_commit(mount: pathlib.Path, repo: RepoInfo) -> None:
 
     with open(repo.path / "a.txt", "w") as f:
         f.write("hello")
-    repo.repo_object.index.add(["a.txt"])
-    c = repo.repo_object.index.commit("Add a.txt")
+    repo.obj.index.add(["a.txt"])
+    c = repo.obj.index.commit("Add a.txt")
 
     commits = [p.name for p in (mount / "commits").iterdir()]
     assert len(commits) - 1 == n_commits + 1, "new commit should appear"
@@ -136,7 +136,7 @@ def test_branch_updates(mount: pathlib.Path, repo: RepoInfo) -> None:
     branches = [p.name for p in (mount / "branches").iterdir()]
     assert len(branches) == n_branches
 
-    repo.repo_object.create_head("new_branch")
+    repo.obj.create_head("new_branch")
     branches = [p.name for p in (mount / "branches").iterdir()]
     assert len(branches) == n_branches + 1
     assert "new_branch" in branches

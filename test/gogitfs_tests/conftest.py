@@ -31,7 +31,7 @@ def pytest_runtest_makereport(item: Item, call: CallInfo) -> CollectReport:
 @dataclass
 class RepoInfo:
     path: pathlib.Path
-    repo_object: git.Repo
+    obj: git.Repo
     schema: Repo
 
 
@@ -41,7 +41,7 @@ def repo():
         tmpdir = pathlib.Path(tmpdir)
         schema = load_repo_schema(REPO_JSON)
         repo = build_repo(schema, tmpdir)
-        yield RepoInfo(path=tmpdir, repo_object=repo, schema=schema)
+        yield RepoInfo(path=tmpdir, obj=repo, schema=schema)
 
 
 @pytest.fixture(scope="session")
@@ -50,8 +50,8 @@ def repo_path(repo):
 
 
 @pytest.fixture(scope="session")
-def repo_object(repo):
-    return repo.repo_object
+def repo_obj(repo):
+    return repo.obj
 
 
 @pytest.fixture(scope="session")
