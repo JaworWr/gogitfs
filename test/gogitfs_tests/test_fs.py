@@ -1,4 +1,3 @@
-import datetime
 import os
 import pathlib
 import subprocess
@@ -130,6 +129,5 @@ def test_new_commit(mount: pathlib.Path, repo: RepoInfo) -> None:
     assert len(commits) - 1 == n_commits + 1, "new commit should appear"
     assert c.hexsha in commits, "new commit should be present"
     assert (mount / "commits" / c.hexsha / "message").read_text() == "Add a.txt", "incorrect new commit message"
-
 
 # TODO: check if new / deleted / renamed branches cause updates
