@@ -127,7 +127,7 @@ def test_new_commit(mount: pathlib.Path, repo: RepoInfo) -> None:
 
     commits = [p.name for p in (mount / "commits").iterdir()]
     assert len(commits) - 1 == n_commits + 1, "new commit should appear"
-    assert c.hexsha in commits, "new commit should be present"
+    assert c.hexsha in commits, "new commit should appear"
     assert (mount / "commits" / c.hexsha / "message").read_text() == "Add a.txt", "incorrect new commit message"
 
 
@@ -138,6 +138,16 @@ def test_branch_updates(mount: pathlib.Path, repo: RepoInfo) -> None:
 
     repo.obj.create_head("new_branch")
     branches = [p.name for p in (mount / "branches").iterdir()]
-    assert len(branches) == n_branches + 1
-    assert "new_branch" in branches
+    assert len(branches) == n_branches + 1, "new branch should appear"
+    assert "new_branch" in branches, "new branch should appear"
 
+    repo.obj.heads["baz"].rename("baz2")
+    branches = [p.name for p in (mount / "branches").iterdir()]
+    assert len(branches) == n_branches + 1, "number of branches should remain unchanged after rename"
+    assert "baz" not in branches, "old name should not appear"
+    assert "baz2" in branches, "new name should appear"
+
+    repo.obj.delete_head("new_branch")
+    branches = [p.name for p in (mount / "branches").iterdir()]
+    assert len(branches) == n_branches, "deleted branch should not appear"
+    assert "new_branch" not in branches, "deleted branch should not appear"
