@@ -130,4 +130,14 @@ def test_new_commit(mount: pathlib.Path, repo: RepoInfo) -> None:
     assert c.hexsha in commits, "new commit should be present"
     assert (mount / "commits" / c.hexsha / "message").read_text() == "Add a.txt", "incorrect new commit message"
 
-# TODO: check if new / deleted / renamed branches cause updates
+
+def test_branch_updates(mount: pathlib.Path, repo: RepoInfo) -> None:
+    n_branches = len(repo.schema.branches)
+    branches = [p.name for p in (mount / "branches").iterdir()]
+    assert len(branches) == n_branches
+
+    repo.repo_object.create_head("new_branch")
+    branches = [p.name for p in (mount / "branches").iterdir()]
+    assert len(branches) == n_branches + 1
+    assert "new_branch" in branches
+
