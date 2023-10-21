@@ -1,3 +1,4 @@
+import datetime
 import os
 import pathlib
 import subprocess
@@ -7,7 +8,7 @@ import pytest
 import sh
 
 from test.gogitfs_tests.common import GOGITFS_BINARY
-from test.gogitfs_tests.conftest import phase_report_key
+from test.gogitfs_tests.conftest import phase_report_key, RepoInfo
 from test.repo import schema
 
 
@@ -115,5 +116,20 @@ def test_branches(mount: pathlib.Path, repo_schema: schema.Repo):
         )
 
 
-# TODO: check if new commits cause updates
+def test_new_commit(mount: pathlib.Path, repo: RepoInfo) -> None:
+    n_commits = sum(1 for _ in repo.schema.iter_commits())
+    commits = [p.name for p in (mount / "commits").iterdir()]
+    assert len(commits) - 1 == n_commits
+
+    with open(repo.path / "a.txt", "w") as f:
+        f.write("hello")
+    repo.repo_object.index.add(["a.txt"])
+    c = repo.repo_object.index.commit("Add a.txt")
+
+    commits = [p.name for p in (mount / "commits").iterdir()]
+    assert len(commits) - 1 == n_commits + 1, "new commit should appear"
+    assert c.hexsha in commits, "new commit should be present"
+    assert (mount / "commits" / c.hexsha / "message").read_text() == "Add a.txt", "incorrect new commit message"
+
+
 # TODO: check if new / deleted / renamed branches cause updates
