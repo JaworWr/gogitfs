@@ -26,8 +26,36 @@ def test_repo_graph(small_repo_schema: schema.Repo):
     assert graph == expected
 
 
+def test_iter_commits(small_repo_schema: schema.Repo):
+    for name, commit in small_repo_schema.iter_commits():
+        assert commit is small_repo_schema.get_commit_by_id(name)
+
+    names = sorted(x[0] for x in small_repo_schema.iter_commits())
+    expected = []
+    for name, branch in small_repo_schema.branches.items():
+        for i in range(len(branch.commits)):
+            expected.append(f"{name}:{i}")
+    assert names == sorted(expected)
+
+
+def test_iter_branch_commits(small_repo_schema: schema.Repo):
+    for name, commit in small_repo_schema.iter_branch_commits("baz"):
+        assert commit is small_repo_schema.get_commit_by_id(name)
+
+    names = list(x[0] for x in small_repo_schema.iter_branch_commits("baz"))
+    expected = [f"baz:{i}" for i in range(len(small_repo_schema.branches["baz"].commits))]
+    expected = expected[::-1] + ["main:1", "main:0"]
+
+    names = list(x[0] for x in small_repo_schema.iter_branch_commits("main"))
+    expected = ["main:2"]
+    expected += [f"bar:{i}" for i in range(len(small_repo_schema.branches["bar"].commits))][::-1]
+    expected += ["main:0"]
+    expected += ["main:1", "main:0"]
+    assert names == expected
+
+
 def test_get_commit_by_id(small_repo_schema: schema.Repo):
-    commit_schema = utils.get_commit_by_id(small_repo_schema, "baz:1")
+    commit_schema = small_repo_schema.get_commit_by_id("baz:1")
     assert commit_schema.message == "baz2"
 
 
@@ -79,7 +107,7 @@ def test_merge_commit(small_repo_schema: schema.Repo, tmp_path: Path):
     assert isinstance(commit_schema, schema.MergeCommit), "selected commit should be a merge commit"
     branch = commit_schema.other_commit.split(":")[0]
 
-    start_commit = utils.get_commit_by_id(small_repo_schema, small_repo_schema.branches[branch].from_commit)
+    start_commit = small_repo_schema.get_commit_by_id(small_repo_schema.branches[branch].from_commit)
     h = utils.get_commit_hash(start_commit)
     utils.checkout_branch(repo, branch, h)
 

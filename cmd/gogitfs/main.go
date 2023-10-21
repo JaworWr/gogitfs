@@ -15,14 +15,14 @@ func main() {
 
 	})
 	if err != nil {
-		fmt.Println(err.Error())
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
 		os.Exit(2)
 	}
 
 	err = daemon.SpawnDaemon(daemonObj, nil, "gogitfs")
 	if err != nil {
-		fmt.Printf("cannot start the filesystem daemon\n%v\n", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "cannot start the filesystem daemon\n%v\n", err.Error())
 		os.Exit(1)
 	}
 }

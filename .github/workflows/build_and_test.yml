@@ -69,4 +69,15 @@ jobs:
 
     - name: Test helper code
       run: python -m pytest -v test/repo_tests
-        
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ./gogitfs
+
+    - name: Run integration tests
+      run: |
+        chmod +x $GOGITFS_BINARY
+        python -m pytest -v test/gogitfs_tests
+      env:
+        GOGITFS_BINARY: ./gogitfs/gogitfs
