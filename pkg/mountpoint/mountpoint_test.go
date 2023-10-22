@@ -1,10 +1,12 @@
 package mountpoint
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"io/fs"
 	"os"
 	"path"
+	"syscall"
 	"testing"
 )
 
@@ -47,26 +49,31 @@ func Test_ValidateMountpoint(t *testing.T) {
 	testCases := []struct {
 		name string
 		args
-		shouldWork bool
+		errorType     any
+		errorInstance error
 	}{
-		{"absent", args{"absent", true}, false},
-		{"file", args{"file", true}, false},
-		{"readonly", args{"readonly", true}, false},
-		{"sticky", args{"file", true}, false},
-		{"nonempty allowed", args{"nonempty", true}, true},
-		{"nonempty not allowed", args{"nonempty", false}, false},
-		{"empty allowed", args{"empty", true}, true},
-		{"empty not allowed", args{"empty", false}, true},
+		{"absent", args{"absent", true}, fs.PathError{}, nil},
+		{"file", args{"file", true}, nil, ErrNotADirectory},
+		{"readonly", args{"readonly", true}, syscall.Errno(0), nil},
+		{"sticky", args{"sticky", true}, nil, ErrStickyBitSet},
+		{"nonempty allowed", args{"nonempty", true}, nil, nil},
+		{"nonempty not allowed", args{"nonempty", false}, nil, ErrNotEmpty},
+		{"empty allowed", args{"empty", true}, nil, nil},
+		{"empty not allowed", args{"empty", false}, nil, nil},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			p := tmpPath(tc.filename)
 			_, err := ValidateMountpoint(p, tc.allowNonEmpty)
-			if tc.shouldWork {
-				assert.NoError(t, err)
-			} else {
+			if tc.errorInstance != nil {
 				assert.Error(t, err)
+				assert.True(t, errors.Is(err, tc.errorInstance), "incorrect error type")
+			} else if tc.errorType != nil {
+				assert.Error(t, err)
+				assert.True(t, errors.As(err, &tc.errorType), "incorrect error type")
+			} else {
+				assert.NoError(t, err, "unexpected error returned by ValidateError")
 			}
 		})
 	}

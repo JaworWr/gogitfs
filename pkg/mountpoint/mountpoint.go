@@ -22,7 +22,7 @@ var (
 func validateStat(path string) error {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("stat failed for %v: %w", path, err)
+		return fmt.Errorf("stat failed: %w", err)
 	}
 	// check if mount point is a directory
 	if !stat.IsDir() {
