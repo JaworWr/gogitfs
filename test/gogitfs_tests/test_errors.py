@@ -28,7 +28,7 @@ def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):
 def test_nonexistent_repo(tmp_path: pathlib.Path):
     with mount_with_flags(tmp_path / "repo", tmp_path, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, "repository does not exist")
+        assert is_filesystem_error(process.stderr, "cannot create root node: repository does not exist")
 
 
 def test_invalid_repo(tmp_path: pathlib.Path):
@@ -38,17 +38,17 @@ def test_invalid_repo(tmp_path: pathlib.Path):
     mount_point.mkdir()
     with mount_with_flags(repo_path, mount_point, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, "repository does not exist")
+        assert is_filesystem_error(process.stderr, "cannot create root node: repository does not exist")
 
 
 def test_invalid_mountpoint(repo_path: pathlib.Path, tmp_path: pathlib.Path):
     mount_point = tmp_path / "mount"
     with mount_with_flags(repo_path, mount_point, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, r"stat .*: no such file or directory")
+        assert is_filesystem_error(process.stderr, r"invalid mountpoint: stat .*: no such file or directory")
 
     mount_point.mkdir()
     os.chmod(mount_point, 0o444)  # make mount point read-only
     with mount_with_flags(repo_path, mount_point, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, "permission denied")
+        assert is_filesystem_error(process.stderr, "invalid mountpoint: permission denied")
