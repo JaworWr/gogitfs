@@ -6,6 +6,7 @@ import (
 	"gogitfs/pkg/logging"
 )
 
+// CLI flag names
 const (
 	logLevelFlag      = "log-level"
 	fuseDebugFlag     = "fuse-debug"
@@ -15,6 +16,9 @@ const (
 	allowOtherFlag    = "allow-other"
 )
 
+// gogitfsDaemon describes a daemon process handling the mounted repository
+// When started, it runs a FUSE server. The process exits as soon as the server stops,
+// which happens when the directory is unmounted.
 type gogitfsDaemon struct {
 	repoDir  string
 	mountDir string

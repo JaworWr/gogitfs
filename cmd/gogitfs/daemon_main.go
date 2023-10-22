@@ -53,6 +53,7 @@ func (d *gogitfsDaemon) DaemonMain(
 
 var _ daemon.Daemon = (*gogitfsDaemon)(nil)
 
+// getFuseOpts sets FUSE options based on the daemon's CLI arguments.
 func getFuseOpts(d *gogitfsDaemon) (*fs.Options, error) {
 	opts := &fs.Options{}
 	// get current UID and GID if not specified

@@ -1,3 +1,4 @@
+// Package main defines the CLI and the program's entry point.
 package main
 
 import (
