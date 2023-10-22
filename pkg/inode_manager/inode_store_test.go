@@ -56,11 +56,13 @@ func TestInodeStore_GetOrInsert(t *testing.T) {
 			})
 		}
 		t.Run("error", func(t *testing.T) {
+			expectedErr := errors.New("foo")
 			builder := func() (fs.InodeEmbedder, error) {
-				return nil, errors.New("foo")
+				return nil, expectedErr
 			}
 			_, err := store.GetOrInsert(ctx, "zzz", fs.StableAttr{}, root, builder, false)
 			assert.Error(t, err)
+			assert.True(t, errors.Is(err, expectedErr), "error should be the one returned by builder")
 		})
 	})
 }
