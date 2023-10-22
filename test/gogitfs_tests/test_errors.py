@@ -28,7 +28,9 @@ def test_invalid_args(repo_path: pathlib.Path, tmp_path: pathlib.Path):
 def test_nonexistent_repo(tmp_path: pathlib.Path):
     with mount_with_flags(tmp_path / "repo", tmp_path, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, "cannot create root node: repository does not exist")
+        assert is_filesystem_error(
+            process.stderr,
+            "cannot create root node: cannot open the Git repository: repository does not exist")
 
 
 def test_invalid_repo(tmp_path: pathlib.Path):
@@ -38,7 +40,10 @@ def test_invalid_repo(tmp_path: pathlib.Path):
     mount_point.mkdir()
     with mount_with_flags(repo_path, mount_point, [], True) as process:
         assert process.returncode != 0
-        assert is_filesystem_error(process.stderr, "cannot create root node: repository does not exist")
+        assert is_filesystem_error(
+            process.stderr,
+            "cannot create root node: cannot open the Git repository: repository does not exist"
+        )
 
 
 def test_invalid_mountpoint(repo_path: pathlib.Path, tmp_path: pathlib.Path):
