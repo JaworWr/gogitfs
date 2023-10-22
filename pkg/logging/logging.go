@@ -51,7 +51,7 @@ func (f *LogLevelFlag) Set(s string) error {
 		err = fmt.Errorf("log level must be between 0 and %v, got %v", Error, val)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid numerical log level: %w", err)
 	}
 	*f = val
 	return nil
