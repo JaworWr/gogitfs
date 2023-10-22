@@ -2,6 +2,7 @@ package error_handling
 
 import (
 	"encoding/gob"
+	"fmt"
 	"os"
 )
 
@@ -14,7 +15,7 @@ type SubprocessErrorReceiver struct {
 func NewSubprocessErrorReceiver(namedPipeName string) (*SubprocessErrorReceiver, error) {
 	fifo, err := os.OpenFile(namedPipeName, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot open named pipe for reading: %w", err)
 	}
 	decoder := gob.NewDecoder(fifo)
 	receiver := SubprocessErrorReceiver{fifo, decoder}

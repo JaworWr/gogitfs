@@ -2,6 +2,7 @@ package error_handling
 
 import (
 	"encoding/gob"
+	"fmt"
 	"os"
 )
 
@@ -15,7 +16,7 @@ type SubprocessErrorSender struct {
 func NewSubprocessErrorSender(namedPipeName string) (*SubprocessErrorSender, error) {
 	fifo, err := os.OpenFile(namedPipeName, os.O_WRONLY, os.ModeNamedPipe)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot open named pipe for writing: %w", err)
 	}
 	encoder := gob.NewEncoder(fifo)
 	sender := SubprocessErrorSender{fifo: fifo, encoder: encoder}
