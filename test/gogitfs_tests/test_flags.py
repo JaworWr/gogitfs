@@ -34,7 +34,7 @@ def test_allow_empty(repo_path: pathlib.Path, tmp_path: pathlib.Path):
     flags = []
     with mount_with_flags(repo_path, mount_point, flags, True) as process:
         assert process.returncode == 1
-        assert is_filesystem_error(process.stderr, "invalid mountpoint: directory not empty")
+        assert is_filesystem_error(process.stderr, f"invalid mountpoint: {mount_point}: directory not empty")
         assert (mount_point / "foo").exists(), "repo should not be mounted"
 
     flags = ["-allow-nonempty"]
