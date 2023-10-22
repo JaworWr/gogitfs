@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
@@ -46,7 +47,7 @@ func (m *branchNodeCache) getOrInsert(
 
 	lastCommit, err := parent.embeddedRepoNode().repo.CommitObject(branch.Hash())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("cannot get last commit of branch %v: %w", branchName, err)
 	}
 
 	builder := func() (fs.InodeEmbedder, error) {
@@ -64,7 +65,7 @@ func (m *branchNodeCache) getOrInsert(
 	}
 	node, err := m.InodeCache.GetOrInsert(ctx, branchName, fuse.S_IFDIR, parent, builder, overwrite)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("cannot create node for branch %v: %w", branchName, err)
 	}
 	return lastCommit, node, nil
 }
