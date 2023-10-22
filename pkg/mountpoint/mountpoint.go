@@ -2,6 +2,7 @@
 package mountpoint
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
 	"io/fs"
@@ -10,16 +11,22 @@ import (
 	"syscall"
 )
 
+var (
+	ErrNotADirectory = errors.New("not a directory")
+	ErrStickyBitSet  = errors.New("directory has sticky bit set")
+	ErrNotEmpty      = errors.New("directory not empty")
+)
+
 // validateStat checks if the mountpoint has the correct type and permissions. If this is the case, it returns nil,
 // otherwise an error is returned specifying what exactly is wrong.
 func validateStat(path string) error {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("stat failed for %v: %w", path, err)
 	}
 	// check if mount point is a directory
 	if !stat.IsDir() {
-		return fmt.Errorf("not a directory: %v", path)
+		return fmt.Errorf("%v: %w", path, ErrNotADirectory)
 	}
 	// check if we have write access
 	err = syscall.Access(path, unix.W_OK)
@@ -28,7 +35,7 @@ func validateStat(path string) error {
 	}
 	// check for sticky bit
 	if stat.Mode()&fs.ModeSticky != 0 {
-		return fmt.Errorf("directory has sticky bit set: %v", path)
+		return fmt.Errorf("%v: %w", path, ErrStickyBitSet)
 	}
 	return nil
 }
@@ -42,7 +49,7 @@ func validateNonEmpty(path string) error {
 	if len(entries) == 0 {
 		return nil
 	} else {
-		return fmt.Errorf("directory not empty: %v", path)
+		return fmt.Errorf("%v: %w", path, ErrNotEmpty)
 	}
 }
 
