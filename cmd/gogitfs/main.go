@@ -23,7 +23,7 @@ func main() {
 
 	err = daemon.SpawnDaemon(daemonObj, nil, "gogitfs")
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "cannot start the filesystem daemon\n%v\n", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "cannot start the filesystem daemon\n%v\n", err)
 		os.Exit(1)
 	}
 }
