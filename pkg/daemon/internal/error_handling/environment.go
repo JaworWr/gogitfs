@@ -38,6 +38,9 @@ func GetDaemonEnv() (info EnvInfo, err error) {
 		pipeKey + "=" + info.NamedPipeName,
 	}
 	err = syscall.Mkfifo(info.NamedPipeName, 0700)
+	if err != nil {
+		err = fmt.Errorf("cannot create named pipe: %w", err)
+	}
 	return
 }
 
@@ -49,6 +52,6 @@ func CleanupDeamonEnv(info EnvInfo) {
 	// delete the named pipe
 	err := syscall.Unlink(info.NamedPipeName)
 	if err != nil {
-		panic("Error during cleanup:" + err.Error())
+		panic("Error during cleanup: " + err.Error())
 	}
 }

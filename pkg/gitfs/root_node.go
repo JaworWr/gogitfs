@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -48,6 +49,7 @@ func NewRootNode(path string) (node *RootNode, err error) {
 	Init()
 	repo, err := git.PlainOpen(path)
 	if err != nil {
+		err = fmt.Errorf("cannot open the Git repository: %w", err)
 		return
 	}
 

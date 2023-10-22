@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"errors"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -75,6 +76,7 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 			assert.Nil(t, commit)
 			assert.Nil(t, inode)
 			assert.Error(t, err)
+			assert.True(t, errors.Is(err, plumbing.ErrObjectNotFound), "error should be ErrObjectNotFound")
 		})
 	})
 	_ = server.Unmount()

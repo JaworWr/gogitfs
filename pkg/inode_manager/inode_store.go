@@ -2,6 +2,7 @@ package inode_manager
 
 import (
 	"context"
+	"fmt"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"sync"
 )
@@ -39,7 +40,7 @@ func (s *InodeStore) GetOrInsert(
 	}
 	newEmb, err := builder()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot build an INode: %w", err)
 	}
 	newNode := parent.EmbeddedInode().NewPersistentInode(ctx, newEmb, attr)
 	s.inodes[key] = newNode

@@ -2,6 +2,7 @@
 package daemon
 
 import (
+	"fmt"
 	"github.com/sevlyar/go-daemon"
 	"gogitfs/pkg/daemon/internal/environment"
 	"gogitfs/pkg/daemon/internal/error_handling"
@@ -39,7 +40,7 @@ func SpawnDaemon(daemonObj Daemon, env []string, processName string) error {
 	}
 	child, err := ctx.Reborn()
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot start the daemon process: %w", err)
 	}
 
 	if child == nil {

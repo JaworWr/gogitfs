@@ -1,6 +1,7 @@
 package gitfs
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
@@ -27,10 +28,14 @@ func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 	repo := n.embeddedRepoNode().repo
 	head, err := repo.Head()
 	if err != nil {
+		err = fmt.Errorf("cannot get HEAD object: %w", err)
 		return
 	}
 	logging.DebugLog.Printf("HEAD points to %v", head.Hash().String())
 	commit, err = repo.CommitObject(head.Hash())
+	if err != nil {
+		err = fmt.Errorf("cannot get commit object: %w", err)
+	}
 	return
 }
 

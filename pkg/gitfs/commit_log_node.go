@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
@@ -119,7 +120,7 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	opts := &git.LogOptions{From: from.Hash}
 	iter, err := repo.Log(opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot get commit log: %w", err)
 	}
 	node := newCommitLogNodeFromIter(iter, repo, from, nodeOpts)
 	return node, nil
