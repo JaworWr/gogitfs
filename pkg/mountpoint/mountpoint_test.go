@@ -10,6 +10,16 @@ import (
 	"testing"
 )
 
+func isPathError(err error) bool {
+	var target *fs.PathError
+	return errors.As(err, &target)
+}
+
+func isErrno(err error) bool {
+	var target syscall.Errno
+	return errors.As(err, &target)
+}
+
 func Test_ValidateMountpoint(t *testing.T) {
 	// helper functions
 	tmpdir := t.TempDir()
@@ -49,12 +59,12 @@ func Test_ValidateMountpoint(t *testing.T) {
 	testCases := []struct {
 		name string
 		args
-		errorType     any
-		errorInstance error
+		errorTypeCheck func(err error) bool
+		errorInstance  error
 	}{
-		{"absent", args{"absent", true}, fs.PathError{}, nil},
+		{"absent", args{"absent", true}, isPathError, nil},
 		{"file", args{"file", true}, nil, ErrNotADirectory},
-		{"readonly", args{"readonly", true}, syscall.Errno(0), nil},
+		{"readonly", args{"readonly", true}, isErrno, nil},
 		{"sticky", args{"sticky", true}, nil, ErrStickyBitSet},
 		{"nonempty allowed", args{"nonempty", true}, nil, nil},
 		{"nonempty not allowed", args{"nonempty", false}, nil, ErrNotEmpty},
@@ -69,9 +79,9 @@ func Test_ValidateMountpoint(t *testing.T) {
 			if tc.errorInstance != nil {
 				assert.Error(t, err)
 				assert.True(t, errors.Is(err, tc.errorInstance), "incorrect error type")
-			} else if tc.errorType != nil {
+			} else if tc.errorTypeCheck != nil {
 				assert.Error(t, err)
-				assert.True(t, errors.As(err, &tc.errorType), "incorrect error type")
+				assert.True(t, tc.errorTypeCheck(err), "incorrect error type")
 			} else {
 				assert.NoError(t, err, "unexpected error returned by ValidateError")
 			}
