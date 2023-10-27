@@ -6,7 +6,6 @@ import (
 	"gogitfs/pkg/daemon/internal/environment"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 )
 
@@ -16,10 +15,12 @@ type EnvInfo struct {
 	NamedPipeName string
 }
 
+const (
+	pipeKey string = "_DAEMON_NAMED_PIPE"
+)
+
 // GetDaemonEnv gets environment information and initializes the named pipe.
 func GetDaemonEnv() (info EnvInfo, err error) {
-	// key under which the named pipe's name appears in the environment
-	pipeKey := strings.ToUpper(environment.DaemonName) + "_NAMED_PIPE"
 	if daemon.WasReborn() {
 		// this runs in the child process
 		pipeName, ok := os.LookupEnv(pipeKey)
