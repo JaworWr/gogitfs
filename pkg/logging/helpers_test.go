@@ -6,13 +6,24 @@ import (
 )
 
 func Test_formatCtxValue(t *testing.T) {
-	assert.Equal(t, "5", formatCtxValue(5), "int should be formatted as a number")
-	assert.Equal(t, "5", formatCtxValue(uint8(5)), "uint8 should be formatted as a number")
-	assert.Equal(t, "5.4", formatCtxValue(5.4), "float should be formatted as a number")
-	assert.Equal(t, "true", formatCtxValue(true), "true should be formatted as \"true\"")
-	assert.Equal(t, "false", formatCtxValue(false), "false should be formatted as \"false\"")
-	assert.Equal(t, "\"abc;def\"", formatCtxValue("abc\ndef"),
-		"strings should be quoted and have newlines removed")
+	testCases := []struct {
+		valType   string
+		valResult string
+		val       any
+		expected  string
+	}{
+		{"int", "a number", 5, "5"},
+		{"uint8", "a number", uint8(5), "5"},
+		{"float", "a floating point number", 5.4, "5.4"},
+		{"true", "\"true\"", true, "true"},
+		{"false", "\"false\"", false, "false"},
+		{"string", "a quoted string with newlines replaced", "abc\ndef", "\"abc;def\""},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.valType, func(t *testing.T) {
+			assert.Equal(t, tc.expected, formatCtxValue(tc.val), "%s should be formatted as %s", tc.valType, tc.valResult)
+		})
+	}
 }
 
 func Test_formatCtx(t *testing.T) {
