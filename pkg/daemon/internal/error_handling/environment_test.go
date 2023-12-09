@@ -17,6 +17,6 @@ func TestGetDaemonEnv(t *testing.T) {
 	expected := []string{
 		fmt.Sprintf("_DAEMON_NAMED_PIPE=%v", envInfo.NamedPipeName),
 	}
-	assert.Equal(t, expected, envInfo.Env)
+	assert.Equal(t, expected, envInfo.Env, "incorrect environment")
 	assert.Contains(t, envInfo.NamedPipeName, "foo", "program name should be contained in the pipe name")
 }
