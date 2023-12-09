@@ -32,7 +32,7 @@ func Test_formatCtx(t *testing.T) {
 		"b": "foo\nbar",
 	}
 	expected := "a=5, b=\"foo;bar\""
-	assert.Equal(t, expected, formatCtx(ctx))
+	assert.Equal(t, expected, formatCtx(ctx), "incorrect formatting")
 }
 
 func Test_concatCtx(t *testing.T) {
@@ -65,7 +65,7 @@ func Test_concatCtx(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := concatCtx(tc.dst, tc.src)
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tc.expected, result, "incorrect result context")
 		})
 	}
 }
@@ -123,10 +123,10 @@ func Test_CurrentFuncName(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			full, pkg, class, method := tc.f()
-			assert.Equal(t, tc.full, full)
-			assert.Equal(t, tc.pkg, pkg)
-			assert.Equal(t, tc.class, class)
-			assert.Equal(t, tc.method, method)
+			assert.Equal(t, tc.full, full, "incorrect result for format Full")
+			assert.Equal(t, tc.pkg, pkg, "incorrect result for format Package")
+			assert.Equal(t, tc.class, class, "incorrect result for format Class")
+			assert.Equal(t, tc.method, method, "incorrect result for format Method")
 		})
 	}
 }

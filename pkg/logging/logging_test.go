@@ -19,7 +19,7 @@ func Test_LogLevelFlag(t *testing.T) {
 
 	t.Run("flag to string", func(t *testing.T) {
 		for k, v := range mapping {
-			assert.Equal(t, k.String(), v)
+			assert.Equal(t, k.String(), v, "incorrect string from flag")
 		}
 	})
 
@@ -27,8 +27,8 @@ func Test_LogLevelFlag(t *testing.T) {
 		for k, v := range mapping {
 			var flag LogLevelFlag
 			err := flag.Set(v)
-			assert.NoError(t, err)
-			assert.Equal(t, k, flag)
+			assert.NoError(t, err, "unexpected error during flag conversion")
+			assert.Equal(t, k, flag, "incorrect flag from string")
 		}
 	})
 
@@ -37,8 +37,8 @@ func Test_LogLevelFlag(t *testing.T) {
 			var flag LogLevelFlag
 			s := strconv.Itoa(i)
 			err := flag.Set(s)
-			assert.NoError(t, err)
-			assert.Equal(t, i, int(flag))
+			assert.NoError(t, err, "unexpected error during flag cconversion")
+			assert.Equal(t, i, int(flag), "incorrect flag from int")
 		}
 	})
 
@@ -46,7 +46,7 @@ func Test_LogLevelFlag(t *testing.T) {
 		for _, s := range []string{"-1", strconv.Itoa(len(mapping)), "aaa"} {
 			var flag LogLevelFlag
 			err := flag.Set(s)
-			assert.Error(t, err)
+			assert.Error(t, err, "should get an error for invalid flag")
 		}
 	})
 
@@ -54,10 +54,10 @@ func Test_LogLevelFlag(t *testing.T) {
 
 func Test_Init(t *testing.T) {
 	Init(Warning)
-	assert.Equal(t, DebugLog.Writer(), io.Discard)
-	assert.Equal(t, InfoLog.Writer(), io.Discard)
-	assert.Equal(t, WarningLog.Writer(), os.Stdout)
-	assert.Equal(t, ErrorLog.Writer(), os.Stdout)
+	assert.Equal(t, DebugLog.Writer(), io.Discard, "incorrect IO for DEBUG")
+	assert.Equal(t, InfoLog.Writer(), io.Discard, "incorrect IO for INFO")
+	assert.Equal(t, WarningLog.Writer(), os.Stdout, "incorrect IO for WARNING")
+	assert.Equal(t, ErrorLog.Writer(), os.Stdout, "incorrect IO for ERROR")
 }
 
 func Test_MakeFileLogger(t *testing.T) {
@@ -65,13 +65,13 @@ func Test_MakeFileLogger(t *testing.T) {
 	name := filepath.Join(tempdir, "test.log")
 	logger, err := MakeFileLogger(name)
 	logger.SetFlags(0)
-	assert.NoError(t, err, "File creation error")
+	assert.NoError(t, err, "unexpected file creation error")
 	logger.Printf("test")
 
 	file, err := os.Open(name)
-	assert.NoError(t, err, "File opening error")
+	assert.NoError(t, err, "unexpected file opening error")
 	data := make([]byte, 20)
 	n, err := file.Read(data)
-	assert.NoError(t, err, "Data reading error")
-	assert.Equal(t, "test\n", string(data[:n]), "Read incorrect data")
+	assert.NoError(t, err, "unexpected data reading error")
+	assert.Equal(t, "test\n", string(data[:n]), "read incorrect data")
 }
