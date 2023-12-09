@@ -3,7 +3,6 @@ package error_handler
 
 import (
 	"gogitfs/pkg/logging"
-	"os"
 )
 
 type ErrorHandler interface {
@@ -41,8 +40,7 @@ type fatalErrorHandler struct{}
 
 func (h fatalErrorHandler) HandleError(err error) {
 	funcname := logging.CurrentFuncName(1, logging.Full)
-	logging.ErrorLog.Printf("[%v] %v", funcname, err.Error())
-	os.Exit(1)
+	logging.ErrorLog.Fatalf("[%v] %v", funcname, err.Error())
 }
 
 // Fatal handler displays a message with level "ERROR" and terminates the program.
