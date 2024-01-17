@@ -77,13 +77,13 @@ func Test_ValidateMountpoint(t *testing.T) {
 			p := tmpPath(tc.filename)
 			_, err := ValidateMountpoint(p, tc.allowNonEmpty)
 			if tc.errorInstance != nil {
-				assert.Error(t, err)
+				assert.Error(t, err, "expected a mountpoint validation error")
 				assert.True(t, errors.Is(err, tc.errorInstance), "incorrect error type")
 			} else if tc.errorTypeCheck != nil {
-				assert.Error(t, err)
+				assert.Error(t, err, "expected a mountpoint validation error")
 				assert.True(t, tc.errorTypeCheck(err), "incorrect error type")
 			} else {
-				assert.NoError(t, err, "unexpected error returned by ValidateError")
+				assert.NoError(t, err, "unexpected error on mountpoint validation")
 			}
 		})
 	}
