@@ -58,8 +58,8 @@ func Test_Send_Receive(t *testing.T) {
 			if tc.err == nil {
 				assert.Nil(t, received, "expected a nil error")
 			} else {
-				assert.NotNilf(t, received, "expected a non-nil error")
-				assert.Equal(t, tc.err.Error(), received.Error(), "sent end received errror messages don't match")
+				assert.NotNil(t, received, "expected a non-nil error")
+				assert.Equal(t, tc.err.Error(), received.Error(), "sent end received error messages don't match")
 			}
 		})
 	}

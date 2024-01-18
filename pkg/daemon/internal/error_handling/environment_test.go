@@ -12,7 +12,7 @@ func TestGetDaemonEnv(t *testing.T) {
 	envInfo, err := GetDaemonEnv()
 	defer CleanupDeamonEnv(envInfo)
 
-	assert.NoError(t, err)
+	assert.NoError(t, err, "unexpected error on running GetDaemonEnv")
 	assert.FileExists(t, envInfo.NamedPipeName, "Named pipe file doesn't exist")
 	expected := []string{
 		fmt.Sprintf("_DAEMON_NAMED_PIPE=%v", envInfo.NamedPipeName),
