@@ -64,7 +64,7 @@ func TestInodeCache_GetOrInsert(t *testing.T) {
 					return &fs.Inode{}, nil
 				}
 				result, err := cache.GetOrInsert(ctx, tc.key, tc.mode, root, builder, tc.overwrite)
-				assert.NoError(t, err, "unexpected error")
+				assert.NoError(t, err, "unexpected error on running GetOrInsert")
 				assert.Equal(t, tc.expected, result.StableAttr(), "incorrect node attributes")
 			})
 		}

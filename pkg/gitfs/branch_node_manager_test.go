@@ -61,7 +61,7 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 					tc.branchHash,
 				)
 				commit, inode, err := cache.getOrInsert(ctx, reference, node)
-				assert.NoError(t, err, "unexpected error")
+				assert.NoError(t, err, "unexpected error on running getOrInsert")
 				assert.Equal(t, tc.branchHash, commit.Hash, "hashes are not equal")
 				assert.Equal(t, tc.expectedAttr, inode.StableAttr(), "attributes are not equal")
 			})
@@ -73,9 +73,9 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 				plumbing.Hash{},
 			)
 			commit, inode, err := cache.getOrInsert(ctx, reference, node)
-			assert.Nil(t, commit)
-			assert.Nil(t, inode)
-			assert.Error(t, err)
+			assert.Error(t, err, "expected an error")
+			assert.Nil(t, commit, "commit should be nil on error")
+			assert.Nil(t, inode, "inode should be nil on error")
 			assert.True(t, errors.Is(err, plumbing.ErrObjectNotFound), "error should be ErrObjectNotFound")
 		})
 	})

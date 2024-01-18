@@ -23,8 +23,8 @@ func Test_branchListNode(t *testing.T) {
 	})
 	t.Run("stat", func(t *testing.T) {
 		stat, err := os.Stat(mountPath)
-		assert.NoError(t, err)
-		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
+		assert.NoError(t, err, "unexpected error on running os.Stat")
+		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC(), "incorrect modification time")
 	})
 
 	opts := git.CheckoutOptions{
