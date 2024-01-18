@@ -7,6 +7,8 @@ import (
 	"gogitfs/pkg/logging"
 )
 
+// CommitAttr creates fuse attributes from a commit object.
+// Commit time is used as atime, ctime and mtime.
 func CommitAttr(commit *object.Commit) fuse.Attr {
 	commitTime := (uint64)(commit.Author.When.Unix())
 	return fuse.Attr{
@@ -16,6 +18,7 @@ func CommitAttr(commit *object.Commit) fuse.Attr {
 	}
 }
 
+// NodeCallCtx creates a logging.CallCtx for a generic Inode.
 func NodeCallCtx(n fs.InodeEmbedder) logging.CallCtx {
 	result := make(logging.CallCtx)
 	attr := n.EmbeddedInode().StableAttr()
