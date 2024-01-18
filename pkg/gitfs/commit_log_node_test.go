@@ -76,12 +76,18 @@ func Test_getBasePath(t *testing.T) {
 	}
 }
 
+// commitLogNodeTestExpected is the expected result of a single commitLogNode test case
 type commitLogNodeTestExpected struct {
-	commits        []string
+	// expected commit hashes
+	commits []string
+	// whether there should be a HEAD symlink
 	expectHeadLink bool
-	headLink       string
+	// where the HEAD symlink should point (if present)
+	headLink string
+	// whether the commit node should be a symlink
 	expectSymlinks bool
-	symlinkPrefix  string
+	// prefix of the symlink, if the node is one
+	symlinkPrefix string
 }
 
 func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode, expected commitLogNodeTestExpected) {
@@ -102,19 +108,19 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 		assertDirEntries(t, mountPath, expectedEntries, "incorrect directory entries")
 	})
 
-	t.Run("head link", func(t *testing.T) {
+	t.Run("HEAD symlink", func(t *testing.T) {
 		if !expected.expectHeadLink {
 			return
 		}
 		p, err := os.Readlink(path.Join(mountPath, "HEAD"))
 		assert.NoError(t, err, "unexpected Readlink error")
-		assert.Equal(t, expected.headLink, p)
+		assert.Equal(t, expected.headLink, p, "incorrect HEAD symlink path")
 	})
 
 	t.Run("symlinks", func(t *testing.T) {
 		p := path.Join(mountPath, expectedCommits[0])
 		stat, err := os.Lstat(p)
-		assert.NoError(t, err, "unexpected Stat error")
+		assert.NoError(t, err, "unexpected os.Lstat error")
 		if expected.expectSymlinks {
 			assert.Equal(t, os.ModeSymlink, stat.Mode()&os.ModeSymlink, "commit node should be a symlink")
 			p1, err := os.Readlink(p)
@@ -157,7 +163,7 @@ func Test_CommitLogNode(t *testing.T) {
 			},
 		},
 		{
-			"no head",
+			"no HEAD",
 			args{"bar", commitLogNodeOpts{0, false, false}},
 			commitLogNodeTestExpected{
 				commits:        []string{"foo"},
@@ -166,7 +172,7 @@ func Test_CommitLogNode(t *testing.T) {
 			},
 		},
 		{
-			"head symlink",
+			"HEAD symlink",
 			args{"bar", commitLogNodeOpts{0, true, true}},
 			commitLogNodeTestExpected{
 				commits:        []string{"bar", "foo"},
