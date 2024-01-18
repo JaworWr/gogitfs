@@ -140,10 +140,7 @@ func Test_headAttr(t *testing.T) {
 
 	attr, err := headAttr(n)
 	assert.NoError(t, err, "unexpected error in headAttr")
-	assert.Equal(t, attr.Atime, uint64(commitSignatures["bar"].When.Unix()),
-		"commit node's access time doesn't match")
-	assert.Equal(t, attr.Ctime, uint64(commitSignatures["bar"].When.Unix()),
-		"commit node's creation time doesn't match")
-	assert.Equal(t, attr.Mtime, uint64(commitSignatures["bar"].When.Unix()),
-		"commit node's modification time doesn't match")
+	assert.Equal(t, attr.Atime, uint64(commitSignatures["bar"].When.Unix()), "incorrect access time")
+	assert.Equal(t, attr.Ctime, uint64(commitSignatures["bar"].When.Unix()), "incorrect creation time")
+	assert.Equal(t, attr.Mtime, uint64(commitSignatures["bar"].When.Unix()), "incorrect modification time")
 }
