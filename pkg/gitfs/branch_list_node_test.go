@@ -19,7 +19,7 @@ func Test_branchListNode(t *testing.T) {
 
 	expected := []string{"main", "branch"}
 	t.Run("ls", func(t *testing.T) {
-		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+		assertDirEntries(t, mountPath, expected, "incorrect directory entries")
 	})
 	t.Run("stat", func(t *testing.T) {
 		stat, err := os.Stat(mountPath)
@@ -35,6 +35,6 @@ func Test_branchListNode(t *testing.T) {
 	checkout(t, extras.worktree, &opts)
 	expected = append(expected, "branch2")
 	t.Run("ls with added branch", func(t *testing.T) {
-		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+		assertDirEntries(t, mountPath, expected, "incorrect directory entries")
 	})
 }

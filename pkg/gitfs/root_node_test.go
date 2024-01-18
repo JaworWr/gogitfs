@@ -70,11 +70,11 @@ func Test_RootNode(t *testing.T) {
 	}()
 	t.Run("ls", func(t *testing.T) {
 		expected := []string{"branches", "commits"}
-		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+		assertDirEntries(t, mountPath, expected, "incorrect root diretory entries")
 	})
 	t.Run("stat", func(t *testing.T) {
 		stat, err := os.Stat(mountPath)
-		assert.NoError(t, err, "unexpected error when running os.Stat")
+		assert.NoError(t, err, "unexpected error on running os.Stat")
 		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC(), "incorrect modification time")
 	})
 }

@@ -106,7 +106,7 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 		if expected.expectHeadLink {
 			expectedEntries = append(expectedEntries, "HEAD")
 		}
-		assertDirEntries(t, mountPath, expectedEntries, "unexpected ls result")
+		assertDirEntries(t, mountPath, expectedEntries, "incorrect directory entries")
 	})
 
 	t.Run("head link", func(t *testing.T) {
