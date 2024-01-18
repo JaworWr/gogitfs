@@ -54,4 +54,17 @@ func Test_allCommitsNode(t *testing.T) {
 		assert.NoError(t, err, "unexpected error on running os.Stat")
 		assert.Equal(t, commitSignatures["new"].When, stat.ModTime().UTC(), "incorrect modification time")
 	})
+
+	t.Run("lookup existent", func(t *testing.T) {
+		_, err := os.Stat(path.Join(mountPath, extras.commits["bar"].String()))
+		assert.NoError(t, err, "unexpected error on running os.Stat on existent commit's node")
+	})
+
+	t.Run("lookup nonexistent", func(t *testing.T) {
+		h := extras.commits["bar"]
+		h[0] += 1
+		_, err := os.Stat(path.Join(mountPath, h.String()))
+		assert.Error(t, err, "expected an error on running os.Stat on nonexistent commit's node")
+		assert.True(t, os.IsNotExist(err), "error should be an ErrNotExist")
+	})
 }

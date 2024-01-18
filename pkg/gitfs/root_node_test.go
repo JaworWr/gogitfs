@@ -14,6 +14,7 @@ import (
 // MountCb is the type of callbacks run after mounting the node
 type MountCb = func(t *testing.T, ctx context.Context, inode *fs.Inode)
 
+// noOpCb does nothing while matching the signature of MountCb
 func noOpCb(_ *testing.T, _ context.Context, _ *fs.Inode) {
 
 }
