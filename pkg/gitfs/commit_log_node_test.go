@@ -118,17 +118,20 @@ func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode,
 	})
 
 	t.Run("symlinks", func(t *testing.T) {
-		p := path.Join(mountPath, expectedCommits[0])
-		stat, err := os.Lstat(p)
-		assert.NoError(t, err, "unexpected os.Lstat error")
-		if expected.expectSymlinks {
-			assert.Equal(t, os.ModeSymlink, stat.Mode()&os.ModeSymlink, "commit node should be a symlink")
-			p1, err := os.Readlink(p)
-			assert.NoError(t, err, "unexpected Readlink error")
-			assert.Equal(t, expected.symlinkPrefix+expectedCommits[0], p1, "incorrect symlink path")
-		} else {
-			assert.Equal(t, os.ModeDir, stat.Mode()&os.ModeDir, "commit node should be a directory")
+		for _, c := range expectedCommits {
+			p := path.Join(mountPath, c)
+			stat, err := os.Lstat(p)
+			assert.NoError(t, err, "unexpected os.Lstat error")
+			if expected.expectSymlinks {
+				assert.Equal(t, os.ModeSymlink, stat.Mode()&os.ModeSymlink, "commit node should be a symlink")
+				p1, err := os.Readlink(p)
+				assert.NoError(t, err, "unexpected Readlink error")
+				assert.Equal(t, expected.symlinkPrefix+c, p1, "incorrect symlink path")
+			} else {
+				assert.Equal(t, os.ModeDir, stat.Mode()&os.ModeDir, "commit node should be a directory")
+			}
 		}
+
 	})
 }
 

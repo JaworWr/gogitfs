@@ -8,6 +8,7 @@ import (
 	"testing"
 )
 
+// catFile returns the contents of file specified by `path`
 func catFile(t *testing.T, path string) string {
 	data, err := os.ReadFile(path)
 	assert.NoError(t, err, "unexpected error when reading %v", path)
