@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// commitSignatures contains example commits
 var commitSignatures = map[string]object.Signature{
 	"foo": {
 		Name:  "Aaa Bbb",
@@ -36,9 +37,11 @@ var commitSignatures = map[string]object.Signature{
 	},
 }
 
+// addCommit adds a commit to worktree creating a file with name and contents equal to `msg`
+// and sets the commit message to `msg`
 func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg string) plumbing.Hash {
 	errHandler := func(err error) {
-		t.Fatalf("Error during commit creation: %v", err)
+		t.Fatalf("Error during creation of commit '%v': %v", msg, err)
 	}
 	f, err := fs.Create(msg)
 	if err != nil {
@@ -65,6 +68,7 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	return hash
 }
 
+// checkout with error handling
 func checkout(t *testing.T, worktree *git.Worktree, opts *git.CheckoutOptions) {
 	err := worktree.Checkout(opts)
 	if err != nil {
@@ -72,16 +76,21 @@ func checkout(t *testing.T, worktree *git.Worktree, opts *git.CheckoutOptions) {
 	}
 }
 
+// repoExtras represents additional information about the sample repository
 type repoExtras struct {
-	commits  map[string]plumbing.Hash
+	// commit hashes, with the same keys as commitSignatures
+	commits map[string]plumbing.Hash
+	// created Worktree object
 	worktree *git.Worktree
-	fs       billy.Filesystem
+	// crated Filesystem object
+	fs billy.Filesystem
 }
 
+// makeRepo creates a sample repository and returns it as well as additional information
 func makeRepo(t *testing.T) (repo *git.Repository, extras repoExtras) {
 	logging.Init(logging.Debug)
 	errHandler := func(err error) {
-		t.Fatalf("Error during repo creation: %v", err)
+		t.Fatalf("Error during repository creation: %v", err)
 	}
 	tempdir := t.TempDir()
 	fs := osfs.New(tempdir)
@@ -120,8 +129,9 @@ func Test_headCommit(t *testing.T) {
 	n := &repoNode{repo: repo}
 
 	c, err := headCommit(n)
-	assert.NoError(t, err)
-	assert.Equal(t, extras.commits["bar"], c.Hash)
+	assert.NoError(t, err, "unexpected error in headCommit")
+	assert.Equal(t, extras.commits["bar"], c.Hash,
+		"retrieved commit's hash does not match the hash of expected head commit")
 }
 
 func Test_headAttr(t *testing.T) {
@@ -129,8 +139,11 @@ func Test_headAttr(t *testing.T) {
 	n := &repoNode{repo: repo}
 
 	attr, err := headAttr(n)
-	assert.NoError(t, err)
-	assert.Equal(t, attr.Atime, uint64(commitSignatures["bar"].When.Unix()))
-	assert.Equal(t, attr.Ctime, uint64(commitSignatures["bar"].When.Unix()))
-	assert.Equal(t, attr.Mtime, uint64(commitSignatures["bar"].When.Unix()))
+	assert.NoError(t, err, "unexpected error in headAttr")
+	assert.Equal(t, attr.Atime, uint64(commitSignatures["bar"].When.Unix()),
+		"commit node's access time doesn't match")
+	assert.Equal(t, attr.Ctime, uint64(commitSignatures["bar"].When.Unix()),
+		"commit node's creation time doesn't match")
+	assert.Equal(t, attr.Mtime, uint64(commitSignatures["bar"].When.Unix()),
+		"commit node's modification time doesn't match")
 }
