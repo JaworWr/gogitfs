@@ -42,6 +42,7 @@ func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.At
 	return fs.OK
 }
 
+// commitSymlink creates a symlink node for a given commit object
 func commitSymlink(commit *object.Commit, basePath *string) *fs.MemSymlink {
 	attr := utils.CommitAttr(commit)
 	attr.Mode = 0555

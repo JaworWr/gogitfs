@@ -51,8 +51,8 @@ func TestInodeStore_GetOrInsert(t *testing.T) {
 					return &fs.Inode{}, nil
 				}
 				_, err := store.GetOrInsert(ctx, tc.key, fs.StableAttr{}, root, builder, tc.overwrite)
-				assert.NoError(t, err)
-				assert.Equal(t, tc.shouldCreate, didCreate)
+				assert.NoError(t, err, "unexpected error on running GetOrInsert")
+				assert.Equal(t, tc.shouldCreate, didCreate, "unexpected node creation or reuse")
 			})
 		}
 		t.Run("error", func(t *testing.T) {
@@ -61,7 +61,7 @@ func TestInodeStore_GetOrInsert(t *testing.T) {
 				return nil, expectedErr
 			}
 			_, err := store.GetOrInsert(ctx, "zzz", fs.StableAttr{}, root, builder, false)
-			assert.Error(t, err)
+			assert.Error(t, err, "expected an error")
 			assert.True(t, errors.Is(err, expectedErr), "error should be the one returned by builder")
 		})
 	})

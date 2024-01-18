@@ -49,7 +49,7 @@ func TestAttrStore_GetOrInsert(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := store.GetOrInsert(tc.key, tc.updateGen)
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tc.expected, result, "retrieved an incorrect value")
 		})
 	}
 }

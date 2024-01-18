@@ -11,12 +11,18 @@ import (
 	"testing"
 )
 
+// MountCb is the type of callbacks run after mounting the node
 type MountCb = func(t *testing.T, ctx context.Context, inode *fs.Inode)
 
+// noOpCb does nothing while matching the signature of MountCb
 func noOpCb(_ *testing.T, _ context.Context, _ *fs.Inode) {
 
 }
 
+// mountNode mounts the given InodeEmbedder at a temporary path and returns the mount server object
+// and the path of the mounted node in the filesystem.
+// The function also runs a callback after adding the node - this allows code to be run which requires
+// the node to be mounted.
 func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Server, mountPath string) {
 	tmpdir := t.TempDir()
 	mountPath = path.Join(tmpdir, "root")
@@ -34,6 +40,7 @@ func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Serve
 	return
 }
 
+// getSortedNames extracts name from a list of directory entries and returns them in sorted order.
 func getSortedNames(entries []os.DirEntry) []string {
 	names := make([]string, len(entries))
 	for i, e := range entries {
@@ -43,13 +50,14 @@ func getSortedNames(entries []os.DirEntry) []string {
 	return names
 }
 
+// assertDirEntries checks if the directory at path contains the specified files
 func assertDirEntries(t *testing.T, path string, expected []string, msgAndArgs ...interface{}) {
 	entries, err := os.ReadDir(path)
 	names := getSortedNames(entries)
 	sorted := make([]string, len(expected))
 	copy(sorted, expected)
 	sort.Strings(sorted)
-	assert.NoError(t, err)
+	assert.NoError(t, err, "unexpected error during directory reading")
 	assert.Equal(t, sorted, names, msgAndArgs...)
 }
 
@@ -63,11 +71,11 @@ func Test_RootNode(t *testing.T) {
 	}()
 	t.Run("ls", func(t *testing.T) {
 		expected := []string{"branches", "commits"}
-		assertDirEntries(t, mountPath, expected, "unexpected ls result")
+		assertDirEntries(t, mountPath, expected, "incorrect root diretory entries")
 	})
 	t.Run("stat", func(t *testing.T) {
 		stat, err := os.Stat(mountPath)
-		assert.NoError(t, err)
-		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC())
+		assert.NoError(t, err, "unexpected error on running os.Stat")
+		assert.Equal(t, commitSignatures["bar"].When, stat.ModTime().UTC(), "incorrect modification time")
 	})
 }
