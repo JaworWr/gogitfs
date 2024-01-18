@@ -67,7 +67,7 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 			})
 		}
 
-		t.Run("non-existent commit", func(t *testing.T) {
+		t.Run("nonexistent commit", func(t *testing.T) {
 			reference := plumbing.NewHashReference(
 				plumbing.NewBranchReferenceName("aaa"),
 				plumbing.Hash{},

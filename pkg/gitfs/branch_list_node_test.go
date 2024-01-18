@@ -5,6 +5,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -36,5 +37,16 @@ func Test_branchListNode(t *testing.T) {
 	expected = append(expected, "branch2")
 	t.Run("ls with added branch", func(t *testing.T) {
 		assertDirEntries(t, mountPath, expected, "incorrect directory entries")
+	})
+
+	t.Run("lookup existent", func(t *testing.T) {
+		_, err := os.Stat(path.Join(mountPath, "branch"))
+		assert.NoError(t, err, "unexpected error on running os.Stat on existent branch's node")
+	})
+
+	t.Run("lookup nonexistent", func(t *testing.T) {
+		_, err := os.Stat(path.Join(mountPath, "nonexistent"))
+		assert.Error(t, err, "expected an error on running os.Stat on nonexistent branch's node")
+		assert.True(t, os.IsNotExist(err), "error should be an ErrNotExist")
 	})
 }
