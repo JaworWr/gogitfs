@@ -14,7 +14,7 @@ import (
 	"syscall"
 )
 
-// commitNode represents a commit. It has subdirectories representing the git log starting from this commit,
+// commitNode represents a single commit. It has subdirectories representing the git log starting from this commit,
 // the commit's parents, a symlink representing the first parent of this commit, as well as text files
 // containing the hash and message of the commit.
 type commitNode struct {
