@@ -12,18 +12,24 @@ import (
 	"sync"
 )
 
+// branchNodeCache extends InodeCache with the information about the last commit on a branch,
+// thus making sure that when a new commit is added to the branch, the corresponding node will be updated as well.
 type branchNodeCache struct {
 	inode_manager.InodeCache
 	lock           *sync.Mutex
 	lastCommitHash map[string]plumbing.Hash
 }
 
+// Init performs initialization. initialIno is passed to InodeCache.Init.
 func (m *branchNodeCache) init(initialIno uint64) {
 	m.InodeCache.Init(initialIno)
 	m.lock = &sync.Mutex{}
 	m.lastCommitHash = make(map[string]plumbing.Hash)
 }
 
+// getOrInsert returns the Inode corresponding to the given key. If the key is absent or the branch head was changed,
+// a new node will be created as in InodeCache. As long as the last commit of the branch remains unchanged,
+// subsequent calls will not create a new node.
 func (m *branchNodeCache) getOrInsert(
 	ctx context.Context,
 	branch *plumbing.Reference,
