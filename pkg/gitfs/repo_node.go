@@ -1,3 +1,4 @@
+// Package gitfs contains implementations of the inodes used by the filesystem.
 package gitfs
 
 import (
