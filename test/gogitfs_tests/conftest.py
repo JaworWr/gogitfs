@@ -15,7 +15,7 @@ REPO_JSON = pathlib.Path(__file__).resolve().parent / "repo.json"
 
 phase_report_key = pytest.StashKey[dict[str, pytest.CollectReport]]()
 
-
+# custom hook to
 @pytest.hookimpl(wrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item: Item, call: CallInfo) -> CollectReport:
     # execute all other hooks to obtain the report object

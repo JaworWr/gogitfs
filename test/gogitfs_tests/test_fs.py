@@ -1,10 +1,10 @@
 import os
 import pathlib
 import subprocess
-import sys
 
 import pytest
 import sh
+import sys
 
 from test.gogitfs_tests.common import GOGITFS_BINARY
 from test.gogitfs_tests.conftest import phase_report_key, RepoInfo
@@ -12,6 +12,7 @@ from test.repo import schema
 
 
 def dump_logs(pid: int) -> None:
+    """Print gogitfs logs to stderr."""
     log_path = pathlib.Path(f"/tmp/gogitfs-{pid}.log")
     if log_path.exists():
         with open(log_path) as f:
@@ -21,6 +22,11 @@ def dump_logs(pid: int) -> None:
 
 @pytest.fixture
 def mount(request, repo_path: pathlib.Path, tmp_path: pathlib.Path) -> pathlib.Path:
+    """Mount the repository in the temporary path by running the gogitfs binary.
+
+    If the current test fails, it will dump the gogitfs logs.
+    The mount path will be returned. It will also be unmounted during cleanup.
+    """
     args = [GOGITFS_BINARY]
     if "GOGITFS_LOGLEVEL" in os.environ:
         args += ["-log-level", os.environ["GOGITFS_LOGLEVEL"]]
@@ -41,7 +47,8 @@ def test_mount_subdirs(mount: pathlib.Path):
     assert (mount / "branches").is_dir()
 
 
-def check_commit_base(commit_dir: pathlib.Path, commit: schema.Commit | schema.MergeCommit):
+def check_commit_base(commit_dir: pathlib.Path, commit: schema.Commit | schema.MergeCommit) -> None:
+    """Common directory structure checks for regular and merge commits."""
     assert (commit_dir / "hash").read_text() == commit.hash
     assert (commit_dir / "message").read_text() == commit.message
     for f in commit_dir.glob("**"):
@@ -49,7 +56,8 @@ def check_commit_base(commit_dir: pathlib.Path, commit: schema.Commit | schema.M
         assert stat.st_mtime == stat.st_atime == stat.st_ctime == commit.time.timestamp()
 
 
-def check_commit(repo_schema: schema.Repo, commit_dir: pathlib.Path, name: str, commit: schema.Commit):
+def check_commit(repo_schema: schema.Repo, commit_dir: pathlib.Path, name: str, commit: schema.Commit) -> None:
+    """Directory structure checks for regular commits."""
     check_commit_base(commit_dir, commit)
     parent_id = repo_schema.get_parent_commit_id(name)
     if parent_id is None:
@@ -62,7 +70,9 @@ def check_commit(repo_schema: schema.Repo, commit_dir: pathlib.Path, name: str, 
         assert [f.name for f in (commit_dir / "parents").iterdir()] == [parent_commit.hash]
 
 
-def check_merge_commit(repo_schema: schema.Repo, commit_dir: pathlib.Path, name: str, commit: schema.MergeCommit):
+def check_merge_commit(repo_schema: schema.Repo, commit_dir: pathlib.Path, name: str,
+                       commit: schema.MergeCommit) -> None:
+    """Directory structure checks for merge commits."""
     check_commit_base(commit_dir, commit)
     parent_id = repo_schema.get_parent_commit_id(name)
     assert parent_id is not None, "merge commit cannot be initial"
