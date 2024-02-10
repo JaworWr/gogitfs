@@ -7,6 +7,7 @@ from test.repo import schema, resolve
 
 
 def load_repo_schema(path: str | os.PathLike[str]) -> schema.Repo:
+    """Load repository schema from JSON."""
     with open(path) as f:
         repo_json = f.read()
     repo = schema.Repo.from_json(repo_json)
@@ -14,6 +15,7 @@ def load_repo_schema(path: str | os.PathLike[str]) -> schema.Repo:
 
 
 def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> git.Repo:
+    """Build an actual git repository in repo_path, as specified by the scchema."""
     repo_path = Path(repo_path)
     repo = git.Repo.init(repo_path, initial_branch=repo_schema.main_branch)
 
@@ -39,6 +41,7 @@ def build_repo(repo_schema: schema.Repo, repo_path: str | os.PathLike[str]) -> g
 
 
 def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
+    """Make a graph modelling the relationships between the commits in the repository."""
     graph = {}
     for branch_name, branch in repo_schema.branches.items():
         if branch_name != repo_schema.main_branch and branch.from_commit is None:
@@ -50,7 +53,7 @@ def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
                 if branch.from_commit is not None:
                     parents.append(branch.from_commit)
             else:
-                parents.append(f"{branch_name}:{idx-1}")
+                parents.append(f"{branch_name}:{idx - 1}")
             if isinstance(commit, schema.MergeCommit):
                 if not parents:
                     raise RuntimeError(f"Merge commit with only one parent: {commit.message}")
@@ -59,17 +62,34 @@ def make_graph_for_repo_schema(repo_schema: schema.Repo) -> resolve.Graph:
     return graph
 
 
-def checkout_branch(repo: git.Repo, branch: str, branch_ref: str | None = None) -> git.Head:
+def checkout_branch(repo: git.Repo, branch: str, commit_ref: str | None = None) -> git.Head:
+    """Checkout a branch specified by its name, creating it if necessary.
+
+    If the branch does not exist, a new branch will be created pointing to commit_ref.
+    If commit_ref is None, an exception will be raised in that case.
+    Args:
+        repo: repository object
+        branch: branch name
+        commit_ref: a commit from which a new branch should be created
+            if there exists no branch with the specified name.
+
+    Returns:
+        a reference to the checked-out branch
+    """
     if branch not in repo.heads:
-        if branch_ref is None:
-            raise RuntimeError(f"Branch {branch} doesn't exist and hash wasn't provided")
-        repo.create_head(branch, branch_ref)
+        if commit_ref is None:
+            raise RuntimeError(f"Branch {branch} doesn't exist and a commit wasn't provided")
+        repo.create_head(branch, commit_ref)
 
     repo.heads[branch].checkout()
     return repo.heads[branch]
 
 
 def make_commit_file(repo_path: Path, file_schema: schema.CommitFile) -> str:
+    """Make a file based on the schema relative to the repo path.
+
+    If the file already exists, it will be overwritten.
+    """
     file_path = repo_path / file_schema.path
     file_path.parent.mkdir(exist_ok=True, parents=True)
     with open(file_path, "w") as f:
@@ -78,6 +98,7 @@ def make_commit_file(repo_path: Path, file_schema: schema.CommitFile) -> str:
 
 
 def make_commit(repo: git.Repo, repo_path: Path, commit_schema: schema.Commit) -> git.Commit:
+    """Make a new commit based on the given schema."""
     for file_schema in commit_schema.files:
         file_path = make_commit_file(repo_path, file_schema)
         repo.index.add(file_path)
@@ -91,6 +112,10 @@ def make_merge_commit(
         repo_schema: schema.Repo,
         commit_schema: schema.MergeCommit,
 ) -> git.Commit:
+    """Make a new merge commit based on the commit and repository schemas.
+
+    The repository schema is necessary to get information on the parent commits.
+    """
     other_commit_schema = repo_schema.get_commit_by_id(commit_schema.other_commit)
     other_hash = get_commit_hash(other_commit_schema)
     head = repo.head
