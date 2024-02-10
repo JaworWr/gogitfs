@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// HeadAttrValid represents validity time for HEAD symlink attributes
+// HeadAttrValid represents expiration time for HEAD symlink attributes
 const HeadAttrValid = 30 * time.Second
 
 // allCommitsNode implements a directory containing all commits in the repository.

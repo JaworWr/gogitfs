@@ -15,8 +15,11 @@ import (
 	"time"
 )
 
+// BranchValid represents expiration time for branch nodes
 const BranchValid = 30 * time.Second
 
+// branchListNode represents the list of all branches. Each branch is represented as a directory named after the branch.
+// Readdir and Lookup always consider the current state of the repository.
 type branchListNode struct {
 	repoNode
 }
@@ -25,12 +28,16 @@ func (n *branchListNode) GetCallCtx() logging.CallCtx {
 	return utils.NodeCallCtx(n)
 }
 
+// branchDirStream implements an iterator over the contents of the branch directory.
+// Uses a separate goroutine to actually read the directory.
 type branchDirStream struct {
 	next *fuse.DirEntry
 	rest <-chan *fuse.DirEntry
 	stop chan<- int
 }
 
+// readBranchIter reads the branch references from `iter`, generates corresponding entries
+// and places them in the channel `next`. If a value is read from `stop`, the function returns immediately.
 func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop <-chan int) {
 	funcName := logging.CurrentFuncName(0, logging.Package)
 	err := iter.ForEach(func(reference *plumbing.Reference) error {
@@ -57,6 +64,7 @@ func readBranchIter(iter storer.ReferenceIter, next chan<- *fuse.DirEntry, stop 
 	close(next)
 }
 
+// newBranchDirStream creates a new branchDirStream from the branch reference iterator.
 func newBranchDirStream(iter storer.ReferenceIter) *branchDirStream {
 	rest := make(chan *fuse.DirEntry, 5)
 	stop := make(chan int, 1)
@@ -65,6 +73,7 @@ func newBranchDirStream(iter storer.ReferenceIter) *branchDirStream {
 	return stream
 }
 
+// HasNext returns true if there are more entries.
 func (s *branchDirStream) HasNext() bool {
 	if s.next == nil {
 		s.next = <-s.rest
@@ -72,6 +81,7 @@ func (s *branchDirStream) HasNext() bool {
 	return s.next != nil
 }
 
+// Next returns the next entry. Note that this function depends on HasNext being called first.
 func (s *branchDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 	if s.next == nil {
 		errno = syscall.ENOENT
@@ -82,11 +92,14 @@ func (s *branchDirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
 	return
 }
 
+// Close closes the stream and cleans up any resources.
 func (s *branchDirStream) Close() {
 	s.next = nil
 	s.stop <- 1
 }
 
+// Readdir returns the contents of the directory representing all branches.
+// The result is based on the current state of the repository.
 func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
 	logging.LogCall(n, nil)
 	iter, err := n.repo.Branches()
@@ -97,6 +110,8 @@ func (n *branchListNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno
 	return newBranchDirStream(iter), fs.OK
 }
 
+// Lookup returns a node representing the branch with the given name.
+// The result is based on the current state of the repository.
 func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
 	logging.LogCall(n, logging.CallCtx{"name": name})
 	refName := plumbing.NewBranchReferenceName(name)
@@ -122,6 +137,7 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 	return node, fs.OK
 }
 
+// Getattr returns attributes corresponding to the current HEAD commit.
 func (n *branchListNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
