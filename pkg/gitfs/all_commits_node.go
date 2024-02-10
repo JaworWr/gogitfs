@@ -20,7 +20,7 @@ import (
 const HeadAttrValid = 30 * time.Second
 
 // allCommitsNode implements a directory containing all commits in the repository.
-// Each commit is represented by a directory, whose name is the commit's hash.
+// Each commit is represented by a directory, whose name is the hash of the commit.
 // Readdir and Lookup always consider the current state of the repository.
 // This way, new commits are included automatically.
 type allCommitsNode struct {
