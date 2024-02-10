@@ -12,6 +12,10 @@ dataclasses_json.cfg.global_config.decoders[dt.datetime] = dt.datetime.fromisofo
 @dataclass_json
 @dataclass
 class CommitFile:
+    """File added in a commit, represented as its path and contents.
+
+    The path must be relative to the repository root.
+    """
     path: str
     contents: str
 
@@ -19,6 +23,7 @@ class CommitFile:
 @dataclass_json
 @dataclass
 class Commit:
+    """A non-merge commit, adding or changing an arbitrary number of files."""
     message: str
     time: dt.datetime
     files: list[CommitFile]
@@ -28,6 +33,7 @@ class Commit:
 @dataclass_json
 @dataclass
 class MergeCommit:
+    """A merge commit."""
     message: str
     time: dt.datetime
     other_commit: str
@@ -37,6 +43,7 @@ class MergeCommit:
 @dataclass_json
 @dataclass
 class Branch:
+    """A branch starting at a specified commit and containing some new commits."""
     from_commit: str | None
     commits: list[Commit | MergeCommit]
 
@@ -44,12 +51,16 @@ class Branch:
 @dataclass_json
 @dataclass
 class Repo:
+    """Repository, specified as a list of branches.
+
+    main_branch should contain the initial commit. active_branch is the current checked out branch.
+    """
     branches: dict[str, Branch]
     main_branch: str
     active_branch: str
 
     def iter_commits(self) -> Iterable[tuple[str, Commit | MergeCommit]]:
-        """Iterate over all commits, each commit exactly once"""
+        """Iterate over all commits, yielding each commit exactly once"""
         for name, branch in self.branches.items():
             for i, commit in enumerate(branch.commits):
                 id_ = f"{name}:{i}"
@@ -73,13 +84,13 @@ class Repo:
             next_branch, idx = self.branches[branch].from_commit.split(":")
             yield from self.iter_branch_commits(next_branch, int(idx))
 
-    def get_commit_by_id(self, id_: str) -> Commit | MergeCommit:
-        branch, idx = id_.split(":")
+    def get_commit_by_id(self, commit_id: str) -> Commit | MergeCommit:
+        branch, idx = commit_id.split(":")
         idx = int(idx)
         return self.branches[branch].commits[idx]
 
-    def get_parent_commit_id(self, id_: str) -> str | None:
-        branch, idx = id_.split(":")
+    def get_parent_commit_id(self, commit_id: str) -> str | None:
+        branch, idx = commit_id.split(":")
         idx = int(idx)
         if idx != 0:
             parent_id = f"{branch}:{idx - 1}"

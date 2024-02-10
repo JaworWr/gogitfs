@@ -26,7 +26,7 @@ def test_uid_gid(repo_path: pathlib.Path, tmp_path: pathlib.Path):
             assert stat.st_gid == gid
 
 
-def test_allow_empty(repo_path: pathlib.Path, tmp_path: pathlib.Path):
+def test_allow_nonempty(repo_path: pathlib.Path, tmp_path: pathlib.Path):
     mount_point = tmp_path / "mount"
     mount_point.mkdir()
     (mount_point / "foo").mkdir()
