@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 from collections.abc import Generator
-from typing import Iterable, Iterator
+from typing import Iterable
 
 import sh
 
