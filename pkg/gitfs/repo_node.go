@@ -11,13 +11,16 @@ import (
 	"gogitfs/pkg/logging"
 )
 
+// repoNode is the base class for all repository-related nodes.
 type repoNode struct {
 	fs.Inode
 	repo *git.Repository
 }
 
+// repoNodeEmbedder is an interface for Inodes which embed repoNode.
 type repoNodeEmbedder interface {
 	fs.InodeEmbedder
+	// embeddedRepoNode returns the embedded repoNode.
 	embeddedRepoNode() *repoNode
 }
 
@@ -25,6 +28,7 @@ func (n *repoNode) embeddedRepoNode() *repoNode {
 	return n
 }
 
+// headCommit returns the head commit of the repository.
 func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 	repo := n.embeddedRepoNode().repo
 	head, err := repo.Head()
@@ -40,6 +44,7 @@ func headCommit(n repoNodeEmbedder) (commit *object.Commit, err error) {
 	return
 }
 
+// headAttr returns the attributes of the head commit of the repository.
 func headAttr(n repoNodeEmbedder) (attr fuse.Attr, err error) {
 	commit, err := headCommit(n)
 	if err != nil {
