@@ -13,13 +13,24 @@ import (
 	"syscall"
 )
 
+// commitLogNode represents a commit log, or any other subset of repo commits.
+// Each commit is represented as a symlink or a hardlink, whose name and attributes correspond to those of
+// the actual directory representing the commit (in particular, the symlink's name is the hash of the commit).
 type commitLogNode struct {
 	repoNode
-	from        *object.Commit
-	iter        object.CommitIter
-	basePath    *string
-	attr        fuse.Attr
+	// from is the start commit of the log
+	from *object.Commit
+	// iter is the iterator over commits, which may or may not contain from.
+	iter object.CommitIter
+	// basePath is the path of the actual commit directory. All symlinks will link to its subdirectories.
+	// If set to nil, the links will be hardlinks instead.
+	basePath *string
+	// attr represents attributes of the inode corresponding to this object.
+	attr fuse.Attr
+	// If true, the head commit (represented by from) will be included in the represented directory.
+	// Otherwise, it will be skipped.
 	includeHead bool
+	// If true, a symlink to the head commit called "HEAD" will be created - requires includeHead.
 	symlinkHead bool
 }
 
@@ -36,6 +47,7 @@ func (n *commitLogNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
+// Getattr returns attributes corresponding to the head commit of the log.
 func (n *commitLogNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = n.attr
@@ -54,6 +66,7 @@ func commitSymlink(commit *object.Commit, basePath *string) *fs.MemSymlink {
 	return link
 }
 
+// OnAdd populates the inode with links corresponding to commits and the optional HEAD symlink.
 func (n *commitLogNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
 	if n.basePath == nil {
@@ -97,6 +110,8 @@ func (n *commitLogNode) addSymlinks(ctx context.Context, basePath string) {
 	})
 }
 
+// getBasePath creates a path that leads linkLevels directories up. If linkLevels == 0, returns nil,
+// which signalizes that hardlinks should be used.
 func getBasePath(linkLevels int) (basePath *string) {
 	if linkLevels == 0 {
 		basePath = nil
@@ -112,11 +127,17 @@ func getBasePath(linkLevels int) (basePath *string) {
 }
 
 type commitLogNodeOpts struct {
-	linkLevels  int
+	// linkLevels determines how many directories upward in the hierarchy the symlinks should point.
+	// Setting this value to 0 signalizes that hardlinks should be used.
+	linkLevels int
+	// If true, the head commit (represented by from) will be included in the represented directory.
+	// Otherwise, it will be skipped.
 	includeHead bool
+	// If true, a symlink to the head commit called "HEAD" will be created - requires includeHead.
 	symlinkHead bool
 }
 
+// newCommitLogNode creates a node commitLogNode from the git log starting at the commit `from`.
 func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commitLogNodeOpts) (*commitLogNode, error) {
 	opts := &git.LogOptions{From: from.Hash}
 	iter, err := repo.Log(opts)
@@ -127,6 +148,8 @@ func newCommitLogNode(repo *git.Repository, from *object.Commit, nodeOpts commit
 	return node, nil
 }
 
+// newCommitLogNode creates a node commitLogNode starting from an arbitrary CommitIter,
+// which may or may not contain `from`.
 func newCommitLogNodeFromIter(
 	iter object.CommitIter,
 	repo *git.Repository,

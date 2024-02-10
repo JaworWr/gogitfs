@@ -14,6 +14,9 @@ import (
 	"syscall"
 )
 
+// commitNode represents a single commit. It has subdirectories representing the git log starting from this commit,
+// the commit's parents, a symlink representing the first parent of this commit, as well as text files
+// containing the hash and message of the commit.
 type commitNode struct {
 	repoNode
 	commit *object.Commit
@@ -26,6 +29,8 @@ func (n *commitNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
+// Getattr returns attributes corresponding to those of the commit - the modification, access and creation times
+// are all set to the timestamp of the commit.
 func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = utils.CommitAttr(n.commit)
@@ -33,6 +38,7 @@ func (n *commitNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrO
 	return 0
 }
 
+// addHashMsg creates the child nodes containing the hash and the commit's message.
 func (n *commitNode) addHashMsg(ctx context.Context) {
 	attr := utils.CommitAttr(n.commit)
 	attr.Mode = 0444
@@ -45,6 +51,7 @@ func (n *commitNode) addHashMsg(ctx context.Context) {
 	n.AddChild("message", child, false)
 }
 
+// addParent adds the symlink to the commit's parent. Note that the symlink always points to a sibling directory.
 func (n *commitNode) addParent(ctx context.Context) {
 	parent, err := n.commit.Parent(0)
 	if err == nil {
@@ -59,6 +66,7 @@ func (n *commitNode) addParent(ctx context.Context) {
 	}
 }
 
+// addParents adds a commitLogNode representing all the commit's parents.
 func (n *commitNode) addParents(ctx context.Context) {
 	nodeOpts := commitLogNodeOpts{linkLevels: 2}
 	iter := n.commit.Parents()
@@ -67,6 +75,7 @@ func (n *commitNode) addParents(ctx context.Context) {
 	n.AddChild("parents", child, false)
 }
 
+// addLog adds a commitLogNode representing the git log starting from the commit.
 func (n *commitNode) addLog(ctx context.Context) {
 	nodeOpts := commitLogNodeOpts{linkLevels: 2}
 	logNode, err := newCommitLogNode(n.repo, n.commit, nodeOpts)
@@ -77,6 +86,7 @@ func (n *commitNode) addLog(ctx context.Context) {
 	n.AddChild("log", child, false)
 }
 
+// OnAdd creates all the child nodes.
 func (n *commitNode) OnAdd(ctx context.Context) {
 	logging.LogCall(n, nil)
 	n.addHashMsg(ctx)
@@ -85,6 +95,7 @@ func (n *commitNode) OnAdd(ctx context.Context) {
 	n.addLog(ctx)
 }
 
+// newCommitNode creates a commit node representing the given commit.
 func newCommitNode(ctx context.Context, commit *object.Commit, parent repoNodeEmbedder) *fs.Inode {
 	builder := func() (fs.InodeEmbedder, error) {
 		logging.InfoLog.Printf(
