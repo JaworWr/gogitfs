@@ -47,7 +47,7 @@ func (d *gogitfsDaemon) Setup() {
 
 func (d *gogitfsDaemon) PositionalArgs() []daemon.PositionalArg {
 	return []daemon.PositionalArg{
-		{Name: "repo-dir", Usage: "directory of the repository"},
+		{Name: "repo-dir", Usage: "path to the repository"},
 		{Name: "mount-dir", Usage: "where to mount the repository"},
 	}
 }
