@@ -3,6 +3,7 @@ package gitfs
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -41,7 +42,7 @@ type headLinkNode struct {
 func (n *headLinkNode) GetCallCtx() logging.CallCtx {
 	commit, err := headCommit(n)
 	if err != nil {
-		error_handler.Fatal.HandleError(err)
+		error_handler.Fatal.HandleError(fmt.Errorf("cannot get HEAD commit object: %w", err))
 	}
 	info := utils.NodeCallCtx(n)
 	info["headHash"] = commit.Hash.String()
@@ -54,7 +55,7 @@ func (n *headLinkNode) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	logging.LogCall(n, nil)
 	head, err := n.repo.Head()
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD object: %w", err))
 		return nil, syscall.EIO
 	}
 	return []byte(head.Hash().String()), fs.OK
@@ -65,7 +66,7 @@ func (n *headLinkNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.Att
 	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD commit attributes: %w", err))
 		return syscall.EIO
 	}
 	out.Attr = attr
@@ -172,7 +173,7 @@ func (n *allCommitsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Err
 	logging.LogCall(n, nil)
 	iter, err := n.repo.CommitObjects()
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get commit objects: %w", err))
 		return nil, syscall.EIO
 	}
 	return newCommitDirStream(iter, n.getHeadLinkNode(ctx)), fs.OK
@@ -187,7 +188,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 		headLink := n.getHeadLinkNode(ctx)
 		out.Attr, err = headAttr(n)
 		if err != nil {
-			error_handler.Logging.HandleError(err)
+			error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD commit attributes: %w", err))
 			return nil, syscall.EIO
 		}
 		out.Mode = fuse.S_IFLNK | 0555
@@ -202,7 +203,7 @@ func (n *allCommitsNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 			logging.WarningLog.Printf("Commit %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
-			error_handler.Logging.HandleError(err)
+			error_handler.Logging.HandleError(fmt.Errorf("cannot get commit object %v: %w", hash, err))
 			return nil, syscall.EIO
 		}
 	}
@@ -218,7 +219,7 @@ func (n *allCommitsNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.A
 	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD commit attributes: %w", err))
 		return syscall.EIO
 	}
 	out.Attr = attr
