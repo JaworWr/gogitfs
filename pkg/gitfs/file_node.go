@@ -1,12 +1,15 @@
 package gitfs
 
 import (
+	"bytes"
 	"context"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
+	"io"
 	"syscall"
 )
 
@@ -35,10 +38,36 @@ func (n *fileNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
-func (n *fileNode) Getattr(ctx context.Context, f fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+func (n *fileNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = n.attr
-	return syscall.F_OK
+	return fs.OK
+}
+
+func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
+	if flags&(syscall.O_RDWR|syscall.O_WRONLY) != 0 {
+		return nil, 0, syscall.EROFS
+	}
+
+	if n.data == nil {
+		reader, err := n.file.Reader()
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+			return nil, 0, syscall.EIO
+		}
+		defer func(reader io.ReadCloser) {
+			_ = reader.Close()
+		}(reader)
+		buf := &bytes.Buffer{}
+		_, err = buf.ReadFrom(reader)
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+			return nil, 0, syscall.EIO
+		}
+		n.data = buf.Bytes()
+	}
+	return fileNodeHandle{}, 0, fs.OK
 }
 
 var _ fs.NodeGetattrer = (*fileNode)(nil)
+var _ fs.NodeOpener = (*fileNode)(nil)
