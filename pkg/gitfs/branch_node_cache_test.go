@@ -15,7 +15,7 @@ func Test_branchNodeCache_getOrInsert(t *testing.T) {
 	repo, extras := makeRepo(t)
 	node := &repoNode{}
 	node.repo = repo
-	server, _ := mountNode(t, node, func(t *testing.T, ctx context.Context, inode *fs.Inode) {
+	server, _ := mountDirNode(t, node, func(t *testing.T, ctx context.Context, inode *fs.Inode) {
 		cache := &branchNodeCache{}
 		cache.init(16)
 

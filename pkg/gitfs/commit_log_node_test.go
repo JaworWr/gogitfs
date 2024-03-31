@@ -91,7 +91,7 @@ type commitLogNodeTestExpected struct {
 }
 
 func commitLogNodeTestCase(t *testing.T, extras repoExtras, node *commitLogNode, expected commitLogNodeTestExpected) {
-	server, mountPath := mountNode(t, node, noOpCb)
+	server, mountPath := mountDirNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()

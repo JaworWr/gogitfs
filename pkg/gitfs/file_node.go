@@ -3,6 +3,7 @@ package gitfs
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -52,7 +53,9 @@ func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuse
 	if n.data == nil {
 		reader, err := n.file.Reader()
 		if err != nil {
-			error_handler.Logging.HandleError(err)
+			error_handler.Logging.HandleError(
+				fmt.Errorf("cannot create reader: %w", err),
+			)
 			return nil, 0, syscall.EIO
 		}
 		defer func(reader io.ReadCloser) {
@@ -61,7 +64,9 @@ func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuse
 		buf := &bytes.Buffer{}
 		_, err = buf.ReadFrom(reader)
 		if err != nil {
-			error_handler.Logging.HandleError(err)
+			error_handler.Logging.HandleError(
+				fmt.Errorf("cannot perform ReadFrom: %w", err),
+			)
 			return nil, 0, syscall.EIO
 		}
 		n.data = buf.Bytes()

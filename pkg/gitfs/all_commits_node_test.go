@@ -11,7 +11,7 @@ func Test_allCommitsNode(t *testing.T) {
 	Init()
 	repo, extras := makeRepo(t)
 	node := newAllCommitsNode(repo)
-	server, mountPath := mountNode(t, node, noOpCb)
+	server, mountPath := mountDirNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()
