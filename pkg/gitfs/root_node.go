@@ -28,7 +28,7 @@ func (n *RootNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut
 	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD commit attributes: %w", err))
 		return syscall.EIO
 	}
 	out.Attr = attr
