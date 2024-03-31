@@ -69,5 +69,17 @@ func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuse
 	return fileNodeHandle{}, 0, fs.OK
 }
 
+func (n *fileNode) Read(_ context.Context, f fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
+	if f == nil {
+		return nil, syscall.EIO
+	}
+
+	toRead := min(int64(len(dest)), int64(len(n.data))-off)
+	copy(dest, n.data[off:off+toRead])
+	res := fuse.ReadResultData(dest)
+	return res, fs.OK
+}
+
 var _ fs.NodeGetattrer = (*fileNode)(nil)
 var _ fs.NodeOpener = (*fileNode)(nil)
+var _ fs.NodeReader = (*fileNode)(nil)
