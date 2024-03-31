@@ -62,7 +62,7 @@ func (n *commitNode) addParent(ctx context.Context) {
 		child := n.NewPersistentInode(ctx, parentNode, fs.StableAttr{Mode: fuse.S_IFLNK})
 		n.AddChild("parent", child, false)
 	} else if !errors.Is(err, object.ErrParentNotFound) {
-		error_handler.Fatal.HandleError(err)
+		error_handler.Fatal.HandleError(fmt.Errorf("cannot get commit parent: %w", err))
 	}
 }
 
@@ -80,7 +80,7 @@ func (n *commitNode) addLog(ctx context.Context) {
 	nodeOpts := commitLogNodeOpts{linkLevels: 2}
 	logNode, err := newCommitLogNode(n.repo, n.commit, nodeOpts)
 	if err != nil {
-		error_handler.Fatal.HandleError(err)
+		error_handler.Fatal.HandleError(fmt.Errorf("cannot create log node: %w", err))
 	}
 	child := n.NewPersistentInode(ctx, logNode, fs.StableAttr{Mode: fuse.S_IFDIR})
 	n.AddChild("log", child, false)
