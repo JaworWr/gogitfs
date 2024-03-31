@@ -3,6 +3,7 @@ package gitfs
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/storer"
@@ -121,13 +122,13 @@ func (n *branchListNode) Lookup(ctx context.Context, name string, out *fuse.Entr
 			logging.WarningLog.Printf("Branch %v not found", name)
 			return nil, syscall.ENOENT
 		} else {
-			error_handler.Logging.HandleError(err)
+			error_handler.Logging.HandleError(fmt.Errorf("cannot get branch reference %v: %w", refName, err))
 			return nil, syscall.EIO
 		}
 	}
 	commit, node, err := branchCache.getOrInsert(ctx, branch, n)
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get branch %v: %w", branch, err))
 		return nil, syscall.EIO
 	}
 	out.SetAttrTimeout(BranchValid)
@@ -142,7 +143,7 @@ func (n *branchListNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.A
 	logging.LogCall(n, nil)
 	attr, err := headAttr(n)
 	if err != nil {
-		error_handler.Logging.HandleError(err)
+		error_handler.Logging.HandleError(fmt.Errorf("cannot get HEAD commit attributes: %w", err))
 		return syscall.EIO
 	}
 	out.Attr = attr
