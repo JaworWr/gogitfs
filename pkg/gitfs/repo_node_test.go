@@ -39,45 +39,40 @@ var commitSignatures = map[string]object.Signature{
 	},
 }
 
-type fileDesc struct {
-	path     string
-	contents string
-}
-
 // commitExtraFiles contains extra files to be created or overwritten during commits
-var commitExtraFiles = map[string][]fileDesc{
+var commitExtraFiles = map[string]map[string]string{
 	"foo": {
-		{"toOverwrite.txt", "foo"},
+		"toOverwrite.txt": "foo",
 	},
 	"bar": {
-		{"barDir/bar1.txt", "bar inside dir"},
-		{"barDir/bar2.txt", "bar inside dir again"},
-		{"toOverwrite.txt", "bar"},
+		"barDir/bar1.txt": "bar inside dir",
+		"barDir/bar2.txt": "bar inside dir again",
+		"toOverwrite.txt": "bar",
 	},
 	"baz": {
-		{"toOverwrite.txt", "baz"},
+		"toOverwrite.txt": "baz",
 	},
 }
 
-func addFile(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, desc fileDesc) error {
-	err := fs.MkdirAll(path.Dir(desc.path), 0700)
+func addFile(worktree *git.Worktree, fs billy.Filesystem, p string, contents string) error {
+	err := fs.MkdirAll(path.Dir(p), 0700)
 	if err != nil {
-		return fmt.Errorf("cannot create directories for %v: %w", desc.path, err)
+		return fmt.Errorf("cannot create directories for %v: %w", p, err)
 	}
-	f, err := fs.Create(desc.path)
+	f, err := fs.Create(p)
 	defer func() {
 		_ = f.Close()
 	}()
 	if err != nil {
-		return fmt.Errorf("cannot create file %v: %w", desc.path, err)
+		return fmt.Errorf("cannot create file %v: %w", p, err)
 	}
-	_, err = f.Write([]byte(desc.contents))
+	_, err = f.Write([]byte(contents))
 	if err != nil {
-		return fmt.Errorf("cannot write to file %v: %w", desc.path, err)
+		return fmt.Errorf("cannot write to file %v: %w", p, err)
 	}
-	_, err = worktree.Add(desc.path)
+	_, err = worktree.Add(p)
 	if err != nil {
-		return fmt.Errorf("cannot add file %v to worktree: %w", desc.path, err)
+		return fmt.Errorf("cannot add file %v to worktree: %w", p, err)
 	}
 	return nil
 }
@@ -88,9 +83,12 @@ func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg st
 	errHandler := func(err error) {
 		t.Fatalf("Error during creation of commit '%v': %v", msg, err)
 	}
-	files := append(commitExtraFiles[msg], fileDesc{path: msg, contents: msg})
-	for _, f := range files {
-		err := addFile(t, worktree, fs, f)
+	err := addFile(worktree, fs, msg, msg)
+	if err != nil {
+		errHandler(err)
+	}
+	for p, contents := range commitExtraFiles[msg] {
+		err := addFile(worktree, fs, p, contents)
 		if err != nil {
 			errHandler(err)
 		}
