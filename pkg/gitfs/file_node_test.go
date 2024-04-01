@@ -14,11 +14,7 @@ import (
 	"testing"
 )
 
-func getFile(repo *git.Repository, commit plumbing.Hash, path string) (*object.File, error) {
-	commitObj, err := repo.CommitObject(commit)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get commit object: %w", err)
-	}
+func getFile(repo *git.Repository, commitObj *object.Commit, path string) (*object.File, error) {
 	tree, err := repo.TreeObject(commitObj.TreeHash)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get tree object: %w", err)
@@ -30,19 +26,31 @@ func getFile(repo *git.Repository, commit plumbing.Hash, path string) (*object.F
 	return file, nil
 }
 
-func Test_FileNode(t *testing.T) {
-	repo, extras := makeRepo(t)
-	head, err := repo.Head()
-	if err != nil {
-		t.Fatalf("Cannot get repo head: %v", err)
+func fileNodeTestCase(
+	t *testing.T,
+	repo *git.Repository,
+	extras repoExtras,
+	commit string,
+	fileCommit string,
+	path string,
+) {
+	var hash plumbing.Hash
+	if commit == "HEAD" {
+		head, err := repo.Head()
+		if err != nil {
+			t.Fatalf("Cannot get repo head: %v", err)
+		}
+		hash = head.Hash()
+	} else {
+		hash = extras.commits[commit]
 	}
-	file, err := getFile(repo, head.Hash(), "foo")
-	if err != nil {
-		t.Fatalf("Error during file retrieval: %v", err)
-	}
-	commitObj, err := repo.CommitObject(extras.commits["foo"])
+	commitObj, err := repo.CommitObject(hash)
 	if err != nil {
 		t.Fatalf("Error during commit retrieval: %v", err)
+	}
+	file, err := getFile(repo, commitObj, path)
+	if err != nil {
+		t.Fatalf("Error during file retrieval: %v", err)
 	}
 	attr := utils.CommitAttr(commitObj)
 	node := newFileNode(file, attr)
@@ -58,6 +66,32 @@ func Test_FileNode(t *testing.T) {
 		buf := &bytes.Buffer{}
 		_, err = buf.ReadFrom(f)
 		assert.NoError(t, err, "unexpected error when reading file")
-		assert.Equal(t, "foo", buf.String())
+		contents, ok := commitExtraFiles[fileCommit][path]
+		if !ok {
+			contents = path
+		}
+		assert.Equal(t, contents, buf.String())
 	})
+}
+
+func Test_fileNode(t *testing.T) {
+	repo, extras := makeRepo(t)
+	testCases := []struct {
+		commit, fileCommit, path string
+	}{
+		{"HEAD", "foo", "foo"},
+		{"HEAD", "bar", "barDir/bar1.txt"},
+		{"HEAD", "bar", "barDir/bar2.txt"},
+		{"foo", "foo", "toOverwrite.txt"},
+		{"bar", "bar", "toOverwrite.txt"},
+		{"baz", "baz", "toOverwrite.txt"},
+		{"HEAD", "bar", "toOverwrite.txt"},
+	}
+
+	for _, tc := range testCases {
+		name := fmt.Sprintf("%v:(%v)", tc.commit, tc.path)
+		t.Run(name, func(t *testing.T) {
+			fileNodeTestCase(t, repo, extras, tc.commit, tc.fileCommit, tc.path)
+		})
+	}
 }
