@@ -72,6 +72,15 @@ func fileNodeTestCase(
 		}
 		assert.Equal(t, contents, buf.String())
 	})
+	t.Run("stat", func(t *testing.T) {
+		stat, err := os.Stat(mountPath)
+		assert.NoError(t, err, "unexpected error when calling Stat()")
+		assert.Equal(t, node.file.Size, stat.Size(), "size mismatch")
+		assert.Equal(t, os.FileMode(0444), stat.Mode().Perm(), "mode mismatch")
+		if commit != "HEAD" {
+			assert.Equal(t, commitSignatures[commit].When, stat.ModTime().UTC(), "modification time mismatch")
+		}
+	})
 }
 
 func Test_fileNode(t *testing.T) {
