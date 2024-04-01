@@ -54,6 +54,8 @@ var commitExtraFiles = map[string]map[string]string{
 	},
 }
 
+// addFile creates a file with path p and given contents
+// and adds it to the Git worktree
 func addFile(worktree *git.Worktree, fs billy.Filesystem, p string, contents string) error {
 	err := fs.MkdirAll(path.Dir(p), 0700)
 	if err != nil {

@@ -14,13 +14,16 @@ import (
 	"syscall"
 )
 
+// fileNode represents a regular file in a Git tree
 type fileNode struct {
 	fs.Inode
 	file *object.File
 	attr fuse.Attr
+	// data contains the actual file data, lazily read during opening
 	data []byte
 }
 
+// newFileNode creates a new fileNode based on File object and attributes extracted from commit
 func newFileNode(file *object.File, attr fuse.Attr) *fileNode {
 	node := &fileNode{}
 	node.file = file
@@ -30,6 +33,7 @@ func newFileNode(file *object.File, attr fuse.Attr) *fileNode {
 	return node
 }
 
+// fileNodeHandle is a dummy handle to be returned when opening the file
 type fileNodeHandle struct{}
 
 func (n *fileNode) GetCallCtx() logging.CallCtx {
@@ -39,12 +43,15 @@ func (n *fileNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
+// Getattr returns attributes corresponding to the tree of the given commit (passed during newFileNode call).
 func (n *fileNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = n.attr
 	return fs.OK
 }
 
+// Open prepares the node to be read and returnes a dummy handle. If the data array has not been initialized yet,
+// it will be populated by data read from the Git blob.
 func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
 	if flags&(syscall.O_RDWR|syscall.O_WRONLY) != 0 {
 		return nil, 0, syscall.EROFS
@@ -74,6 +81,7 @@ func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuse
 	return fileNodeHandle{}, 0, fs.OK
 }
 
+// Read returns the data of the blob object corresponding to the desired file.
 func (n *fileNode) Read(_ context.Context, f fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
 	if f == nil {
 		return nil, syscall.EIO

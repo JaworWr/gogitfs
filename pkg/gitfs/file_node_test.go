@@ -14,6 +14,7 @@ import (
 	"testing"
 )
 
+// getFile retrieves a file in a commit's tree by path
 func getFile(repo *git.Repository, commitObj *object.Commit, path string) (*object.File, error) {
 	tree, err := repo.TreeObject(commitObj.TreeHash)
 	if err != nil {
