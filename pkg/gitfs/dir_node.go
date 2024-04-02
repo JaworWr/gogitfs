@@ -71,7 +71,17 @@ func newChildNode(parent *dirNode, childEntry *object.TreeEntry) (fs.InodeEmbedd
 		child.attr = parent.attr
 		return child, nil
 	case os.ModeSymlink:
-		panic("not implemented")
+		file, err := parent.tree.TreeEntryFile(childEntry)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get file %v: %w", childEntry.Name, err)
+		}
+		target, err := file.Contents()
+		if err != nil {
+			return nil, fmt.Errorf("cannot read symlink %v: %w", childEntry.Name, err)
+		}
+		attr := parent.attr
+		child := &fs.MemSymlink{Attr: attr, Data: []byte(target)}
+		return child, nil
 	default:
 		logging.WarningLog.Printf("unsupported file type: %v (Git tree mode: %v)", mode.Type(), childEntry.Mode)
 		return nil, nil
