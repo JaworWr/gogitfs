@@ -53,6 +53,7 @@ func (n *fileNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut
 // Open prepares the node to be read and returnes a dummy handle. If the data array has not been initialized yet,
 // it will be populated by data read from the Git blob.
 func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
+	logging.LogCall(n, logging.CallCtx{"flags": flags})
 	if flags&(syscall.O_RDWR|syscall.O_WRONLY) != 0 {
 		return nil, 0, syscall.EROFS
 	}
@@ -83,6 +84,7 @@ func (n *fileNode) Open(_ context.Context, flags uint32) (fh fs.FileHandle, fuse
 
 // Read returns the data of the blob object corresponding to the desired file.
 func (n *fileNode) Read(_ context.Context, f fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
+	logging.LogCall(n, logging.CallCtx{"max": len(dest), "off": off})
 	if f == nil {
 		return nil, syscall.EIO
 	}
