@@ -7,11 +7,15 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"gogitfs/pkg/error_handler"
 	"gogitfs/pkg/gitfs/internal/utils"
 	"gogitfs/pkg/logging"
 	"os"
 	"syscall"
+	"time"
 )
+
+const EntryTimeout = 10 * time.Minute
 
 // dirNode represents a directory in the Git repository (a Git tree)
 type dirNode struct {
@@ -93,6 +97,42 @@ func (n *dirNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut)
 	logging.LogCall(n, nil)
 	out.Attr = n.attr
 	return fs.OK
+}
+
+type dirStream struct {
+	// tree to iterate over
+	tree *object.Tree
+	// channel returning remaining entries
+	rest <-chan *fuse.DirEntry
+	// channel indicating that the iteration should stop
+	stop chan<- int
+}
+
+// readTreeEntries reads the commits from `iter`, generates corresponding entries and places them in the channel `next`.
+// If a value is read from `stop`, the function returns immediately.
+func readTreeEntries(tree *object.Tree, next chan<- *fuse.DirEntry, stop <-chan int) {
+	funcName := logging.CurrentFuncName(0, logging.Package)
+	for _, treeEntry := range tree.Entries {
+		logging.DebugLog.Printf(
+			"%s: read entry %v",
+			funcName,
+			treeEntry.Name,
+		)
+
+		var entry fuse.DirEntry
+		entry.Name = treeEntry.Name
+		mode, err := treeEntry.Mode.ToOSFileMode()
+		if err != nil {
+			error_handler.Logging.HandleError(err)
+		}
+		entry.Mode = uint32(mode.Type())
+		select {
+		case <-stop:
+			break
+		case next <- &entry:
+		}
+	}
+	close(next)
 }
 
 var _ fs.NodeGetattrer = (*dirNode)(nil)
