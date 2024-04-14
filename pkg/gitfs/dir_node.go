@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -100,39 +101,38 @@ func (n *dirNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut)
 }
 
 type dirStream struct {
-	// tree to iterate over
 	tree *object.Tree
-	// channel returning remaining entries
-	rest <-chan *fuse.DirEntry
-	// channel indicating that the iteration should stop
-	stop chan<- int
+	idx  int
 }
 
-// readTreeEntries reads the commits from `iter`, generates corresponding entries and places them in the channel `next`.
-// If a value is read from `stop`, the function returns immediately.
-func readTreeEntries(tree *object.Tree, next chan<- *fuse.DirEntry, stop <-chan int) {
-	funcName := logging.CurrentFuncName(0, logging.Package)
-	for _, treeEntry := range tree.Entries {
-		logging.DebugLog.Printf(
-			"%s: read entry %v",
-			funcName,
-			treeEntry.Name,
-		)
+// HasNext returns true if there are more entries.
+func (s *dirStream) HasNext() bool {
+	return s.idx < len(s.tree.Entries)
+}
 
-		var entry fuse.DirEntry
-		entry.Name = treeEntry.Name
-		mode, err := treeEntry.Mode.ToOSFileMode()
-		if err != nil {
-			error_handler.Logging.HandleError(err)
-		}
-		entry.Mode = uint32(mode.Type())
-		select {
-		case <-stop:
-			break
-		case next <- &entry:
-		}
+// Next returns the next entry.
+func (s *dirStream) Next() (entry fuse.DirEntry, errno syscall.Errno) {
+	if s.idx >= len(s.tree.Entries) {
+		errno = syscall.ENOENT
+		return
 	}
-	close(next)
+	treeEntry := s.tree.Entries[s.idx]
+	entry.Name = treeEntry.Name
+	entry.Mode = convertMode(treeEntry.Mode)
+	return
+}
+
+// Close closes the stream and cleans up any resources.
+func (s *dirStream) Close() {
+
+}
+
+func convertMode(mode filemode.FileMode) uint32 {
+	res, err := mode.ToOSFileMode()
+	if err != nil {
+		error_handler.Fatal.HandleError(fmt.Errorf("error converting tree entry mode: %w", err))
+	}
+	return uint32(res)
 }
 
 var _ fs.NodeGetattrer = (*dirNode)(nil)
