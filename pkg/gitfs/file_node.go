@@ -23,8 +23,8 @@ type fileNode struct {
 	data []byte
 }
 
-// newFileNode creates a new fileNode based on File object and attributes extracted from commit
-func newFileNode(file *object.File, attr fuse.Attr) *fileNode {
+// newTreeFileNode creates a new fileNode based on File object and attributes extracted from commit
+func newTreeFileNode(file *object.File, attr fuse.Attr) *fileNode {
 	node := &fileNode{}
 	node.file = file
 	node.attr = attr
@@ -43,7 +43,7 @@ func (n *fileNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
-// Getattr returns attributes corresponding to the tree of the given commit (passed during newFileNode call).
+// Getattr returns attributes corresponding to the tree of the given commit (passed during newTreeFileNode call).
 func (n *fileNode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	logging.LogCall(n, nil)
 	out.Attr = n.attr

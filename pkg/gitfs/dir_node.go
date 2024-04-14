@@ -2,6 +2,7 @@ package gitfs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -16,7 +17,9 @@ import (
 	"time"
 )
 
-const EntryTimeout = 10 * time.Minute
+const TreeEntryTimeout = 10 * time.Minute
+
+var UnsupportedTreeNodeType = errors.New("unsupported tree node type")
 
 // dirNode represents a directory in the Git repository (a Git tree)
 type dirNode struct {
@@ -37,7 +40,7 @@ func (n *dirNode) GetCallCtx() logging.CallCtx {
 	return info
 }
 
-func newDirNode(repo *git.Repository, commit *object.Commit) (*dirNode, error) {
+func newTreeDirNode(repo *git.Repository, commit *object.Commit) (*dirNode, error) {
 	node := &dirNode{}
 	node.repo = repo
 
@@ -51,45 +54,47 @@ func newDirNode(repo *git.Repository, commit *object.Commit) (*dirNode, error) {
 	return node, nil
 }
 
-func newChildNode(parent *dirNode, childEntry *object.TreeEntry) (fs.InodeEmbedder, error) {
+func newTreeChildNode(parent *dirNode, childEntry *object.TreeEntry) (fs.InodeEmbedder, fuse.Attr, error) {
 	mode, err := childEntry.Mode.ToOSFileMode()
 	if err != nil {
-		return nil, fmt.Errorf("cannot get file mode of %v: %w", childEntry.Name, err)
+		return nil, fuse.Attr{}, fmt.Errorf("cannot get file mode of %v: %w", childEntry.Name, err)
 	}
+	attr := parent.attr
 	switch mode.Type() {
 	case 0:
 		file, err := parent.tree.TreeEntryFile(childEntry)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get file %v: %w", childEntry.Name, err)
+			return nil, fuse.Attr{}, fmt.Errorf("cannot get file %v: %w", childEntry.Name, err)
 		}
-		child := newFileNode(file, parent.attr)
-		return child, nil
+		child := newTreeFileNode(file, parent.attr)
+		attr.Mode = fuse.S_IFREG | 0444
+		return child, attr, nil
 	case os.ModeDir:
 		tree, err := parent.repo.TreeObject(childEntry.Hash)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get subdirectory tree %v: %w", childEntry.Name, err)
+			return nil, fuse.Attr{}, fmt.Errorf("cannot get subdirectory tree %v: %w", childEntry.Name, err)
 		}
 		child := &dirNode{}
 		child.repo = parent.repo
 		child.tree = tree
 		child.entry = childEntry
 		child.attr = parent.attr
-		return child, nil
+		return child, attr, nil
 	case os.ModeSymlink:
 		file, err := parent.tree.TreeEntryFile(childEntry)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get file %v: %w", childEntry.Name, err)
+			return nil, fuse.Attr{}, fmt.Errorf("cannot get file %v: %w", childEntry.Name, err)
 		}
 		target, err := file.Contents()
 		if err != nil {
-			return nil, fmt.Errorf("cannot read symlink %v: %w", childEntry.Name, err)
+			return nil, fuse.Attr{}, fmt.Errorf("cannot read symlink %v: %w", childEntry.Name, err)
 		}
 		attr := parent.attr
 		child := &fs.MemSymlink{Attr: attr, Data: []byte(target)}
-		return child, nil
+		attr.Mode = fuse.S_IFLNK
+		return child, attr, nil
 	default:
-		logging.WarningLog.Printf("unsupported file type: %v (Git tree mode: %v)", mode.Type(), childEntry.Mode)
-		return nil, nil
+		return nil, fuse.Attr{}, fmt.Errorf("%w: %v", UnsupportedTreeNodeType, mode)
 	}
 }
 
@@ -141,5 +146,31 @@ func (n *dirNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
 	return s, fs.OK
 }
 
+func (n *dirNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	entry, err := n.tree.FindEntry(name)
+	if err != nil {
+		if errors.Is(err, object.ErrEntryNotFound) {
+			logging.WarningLog.Printf("Name %v not found", name)
+			return nil, syscall.ENOENT
+		} else {
+			error_handler.Logging.HandleError(fmt.Errorf("cannot get tree entry %v: %w", name, err))
+			return nil, syscall.EIO
+		}
+	}
+
+	node, attr, err := newTreeChildNode(n, entry)
+	if err != nil {
+		error_handler.Logging.HandleError(fmt.Errorf("cannot create tree node: %w", err))
+		return nil, syscall.EIO
+	}
+
+	out.SetEntryTimeout(TreeEntryTimeout)
+	out.Attr = attr
+
+	child := n.NewInode(ctx, node, fs.StableAttr{Mode: out.Mode & syscall.S_IFMT})
+	return child, fs.OK
+}
+
 var _ fs.NodeGetattrer = (*dirNode)(nil)
 var _ fs.NodeReaddirer = (*dirNode)(nil)
+var _ fs.NodeLookuper = (*dirNode)(nil)

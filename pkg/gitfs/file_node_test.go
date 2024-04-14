@@ -54,7 +54,7 @@ func fileNodeTestCase(
 		t.Fatalf("Error during file retrieval: %v", err)
 	}
 	attr := utils.CommitAttr(commitObj)
-	node := newFileNode(file, attr)
+	node := newTreeFileNode(file, attr)
 	server, mountPath := mountNode(t, node, fs.StableAttr{Mode: fuse.S_IFREG}, noOpCb)
 	defer func(server *fuse.Server) {
 		_ = server.Unmount()
