@@ -135,4 +135,11 @@ func convertMode(mode filemode.FileMode) uint32 {
 	return uint32(res)
 }
 
+// Readdir returns the contents of the directory.
+func (n *dirNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+	s := &dirStream{n.tree, 0}
+	return s, fs.OK
+}
+
 var _ fs.NodeGetattrer = (*dirNode)(nil)
+var _ fs.NodeReaddirer = (*dirNode)(nil)
