@@ -1,12 +1,14 @@
 package gitfs
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"path"
 	"slices"
 	"strings"
 	"testing"
@@ -22,6 +24,7 @@ func dirNodeTestCase(
 	repo *git.Repository,
 	extras repoExtras,
 	commit string,
+	dirPath string,
 	expected []expectedDirEntry,
 ) {
 	var hash plumbing.Hash
@@ -50,7 +53,7 @@ func dirNodeTestCase(
 	slices.SortFunc(expected, func(a, b expectedDirEntry) int {
 		return strings.Compare(a.name, b.name)
 	})
-	entries, err := os.ReadDir(mountPath)
+	entries, err := os.ReadDir(path.Join(mountPath, dirPath))
 	assert.NoError(t, err, "unexpected error when reading directory")
 	assert.Equal(t, len(expected), len(entries), "result length mismatch")
 	for i, entry := range entries {
@@ -67,5 +70,21 @@ func dirNodeTestCase(
 }
 
 func Test_dirNode(t *testing.T) {
+	repo, extras := makeRepo(t)
+	testCases := []struct {
+		commit, dirPath string
+		expected        []expectedDirEntry
+	}{
+		{"bar", ".", []expectedDirEntry{
+			{"toOverwrite.txt", 0444},
+			{"barDir", os.ModeDir | 0555},
+		}},
+	}
 
+	for _, tc := range testCases {
+		name := fmt.Sprintf("%v:(%v)", tc.commit, tc.dirPath)
+		t.Run(name, func(t *testing.T) {
+			dirNodeTestCase(t, repo, extras, tc.commit, tc.dirPath, tc.expected)
+		})
+	}
 }

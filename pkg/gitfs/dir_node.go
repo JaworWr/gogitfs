@@ -142,11 +142,13 @@ func convertMode(mode filemode.FileMode) uint32 {
 
 // Readdir returns the contents of the directory.
 func (n *dirNode) Readdir(_ context.Context) (fs.DirStream, syscall.Errno) {
+	logging.LogCall(n, nil)
 	s := &dirStream{n.tree, 0}
 	return s, fs.OK
 }
 
 func (n *dirNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	logging.LogCall(n, logging.CallCtx{"name": name})
 	entry, err := n.tree.FindEntry(name)
 	if err != nil {
 		if errors.Is(err, object.ErrEntryNotFound) {
@@ -164,6 +166,7 @@ func (n *dirNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (
 		return nil, syscall.EIO
 	}
 
+	out.SetAttrTimeout(TreeEntryTimeout)
 	out.SetEntryTimeout(TreeEntryTimeout)
 	out.Attr = attr
 
