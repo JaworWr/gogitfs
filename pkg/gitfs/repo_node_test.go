@@ -1,6 +1,7 @@
 package gitfs
 
 import (
+	"fmt"
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
@@ -9,6 +10,7 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"gogitfs/pkg/logging"
+	"path"
 	"testing"
 	"time"
 )
@@ -37,33 +39,67 @@ var commitSignatures = map[string]object.Signature{
 	},
 }
 
+// commitExtraFiles contains extra files to be created or overwritten during commits
+var commitExtraFiles = map[string]map[string]string{
+	"foo": {
+		"toOverwrite.txt": "foo",
+	},
+	"bar": {
+		"barDir/bar1.txt": "bar inside dir",
+		"barDir/bar2.txt": "bar inside dir again",
+		"toOverwrite.txt": "bar",
+	},
+	"baz": {
+		"toOverwrite.txt": "baz",
+	},
+}
+
+// addFile creates a file with path p and given contents
+// and adds it to the Git worktree
+func addFile(worktree *git.Worktree, fs billy.Filesystem, p string, contents string) error {
+	err := fs.MkdirAll(path.Dir(p), 0700)
+	if err != nil {
+		return fmt.Errorf("cannot create directories for %v: %w", p, err)
+	}
+	f, err := fs.Create(p)
+	defer func() {
+		_ = f.Close()
+	}()
+	if err != nil {
+		return fmt.Errorf("cannot create file %v: %w", p, err)
+	}
+	_, err = f.Write([]byte(contents))
+	if err != nil {
+		return fmt.Errorf("cannot write to file %v: %w", p, err)
+	}
+	_, err = worktree.Add(p)
+	if err != nil {
+		return fmt.Errorf("cannot add file %v to worktree: %w", p, err)
+	}
+	return nil
+}
+
 // addCommit adds a commit to worktree creating a file with name and contents equal to `msg`
 // and sets the commit message to `msg`
 func addCommit(t *testing.T, worktree *git.Worktree, fs billy.Filesystem, msg string) plumbing.Hash {
 	errHandler := func(err error) {
 		t.Fatalf("Error during creation of commit '%v': %v", msg, err)
 	}
-	f, err := fs.Create(msg)
+	err := addFile(worktree, fs, msg, msg)
 	if err != nil {
 		errHandler(err)
 	}
-	_, err = f.Write([]byte(msg))
-	if err != nil {
-		errHandler(err)
-	}
-	err = f.Close()
-	if err != nil {
-		errHandler(err)
-	}
-	_, err = worktree.Add(msg)
-	if err != nil {
-		errHandler(err)
+	for p, contents := range commitExtraFiles[msg] {
+		err := addFile(worktree, fs, p, contents)
+		if err != nil {
+			errHandler(err)
+		}
 	}
 	sig := commitSignatures[msg]
 	opts := git.CommitOptions{Author: &sig}
 	hash, err := worktree.Commit(msg, &opts)
 	if err != nil {
-		errHandler(err)
+		errHandler(fmt.Errorf("cannot commit: %w", err))
 	}
 	return hash
 }

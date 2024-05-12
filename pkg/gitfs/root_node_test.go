@@ -23,13 +23,18 @@ func noOpCb(_ *testing.T, _ context.Context, _ *fs.Inode) {
 // and the path of the mounted node in the filesystem.
 // The function also runs a callback after adding the node - this allows code to be run which requires
 // the node to be mounted.
-func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Server, mountPath string) {
+func mountNode(
+	t *testing.T,
+	n fs.InodeEmbedder,
+	attr fs.StableAttr,
+	cb MountCb,
+) (server *fuse.Server, mountPath string) {
 	tmpdir := t.TempDir()
 	mountPath = path.Join(tmpdir, "root")
 	root := &fs.Inode{}
 	opts := &fs.Options{}
 	opts.OnAdd = func(ctx context.Context) {
-		node := root.NewPersistentInode(ctx, n, fs.StableAttr{Mode: fuse.S_IFDIR})
+		node := root.NewPersistentInode(ctx, n, attr)
 		root.AddChild("root", node, false)
 		cb(t, ctx, node)
 	}
@@ -38,6 +43,14 @@ func mountNode(t *testing.T, n fs.InodeEmbedder, cb MountCb) (server *fuse.Serve
 		t.Fatalf("Cannot mount server. Error: %v", err)
 	}
 	return
+}
+
+func mountDirNode(
+	t *testing.T,
+	n fs.InodeEmbedder,
+	cb MountCb,
+) (server *fuse.Server, mountPath string) {
+	return mountNode(t, n, fs.StableAttr{Mode: fuse.S_IFDIR}, cb)
 }
 
 // getSortedNames extracts name from a list of directory entries and returns them in sorted order.
@@ -65,7 +78,7 @@ func Test_RootNode(t *testing.T) {
 	node := &RootNode{}
 	repo, _ := makeRepo(t)
 	node.repo = repo
-	server, mountPath := mountNode(t, node, noOpCb)
+	server, mountPath := mountDirNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()

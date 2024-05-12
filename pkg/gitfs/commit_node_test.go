@@ -24,7 +24,7 @@ func commitNodeTestCase(t *testing.T, repo *git.Repository, extras repoExtras, c
 		t.Fatalf("Error during commit retrieval: %v", err)
 	}
 	node.commit = commitObj
-	server, mountPath := mountNode(t, node, noOpCb)
+	server, mountPath := mountDirNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()

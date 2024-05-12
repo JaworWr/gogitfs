@@ -13,7 +13,7 @@ func Test_branchListNode(t *testing.T) {
 	Init()
 	repo, extras := makeRepo(t)
 	node := newBranchListNode(repo)
-	server, mountPath := mountNode(t, node, noOpCb)
+	server, mountPath := mountDirNode(t, node, noOpCb)
 	defer func() {
 		_ = server.Unmount()
 	}()
